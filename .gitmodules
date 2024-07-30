@@ -1,0 +1,3 @@
+[submodule "vendor/PhotoshopAPI"]
+	path = vendor/PhotoshopAPI
+	url = https://github.com/Chenyichen12/PhotoshopAPI
