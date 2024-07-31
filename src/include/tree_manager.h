@@ -48,8 +48,19 @@ class TreeNode {
   }
 };
 
+//enum ChangeType {
+//  ADD,
+//  DELETE,
+//  MOVE,
+//};
+//struct TreeStructChangeArgs {
+//  ChangeType type;
+//  int targetId;
+//  int preParentId;     // if no assign -1
+//  int targetParentId;  // if no assign -1
+//};
+
 class TreeManager : public QObject {
-  Q_OBJECT
  private:
   TreeNode<Layer> *root;
 

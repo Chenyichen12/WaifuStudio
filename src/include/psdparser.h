@@ -3,17 +3,17 @@
 //
 
 #pragma once
-#include <QString>
 #include <QObject>
+#include <QString>
 namespace Parser {
-class PsdParser:QObject {
+class PsdParser : public QObject {
   Q_OBJECT
-private:
+ private:
   QString path;
   int parseHeight = -1;
   int parseWidth = -1;
 
-public:
+ public:
   explicit PsdParser(const QString &path);
   void Parse();
 
@@ -21,4 +21,4 @@ public:
   inline int width() const { return parseWidth; }
 };
 
-} // namespace Parser
+}  // namespace Parser

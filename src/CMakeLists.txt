@@ -6,6 +6,9 @@ set(SOURCE
         layer.cc
         id_allocation.cc
         tree_manager.cc
+        layer_model.cc
+        layer_bitmap.cc
+        project.cc
 )
 
 file(GLOB HEADER include/*.h)
