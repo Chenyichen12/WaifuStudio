@@ -33,6 +33,9 @@ class BitmapLayer : public Layer {
 };
 
 class PsGroupLayer : public Layer {
+ public:
   inline bool isContainer() override { return true; }
+  explicit PsGroupLayer(const QString& name, bool isVisible = true)
+      : Layer(name, isVisible) {}
 };
 }  // namespace ProjectModel

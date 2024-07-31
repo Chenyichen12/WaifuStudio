@@ -15,6 +15,7 @@ namespace Parser {
 
 ProjectModel::LayerBitmap* createBitmap(const LayerRecord& info,
                                         ChannelImageData& data) {
+  //TODO: wrong index
   const auto& aVec = data.extractImageData<bpp8_t>(
       data.getChannelIndex(Enum::ChannelID::Alpha));
   const auto& rVec =
@@ -58,25 +59,64 @@ void PsdParser::Parse() {
   parseHeight = (int)header.m_Height;
   parseWidth = (int)header.m_Width;
 
-  auto bitmapManagerPtr = std::unique_ptr<ProjectModel::BitmapManager>();
+  auto bitmapManagerPtr = std::make_unique<ProjectModel::BitmapManager>();
+
   typedef ProjectModel::TreeNode<ProjectModel::Layer> nodeType;
-  auto parseStack = std::stack<nodeType>();
-  for (int i = psFile->m_LayerMaskInfo.m_LayerInfo.m_LayerRecords.size() - 1;
-       i >= 0; --i) {
-    const auto& record = psFile->m_LayerMaskInfo.m_LayerInfo.m_LayerRecords[i];
+  auto parseStack = std::stack<nodeType*>();
+  auto psTreeManager = std::make_unique<ProjectModel::TreeManager>();
+  auto controllerTreeManger = std::make_unique<ProjectModel::TreeManager>();
 
-    auto& image = psFile->m_LayerMaskInfo.m_LayerInfo.m_ChannelImageData[i];
+  parseStack.push(psTreeManager->getRoot());
 
-    if (record.m_Top == 0 && record.m_Left == 0 && record.m_Right == 0 &&
-        record.m_Bottom == 0) {
-      if (record.m_LayerName.getString() == "</Layer group>") {
-        std::cout << "devider" << '\n';
+  try {
+    for (int i = psFile->m_LayerMaskInfo.m_LayerInfo.m_LayerRecords.size() - 1;
+         i >= 0; --i) {
+      const auto& record =
+          psFile->m_LayerMaskInfo.m_LayerInfo.m_LayerRecords[i];
+
+      auto& image = psFile->m_LayerMaskInfo.m_LayerInfo.m_ChannelImageData[i];
+
+      if (record.m_Top == 0 && record.m_Left == 0 && record.m_Right == 0 &&
+          record.m_Bottom == 0) {
+        auto layerInfo =
+            std::shared_ptr<ProjectModel::Layer>(new ProjectModel::PsGroupLayer(
+                QString::fromStdString(record.m_LayerName.getString())));
+
+        auto* node = new nodeType(layerInfo);
+        node->setParent(parseStack.top());
+        parseStack.top()->getChildren().push_back(node);
+        parseStack.push(node);
+
+        if (record.m_LayerName.getString() == "</Layer group>") {
+          parseStack.pop();
+        }
+      } else {
+        auto* bitmap = createBitmap(record, image);
+        bitmapManagerPtr->addAsset(bitmap);
+
+        auto layerInfo =
+            std::shared_ptr<ProjectModel::Layer>(new ProjectModel::BitmapLayer(
+                QString::fromStdString(record.m_LayerName.getString()),
+                *bitmap));
+
+        auto* node = new nodeType(layerInfo);
+        parseStack.top()->getChildren().push_back(node);
+        node->setParent(parseStack.top());
+
+        auto controllerNode = new nodeType(layerInfo);
+        controllerTreeManger->getRoot()->getChildren().push_back(
+            controllerNode);
+        controllerNode->setParent(controllerTreeManger->getRoot());
       }
-    } else {
-      auto* bitmap = createBitmap(record, image);
-      bitmapManagerPtr->addAsset(bitmap);
     }
+
+  } catch (...) {
+    std::cout << "bad parse";
+    return;
   }
+  this->_controllerTree = std::move(controllerTreeManger);
+  this->_bitmapManager = std::move(bitmapManagerPtr);
+  this->_psTree = std::move(psTreeManager);
 }
 
 }  // namespace Parser

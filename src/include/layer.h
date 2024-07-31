@@ -15,6 +15,7 @@ class Layer {
   explicit Layer(const QString &name, bool isVisible = true);
   Layer(const Layer &l) = delete;
 
+  Layer &operator=(const Layer &) = delete;
   ~Layer();
   const QString &getName() const;
   int getId() const;
