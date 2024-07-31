@@ -3,8 +3,8 @@
 //
 
 #include <utility>
-
 #include "include/tree_manager.h"
+namespace ProjectModel{
 TreeManager::TreeManager(QObject *parent) : QObject(parent) {
   root = new TreeNode<Layer>();
 }
@@ -45,4 +45,6 @@ TreeNode<Layer> *TreeManager::findNode(const int &id) const {
 TreeNode<Layer> *TreeManager::getRoot() const { return root; }
 TreeManager::~TreeManager() {
   delete this->root;
+}
+
 }

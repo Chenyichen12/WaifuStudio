@@ -2,7 +2,9 @@
 // Created by chen_yichen on 2024/7/30.
 //
 #include "include/layer.h"
+
 #include "include/id_allocation.h"
+namespace ProjectModel {
 Layer::Layer(const QString &name, bool isVisible) {
   this->name = name;
   this->id = IdAllocation::getInstance().allocate();
@@ -11,6 +13,6 @@ Layer::Layer(const QString &name, bool isVisible) {
 const QString &Layer::getName() const { return name; }
 int Layer::getId() const { return id; }
 bool Layer::isVisible() const { return isvisible; }
-Layer::~Layer() {
-  IdAllocation::getInstance().release(this->id);
-}
+Layer::~Layer() { IdAllocation::getInstance().release(this->id); }
+
+}  // namespace ProjectModel

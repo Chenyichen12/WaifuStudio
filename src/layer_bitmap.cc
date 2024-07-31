@@ -3,7 +3,7 @@
 //
 
 #include "include/layer_bitmap.h"
-
+namespace ProjectModel {
 BitmapManager::BitmapManager(QObject *parent) : QObject(parent) {
   this->assetsMap = {};
 }
@@ -27,3 +27,4 @@ BitmapManager::~BitmapManager() {
     delete item.second;
   }
 }
+}  // namespace ProjectModel

@@ -9,7 +9,7 @@
 
 #include "layer.h"
 #include "memory"
-
+namespace ProjectModel{
 template <typename T>
 class TreeNode {
  protected:
@@ -82,3 +82,5 @@ class TreeManager : public QObject {
 
   ~TreeManager() override;
 };
+
+}

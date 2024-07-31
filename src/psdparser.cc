@@ -4,16 +4,17 @@
 
 #include "include/psdparser.h"
 
+#include <stack>
+
 #include "LayeredFile/LayeredFile.h"
 #include "include/id_allocation.h"
 #include "include/layer_model.h"
 #include "include/tree_manager.h"
-
-#include <stack>
 using namespace PhotoshopAPI;
 namespace Parser {
 
-LayerBitmap* createBitmap(const LayerRecord& info, ChannelImageData& data) {
+ProjectModel::LayerBitmap* createBitmap(const LayerRecord& info,
+                                        ChannelImageData& data) {
   const auto& aVec = data.extractImageData<bpp8_t>(
       data.getChannelIndex(Enum::ChannelID::Alpha));
   const auto& rVec =
@@ -32,7 +33,7 @@ LayerBitmap* createBitmap(const LayerRecord& info, ChannelImageData& data) {
   }
   int id = IdAllocation::getInstance().allocate();
 
-  auto bitmap = new LayerBitmap(id);
+  auto bitmap = new ProjectModel::LayerBitmap(id);
 
   bitmap->top = info.m_Top;
   bitmap->left = info.m_Left;
@@ -57,8 +58,9 @@ void PsdParser::Parse() {
   parseHeight = (int)header.m_Height;
   parseWidth = (int)header.m_Width;
 
-  auto bitmapManagerPtr = std::unique_ptr<BitmapManager>();
-
+  auto bitmapManagerPtr = std::unique_ptr<ProjectModel::BitmapManager>();
+  typedef ProjectModel::TreeNode<ProjectModel::Layer> nodeType;
+  auto parseStack = std::stack<nodeType>();
   for (int i = psFile->m_LayerMaskInfo.m_LayerInfo.m_LayerRecords.size() - 1;
        i >= 0; --i) {
     const auto& record = psFile->m_LayerMaskInfo.m_LayerInfo.m_LayerRecords[i];

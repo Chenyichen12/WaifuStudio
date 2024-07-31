@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 #include <tree_manager.h>
 
+using namespace ProjectModel;
 class TextLayer : public Layer {
  public:
   explicit TextLayer(const QString &name, bool isVisible = true)
@@ -12,9 +13,6 @@ class TextLayer : public Layer {
  public:
   bool isContainer() override { return true; }
 };
-
-
-
 
 TEST(TreeManager, TestStruct) {
   auto m = TreeManager();
@@ -63,8 +61,7 @@ TEST(TreeManager, TestStruct) {
   });
 }
 
-
-TEST(TreeManager, TestFind){
+TEST(TreeManager, TestFind) {
   auto m = TreeManager();
   auto n1 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t1")));
   auto n2 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t2")));
@@ -94,7 +91,6 @@ TEST(TreeManager, TestFind){
   m.getRoot()->getChildren().push_back(n1);
   n1->setParent(m.getRoot());
 
-
-  auto&& node = m.findNode(n5->getData()->getId());
-  ASSERT_EQ(node,n5);
+  auto &&node = m.findNode(n5->getData()->getId());
+  ASSERT_EQ(node, n5);
 }

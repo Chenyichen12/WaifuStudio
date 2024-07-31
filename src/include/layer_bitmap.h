@@ -4,6 +4,8 @@
 
 #pragma once
 #include "QObject"
+
+namespace ProjectModel{
 struct LayerBitmap {
  private:
   int id;
@@ -33,3 +35,5 @@ class BitmapManager : public QObject {
   void deleteAsset(LayerBitmap* map);
   const LayerBitmap* getBitmap(int id) const;
 };
+}
+

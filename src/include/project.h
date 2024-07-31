@@ -3,7 +3,7 @@
 //
 #pragma once
 #include "QObject"
-
+namespace ProjectModel{
 class LayerModel;
 class BitmapManager;
 
@@ -33,3 +33,5 @@ class ProjectBuilder {
   void setLayerModel(LayerModel*);
   ProjectBuilder() = default;
 };
+}
+

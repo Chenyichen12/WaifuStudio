@@ -3,6 +3,8 @@
 
 #include "layer.h"
 #include "layer_bitmap.h"
+
+namespace ProjectModel {
 class TreeManager;
 class LayerModel : public QObject {
  private:
@@ -33,3 +35,4 @@ class BitmapLayer : public Layer {
 class PsGroupLayer : public Layer {
   inline bool isContainer() override { return true; }
 };
+}  // namespace ProjectModel

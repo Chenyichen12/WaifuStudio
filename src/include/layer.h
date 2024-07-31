@@ -4,15 +4,16 @@
 
 #pragma once
 #include <QString>
+namespace ProjectModel {
 class Layer {
-protected:
+ protected:
   QString name;
   int id;
   bool isvisible;
 
-public:
+ public:
   explicit Layer(const QString &name, bool isVisible = true);
-  Layer(const Layer& l) = delete;
+  Layer(const Layer &l) = delete;
 
   ~Layer();
   const QString &getName() const;
@@ -20,3 +21,4 @@ public:
   bool isVisible() const;
   virtual bool isContainer() = 0;
 };
+}  // namespace ProjectModel
