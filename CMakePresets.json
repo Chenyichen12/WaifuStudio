@@ -24,6 +24,12 @@
         "value": "x64",
         "strategy": "external"
       }
+    },
+    {
+      "name": "linux",
+      "inherits": [
+        "base"
+      ]
     }
   ]
 }

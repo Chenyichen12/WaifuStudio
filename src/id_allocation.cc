@@ -2,6 +2,7 @@
 // Created by chen_yichen on 2024/7/30.
 //
 #include "include/id_allocation.h"
+#include <algorithm>
 IdAllocation::IdAllocation()= default;
 IdAllocation &IdAllocation::getInstance() {
   static auto allocation = IdAllocation();

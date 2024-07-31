@@ -2,7 +2,7 @@
 // Created by chen_yichen on 2024/7/30.
 //
 #include "include/mainwindow.h"
-#include "ui/ui_MainWindow.h"
+#include "ui/ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
