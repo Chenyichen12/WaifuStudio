@@ -3,11 +3,13 @@
 //
 
 #pragma once
+
 #include <QObject>
 #include <vector>
 
 #include "layer.h"
 #include "memory"
+
 template <typename T>
 class TreeNode {
  protected:
@@ -16,14 +18,18 @@ class TreeNode {
   std::vector<TreeNode<T> *> children{};
 
  public:
-  TreeNode<T>() = default;
-  explicit TreeNode<T>(std::shared_ptr<T> d) { this->d = d; }
+  TreeNode() = default;
 
-  TreeNode<T>(const TreeNode<T> &) = delete;
+  explicit TreeNode(std::shared_ptr<T> d) { this->d = d; }
 
-  const std::vector<TreeNode<T> *> getChildren() const { return children; }
-  void setChildren(const std::vector<TreeNode<T>>& children) {
-    this->children = children;
+  TreeNode(const TreeNode<T> &) = delete;
+
+  const std::vector<TreeNode<T> *> &getChildren() const { return children; }
+
+  std::vector<TreeNode<T> *> &getChildren() { return children; }
+
+  void setChildren(const std::vector<TreeNode<T>> &child) {
+    this->children = child;
   }
 
   void setData(std::shared_ptr<T> data) { this->d = data; }
@@ -53,11 +59,15 @@ class TreeManager : public QObject {
   typedef bool callBack(TreeNode<Layer> *l);
 
   void forEach(const std::function<callBack> &c) const;
+
   static void forEach(const TreeNode<Layer> *r,
                       const std::function<callBack> &c);
+
   TreeNode<Layer> *findNode(const TreeNode<Layer> *source) const;
+
   TreeNode<Layer> *findNode(const int &id) const;
 
   TreeNode<Layer> *getRoot() const;
+
   ~TreeManager() override;
 };
