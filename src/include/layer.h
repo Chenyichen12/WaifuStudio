@@ -11,9 +11,10 @@ protected:
   bool isvisible;
 
 public:
-  explicit Layer(const QString &name, int id = -1, bool isVisible = true);
+  explicit Layer(const QString &name, bool isVisible = true);
   Layer(const Layer& l) = delete;
 
+  ~Layer();
   const QString &getName() const;
   int getId() const;
   bool isVisible() const;

@@ -3,12 +3,19 @@ project(Test)
 enable_testing()
 
 find_package(GTest CONFIG REQUIRED)
-add_executable(Test
-        main.cc
+
+
+set(TestSource  
+      main.cc
         psdparser_test.cc
-        id_allocation_test.cc)
-target_link_libraries(Test PRIVATE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main WaifuStudio)
+        id_allocation_test.cc
+        tree_manager_test.cc)
+add_executable(Test ${TestSource})
+target_link_libraries(Test PUBLIC GTest::gtest GTest::gtest_main WaifuStudio)
 
-target_include_directories(Test PRIVATE ../src/include)
+target_include_directories(Test PUBLIC ../src/include)
 
-#add_test(AllTestsInMain Test)
+include(GoogleTest)
+
+gtest_discover_tests(Test)
+

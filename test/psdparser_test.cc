@@ -12,4 +12,5 @@ TEST(psdparser,testparse){
   auto resString = QString::fromStdString(resPath.string());
   auto p = new Parser::PsdParser(resString);
   p->Parse();
+  delete p;
 }

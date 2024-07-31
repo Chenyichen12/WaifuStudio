@@ -5,6 +5,7 @@ set(SOURCE
         psdparser.cc
         layer.cc
         id_allocation.cc
+        tree_manager.cc
 )
 
 file(GLOB HEADER include/*.h)

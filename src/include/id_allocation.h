@@ -10,7 +10,7 @@ private:
   IdAllocation();
   static IdAllocation& instance;
   std::vector<int>hole;
-  int max;
+  int max = 0;
 
   std::mutex m;
 public:
