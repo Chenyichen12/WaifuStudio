@@ -9,9 +9,9 @@
 #include <stack>
 
 #include "LayeredFile/LayeredFile.h"
-#include "include/id_allocation.h"
-#include "include/layer_model.h"
-#include "include/tree_manager.h"
+#include "model/id_allocation.h"
+#include "model/layer_model.h"
+#include "model/tree_manager.h"
 using namespace PhotoshopAPI;
 namespace Parser {
 

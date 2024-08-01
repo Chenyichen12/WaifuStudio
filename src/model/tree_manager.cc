@@ -3,7 +3,7 @@
 //
 
 #include <utility>
-#include "include/tree_manager.h"
+#include "model/tree_manager.h"
 namespace ProjectModel{
 TreeManager::TreeManager(QObject *parent) : QObject(parent) {
   root = new TreeNode<Layer>();

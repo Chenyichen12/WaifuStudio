@@ -10,3 +10,9 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 MainWindow::~MainWindow() { delete ui; }
+
+
+
+
+void MainWindow::setProject(ProjectModel::Project*p) {
+}

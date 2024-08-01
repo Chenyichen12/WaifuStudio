@@ -1,9 +1,9 @@
 //
 // Created by chen_yichen on 2024/7/30.
 //
-#include "include/layer.h"
+#include "model/layer.h"
 
-#include "include/id_allocation.h"
+#include "model/id_allocation.h"
 namespace ProjectModel {
 Layer::Layer(const QString &name, bool isVisible) {
   this->name = name;

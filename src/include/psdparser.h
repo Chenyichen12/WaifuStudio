@@ -6,9 +6,8 @@
 #include <QObject>
 #include <QString>
 
-#include "layer_bitmap.h"
-#include "layer_model.h"
-#include "tree_manager.h"
+#include "model/layer_bitmap.h"
+#include "model/tree_manager.h"
 namespace Parser {
 class PsdParser : public QObject {
   Q_OBJECT

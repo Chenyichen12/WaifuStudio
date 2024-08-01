@@ -2,7 +2,7 @@
 // Created by chenyichen on 7/31/24.
 //
 
-#include "include/layer_bitmap.h"
+#include "model/layer_bitmap.h"
 namespace ProjectModel {
 BitmapManager::BitmapManager(QObject *parent) : QObject(parent) {
   this->assetsMap = {};

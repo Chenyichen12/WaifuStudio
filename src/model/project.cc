@@ -1,10 +1,10 @@
 //
 // Created by chenyichen on 7/31/24.
 //
-#include "include/project.h"
+#include "model/project.h"
 
-#include "include/layer_bitmap.h"
-#include "include/layer_model.h"
+#include "model/layer_bitmap.h"
+#include "model/layer_model.h"
 namespace ProjectModel {
 Project* ProjectBuilder::build() {
   if (this->manager == nullptr || this->model == nullptr) {

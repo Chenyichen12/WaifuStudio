@@ -2,7 +2,7 @@
 // Created by chen_yichen on 2024/7/30.
 //
 #include <gtest/gtest.h>
-#include <tree_manager.h>
+#include <model/tree_manager.h>
 
 using namespace ProjectModel;
 class TextLayer : public Layer {

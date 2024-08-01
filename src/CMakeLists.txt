@@ -3,12 +3,12 @@ project(WaifuStudio)
 set(SOURCE
         mainwindow.cc
         psdparser.cc
-        layer.cc
-        id_allocation.cc
-        tree_manager.cc
-        layer_model.cc
-        layer_bitmap.cc
-        project.cc
+         model/layer.cc
+         model/id_allocation.cc
+         model/tree_manager.cc
+         model/layer_model.cc
+         model/layer_bitmap.cc
+        model/project.cc
 )
 
 file(GLOB HEADER include/*.h)
@@ -17,6 +17,8 @@ file(GLOB UI ui/*.ui)
 
 
 add_library(WaifuStudio STATIC ${SOURCE} ${HEADER} ${UI})
+
+target_include_directories(WaifuStudio PRIVATE include)
 
 target_include_directories(WaifuStudio PRIVATE ${CMAKE_BINARY_DIR})
 
