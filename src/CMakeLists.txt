@@ -3,6 +3,7 @@ project(WaifuStudio)
 set(SOURCE
         mainwindow.cc
         psdparser.cc
+        viewtree_model.cc
          model/layer.cc
          model/id_allocation.cc
          model/tree_manager.cc
@@ -16,7 +17,7 @@ file(GLOB HEADER include/*.h)
 file(GLOB UI ui/*.ui)
 
 
-add_library(WaifuStudio STATIC ${SOURCE} ${HEADER} ${UI})
+add_library(WaifuStudio STATIC ${SOURCE} ${HEADER} ${UI} ../res/icon.qrc)
 
 target_include_directories(WaifuStudio PRIVATE include)
 

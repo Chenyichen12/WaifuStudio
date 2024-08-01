@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file>eye-disabled.png</file>
+        <file>eye-enabled.png</file>
+        <file>folder.png</file>
+        <file>question.png</file>
+    </qresource>
+</RCC>

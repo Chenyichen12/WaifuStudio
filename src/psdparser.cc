@@ -77,6 +77,10 @@ void PsdParser::Parse() {
 
       if (record.m_Top == 0 && record.m_Left == 0 && record.m_Right == 0 &&
           record.m_Bottom == 0) {
+        if (record.m_LayerName.getString() == "</Layer group>") {
+          parseStack.pop();
+          continue;
+        }
         auto layerInfo =
             std::shared_ptr<ProjectModel::Layer>(new ProjectModel::PsGroupLayer(
                 QString::fromStdString(record.m_LayerName.getString())));
@@ -86,9 +90,7 @@ void PsdParser::Parse() {
         parseStack.top()->getChildren().push_back(node);
         parseStack.push(node);
 
-        if (record.m_LayerName.getString() == "</Layer group>") {
-          parseStack.pop();
-        }
+       
       } else {
         auto* bitmap = createBitmap(record, image);
         bitmapManagerPtr->addAsset(bitmap);
