@@ -6,10 +6,9 @@ find_package(GTest CONFIG REQUIRED)
 
 
 set(TestSource  
-      main.cc
-        psdparser_test.cc
-        id_allocation_test.cc
-        tree_manager_test.cc
+    main.cc
+    psdparser_test.cc
+    tree_manager_test.cc
 )
 add_executable(Test ${TestSource})
 target_link_libraries(Test PUBLIC GTest::gtest GTest::gtest_main WaifuStudio)

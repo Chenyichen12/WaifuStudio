@@ -4,6 +4,8 @@
 
 #include "include/psdparser.h"
 
+#include <qcolor.h>
+
 #include <stack>
 
 #include "LayeredFile/LayeredFile.h"
@@ -15,25 +17,10 @@ namespace Parser {
 
 ProjectModel::LayerBitmap* createBitmap(const LayerRecord& info,
                                         ChannelImageData& data) {
-  int a = -1;
-  int r = -1;
-  int g = -1;
-  int b = -1;
-  for (int i = 0; i < info.m_ChannelInformation.size(); ++i) {
-    auto channel = info.m_ChannelInformation[i].m_ChannelID.id;
-    if (channel == Enum::ChannelID::Alpha) {
-      a = i;
-    }
-    if (channel == Enum::ChannelID::Red) {
-      r = i;
-    }
-    if (channel == Enum::ChannelID::Green) {
-      g = i;
-    }
-    if (channel == Enum::ChannelID::Blue) {
-      b = i;
-    }
-  }
+  const int a = data.getChannelIndex(Enum::ChannelID::Alpha);
+  const int r = data.getChannelIndex(Enum::ChannelID::Red);
+  const int g = data.getChannelIndex(Enum::ChannelID::Green);
+  const int b = data.getChannelIndex(Enum::ChannelID::Blue);
 
   const auto& aVec = data.extractImageData<bpp8_t>(a);
   const auto& rVec = data.extractImageData<bpp8_t>(r);
@@ -42,14 +29,14 @@ ProjectModel::LayerBitmap* createBitmap(const LayerRecord& info,
 
   auto* imagePtr = new unsigned char[aVec.size() * 4];
   for (int i = 0; i < aVec.size(); ++i) {
-    imagePtr[i * 4] = aVec[i];
-    imagePtr[i * 4 + 1] = rVec[i];
-    imagePtr[i * 4 + 2] = gVec[i];
-    imagePtr[i * 4 + 3] = bVec[i];
+    imagePtr[i * 4] = rVec[i];
+    imagePtr[i * 4 + 1] = gVec[i];
+    imagePtr[i * 4 + 2] = bVec[i];
+    imagePtr[i * 4 + 3] = aVec[i];
   }
-  int id = IdAllocation::getInstance().allocate();
+  const int id = IdAllocation::getInstance().allocate();
 
-  auto bitmap = new ProjectModel::LayerBitmap(id);
+  const auto bitmap = new ProjectModel::LayerBitmap(id);
 
   bitmap->top = info.m_Top;
   bitmap->left = info.m_Left;
@@ -60,15 +47,12 @@ ProjectModel::LayerBitmap* createBitmap(const LayerRecord& info,
   return bitmap;
 }
 
-struct PsdParseCallBack : public ProgressCallback {
-  void increment() noexcept override { ProgressCallback::increment(); }
-};
 PsdParser::PsdParser(const QString& path) { this->path = path; }
 
 void PsdParser::Parse() {
   File f = File(path.toStdString());
   auto psFile = std::make_unique<PhotoshopFile>();
-  auto callback = PsdParseCallBack();
+  auto callback = ProgressCallback();
   psFile->read(f, callback);
   auto&& header = psFile->m_Header;
   parseHeight = (int)header.m_Height;
@@ -134,4 +118,5 @@ void PsdParser::Parse() {
   this->_psTree = std::move(psTreeManager);
 }
 
+PsdParser::~PsdParser() = default;
 }  // namespace Parser

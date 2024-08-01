@@ -23,6 +23,7 @@ class PsdParser : public QObject {
  public:
   explicit PsdParser(const QString& path);
   void Parse();
+  ~PsdParser() override;
 
   inline int height() const { return parseHeight; }
   inline int width() const { return parseWidth; }
