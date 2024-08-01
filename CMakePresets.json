@@ -29,7 +29,10 @@
       "name": "linux",
       "inherits": [
         "base"
-      ]
+      ],
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS_DEBUG": "-O0"
+      }
     }
   ]
 }

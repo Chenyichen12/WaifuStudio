@@ -15,15 +15,30 @@ namespace Parser {
 
 ProjectModel::LayerBitmap* createBitmap(const LayerRecord& info,
                                         ChannelImageData& data) {
-  //TODO: wrong index
-  const auto& aVec = data.extractImageData<bpp8_t>(
-      data.getChannelIndex(Enum::ChannelID::Alpha));
-  const auto& rVec =
-      data.extractImageData<bpp8_t>(data.getChannelIndex(Enum::ChannelID::Red));
-  const auto& gVec = data.extractImageData<bpp8_t>(
-      data.getChannelIndex(Enum::ChannelID::Green));
-  const auto& bVec = data.extractImageData<bpp8_t>(
-      data.getChannelIndex(Enum::ChannelID::Blue));
+  int a = -1;
+  int r = -1;
+  int g = -1;
+  int b = -1;
+  for (int i = 0; i < info.m_ChannelInformation.size(); ++i) {
+    auto channel = info.m_ChannelInformation[i].m_ChannelID.id;
+    if (channel == Enum::ChannelID::Alpha) {
+      a = i;
+    }
+    if (channel == Enum::ChannelID::Red) {
+      r = i;
+    }
+    if (channel == Enum::ChannelID::Green) {
+      g = i;
+    }
+    if (channel == Enum::ChannelID::Blue) {
+      b = i;
+    }
+  }
+
+  const auto& aVec = data.extractImageData<bpp8_t>(a);
+  const auto& rVec = data.extractImageData<bpp8_t>(r);
+  const auto& gVec = data.extractImageData<bpp8_t>(g);
+  const auto& bVec = data.extractImageData<bpp8_t>(b);
 
   auto* imagePtr = new unsigned char[aVec.size() * 4];
   for (int i = 0; i < aVec.size(); ++i) {
