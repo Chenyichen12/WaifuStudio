@@ -3,10 +3,9 @@
 //
 #include "model/project.h"
 
-#include "model/layer_bitmap.h"
-#include "model/layer_model.h"
+
 namespace ProjectModel {
-Project* ProjectBuilder::build() {
+Project* ProjectBuilder::build() const {
   if (this->manager == nullptr || this->model == nullptr) {
     return nullptr;
   }
@@ -24,3 +23,4 @@ void ProjectBuilder::setBitmapManager(BitmapManager* m) { this->manager = m; }
 void ProjectBuilder::setLayerModel(LayerModel* m) { this->model = m; }
 
 }  // namespace ProjectModel
+

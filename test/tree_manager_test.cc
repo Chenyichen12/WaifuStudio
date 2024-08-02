@@ -3,58 +3,54 @@
 //
 #include <gtest/gtest.h>
 #include <model/tree_manager.h>
+#include "model/layer.h"
+#include "model/id_allocation.h"
 
 using namespace ProjectModel;
 class TextLayer : public Layer {
  public:
   explicit TextLayer(const QString &name, bool isVisible = true)
-      : Layer(name, isVisible) {}
+      : Layer(IdAllocation::getInstance().allocate()) {
+    this->setText(name);
+    this->setVisible(isVisible);
+  }
 
- public:
-  bool isContainer() override { return true; }
+  int type() const override { return UserType + 100; }
 };
 
 TEST(TreeManager, TestStruct) {
-  auto m = TreeManager();
-  auto n1 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t1")));
-  auto n2 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t2")));
-  auto n3 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t3")));
-  auto n4 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t4")));
-  auto n5 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t5")));
-  auto n6 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t6")));
-  auto n7 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t7")));
+  auto m = TreeItemModel();
 
-  n1->getChildren().push_back(n2);
-  n1->getChildren().push_back(n3);
-  n2->setParent(n1);
-  n3->setParent(n1);
+  auto n1 = new TextLayer("t1");
+  auto n2 = new TextLayer("t2");
+  auto n3 = new TextLayer("t3");
+  auto n4 = new TextLayer("t4");
+  auto n5 = new TextLayer("t5");
+  auto n6 = new TextLayer("t6");
+  auto n7 = new TextLayer("t7");
+  n1->appendRow(n2);
+  n1->appendRow(n3);
 
-  n2->getChildren().push_back(n4);
-  n4->setParent(n2);
+  n2->appendRow(n4);
 
-  n4->getChildren().push_back(n5);
-  n5->setParent(n4);
+  n4->appendRow(n5);
 
-  n3->getChildren().push_back(n6);
-  n3->getChildren().push_back(n7);
+  n3->appendRow(n6);
+  n3->appendRow(n7);
 
-  n6->setParent(n3);
-  n7->setParent(n3);
-
-  m.getRoot()->getChildren().push_back(n1);
-  n1->setParent(m.getRoot());
+  m.appendRow(n1);
 
   auto map =
       std::array<std::string, 7>{"t1", "t2", "t4", "t5", "t3", "t6", "t7"};
 
   auto parentMap =
-      std::array<TreeNode<Layer> *, 7>{m.getRoot(), n1, n2, n4, n1, n3, n3};
+      std::array<QStandardItem *, 7>{nullptr, n1, n2, n4, n1, n3, n3};
   int count = 0;
-  auto asset = [&](const TreeNode<Layer> *p) {
-    ASSERT_EQ(parentMap[count], p->getParent());
-    ASSERT_EQ(map[count], p->getData()->getName().toStdString());
+  auto asset = [&](const QStandardItem *p) {
+    ASSERT_EQ(parentMap[count], p->parent());
+    ASSERT_EQ(map[count], p->text().toStdString());
   };
-  m.forEach([&](const TreeNode<Layer> *f) {
+  m.forEach([&](const QStandardItem *f) {
     asset(f);
     count++;
     return true;
@@ -62,35 +58,32 @@ TEST(TreeManager, TestStruct) {
 }
 
 TEST(TreeManager, TestFind) {
-  auto m = TreeManager();
-  auto n1 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t1")));
-  auto n2 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t2")));
-  auto n3 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t3")));
-  auto n4 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t4")));
-  auto n5 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t5")));
-  auto n6 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t6")));
-  auto n7 = new TreeNode<Layer>(std::shared_ptr<Layer>(new TextLayer("t7")));
+  auto m = TreeItemModel();
+  auto n1 = new TextLayer("t1");
+  auto n2 = new TextLayer("t2");
+  auto n3 = new TextLayer("t3");
+  auto n4 = new TextLayer("t4");
+  auto n5 = new TextLayer("t5");
+  auto n6 = new TextLayer("t6");
+  auto n7 = new TextLayer("t7");
 
-  n1->getChildren().push_back(n2);
-  n1->getChildren().push_back(n3);
-  n2->setParent(n1);
-  n3->setParent(n1);
+  n1->appendRow(n2);
+  n1->appendRow(n3);
 
-  n2->getChildren().push_back(n4);
-  n4->setParent(n2);
+  n2->appendRow(n4);
 
-  n4->getChildren().push_back(n5);
-  n5->setParent(n4);
+  n4->appendRow(n5);
 
-  n3->getChildren().push_back(n6);
-  n3->getChildren().push_back(n7);
+  n3->appendRow(n6);
+  n3->appendRow(n7);
 
-  n6->setParent(n3);
-  n7->setParent(n3);
+  m.appendRow(n1);
+  auto map =
+      std::array<std::string, 7>{"t1", "t2", "t4", "t5", "t3", "t6", "t7"};
 
-  m.getRoot()->getChildren().push_back(n1);
-  n1->setParent(m.getRoot());
+  auto parentMap =
+      std::array<QStandardItem *, 7>{nullptr, n1, n2, n4, n1, n3, n3};
 
-  auto &&node = m.findNode(n5->getData()->getId());
+  auto &&node = m.findNode(n5->getId());
   ASSERT_EQ(node, n5);
 }

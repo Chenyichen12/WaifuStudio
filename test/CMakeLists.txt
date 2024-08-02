@@ -16,6 +16,14 @@ target_link_libraries(Test PUBLIC GTest::gtest GTest::gtest_main WaifuStudio)
 
 target_include_directories(Test PUBLIC ../src/include)
 
+
+add_executable(UiTest
+uitest_main.cc
+)
+
+target_link_libraries(UiTest PUBLIC WaifuStudio)
+
+target_include_directories(UiTest PUBLIC ../src/include)
 include(GoogleTest)
 
 gtest_discover_tests(Test)

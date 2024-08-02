@@ -15,8 +15,8 @@ class PsdParser : public QObject {
   QString path;
   int parseHeight = -1;
   int parseWidth = -1;
-  std::unique_ptr<ProjectModel::TreeManager> _psTree{nullptr};
-  std::unique_ptr<ProjectModel::TreeManager> _controllerTree{nullptr};
+  std::unique_ptr<ProjectModel::TreeItemModel> _psTree{nullptr};
+  std::unique_ptr<ProjectModel::TreeItemModel> _controllerTree{nullptr};
   std::unique_ptr<ProjectModel::BitmapManager> _bitmapManager{nullptr};
 
  public:
@@ -26,11 +26,11 @@ class PsdParser : public QObject {
 
   inline int height() const { return parseHeight; }
   inline int width() const { return parseWidth; }
-  inline ProjectModel::TreeManager* getPsTree() { return _psTree.release(); }
-  inline ProjectModel::TreeManager* getControllerTree() {
+  inline ProjectModel::TreeItemModel* extractPsTree() { return _psTree.release(); }
+  inline ProjectModel::TreeItemModel* extractControllerTree() {
     return _controllerTree.release();
   }
-  inline ProjectModel::BitmapManager* getBitmapManager() {
+  inline ProjectModel::BitmapManager* extractBitmapManager() {
     return _bitmapManager.release();
   }
 };

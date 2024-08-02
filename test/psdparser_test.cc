@@ -3,7 +3,6 @@
 //
 #include "psdparser.h"
 
-#include <QApplication>
 #include <QLabel>
 #include <QHBoxLayout>
 #include "filesystem"
@@ -28,7 +27,7 @@ TEST(psdparser, testparse) {
 //   auto resString = QString::fromStdString(resPath.string());
 //   auto p = new Parser::PsdParser(resString);
 //   p->Parse();
-//   auto m = p->getControllerTree();
+//   auto m = p->extractControllerTree();
 //
 //   auto w = new QWidget();
 //   auto layout = new QHBoxLayout();

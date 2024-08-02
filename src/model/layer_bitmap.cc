@@ -7,16 +7,16 @@ namespace ProjectModel {
 BitmapManager::BitmapManager(QObject *parent) : QObject(parent) {
   this->assetsMap = {};
 }
-void BitmapManager::addAsset(LayerBitmap *map) {
+void BitmapManager::addAsset(BitmapAsset *map) {
   this->assetsMap.insert({map->ID(), map});
 }
-void BitmapManager::deleteAsset(LayerBitmap *map) {
+void BitmapManager::deleteAsset(BitmapAsset *map) {
   if (this->assetsMap.contains(map->ID())) {
     this->assetsMap.erase(map->ID());
     delete map;
   }
 }
-const LayerBitmap *BitmapManager::getBitmap(int id) const {
+const BitmapAsset *BitmapManager::getBitmap(int id) const {
   if (this->assetsMap.contains(id)) {
     return this->assetsMap.at(id);
   }

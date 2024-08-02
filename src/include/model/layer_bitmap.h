@@ -6,13 +6,13 @@
 #include "QObject"
 
 namespace ProjectModel{
-struct LayerBitmap {
+struct BitmapAsset {
  private:
   int id;
 
  public:
-  LayerBitmap(const LayerBitmap&) = delete;
-  explicit LayerBitmap(int id) { this->id = id; };
+  BitmapAsset(const BitmapAsset&) = delete;
+  explicit BitmapAsset(int id) { this->id = id; };
   inline int ID() const { return id; }
   int top = 0;
   int left = 0;
@@ -20,20 +20,20 @@ struct LayerBitmap {
   unsigned int height = 0;
   unsigned char* rawBytes = nullptr;
 
-  ~LayerBitmap() { delete[] rawBytes; }
+  ~BitmapAsset() { delete[] rawBytes; }
 };
 
 class BitmapManager : public QObject {
  protected:
-  std::unordered_map<int, LayerBitmap*> assetsMap;
+  std::unordered_map<int, BitmapAsset*> assetsMap;
 
  public:
   explicit BitmapManager(QObject* parent = nullptr);
   BitmapManager(const BitmapManager&) = delete;
-  ~BitmapManager();
-  void addAsset(LayerBitmap* map);
-  void deleteAsset(LayerBitmap* map);
-  const LayerBitmap* getBitmap(int id) const;
+  ~BitmapManager() override;
+  void addAsset(BitmapAsset* map);
+  void deleteAsset(BitmapAsset* map);
+  const BitmapAsset* getBitmap(int id) const;
 };
 }
 

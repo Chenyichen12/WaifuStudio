@@ -3,19 +3,16 @@
 //
 
 #include "include/psdparser.h"
-
-#include <qcolor.h>
-
 #include <stack>
 
 #include "LayeredFile/LayeredFile.h"
 #include "model/id_allocation.h"
-#include "model/layer_model.h"
+#include "model/layer.h"
 #include "model/tree_manager.h"
 using namespace PhotoshopAPI;
 namespace Parser {
 
-ProjectModel::LayerBitmap* createBitmap(const LayerRecord& info,
+ProjectModel::BitmapAsset* createBitmap(const LayerRecord& info,
                                         ChannelImageData& data) {
   const int a = data.getChannelIndex(Enum::ChannelID::Alpha);
   const int r = data.getChannelIndex(Enum::ChannelID::Red);
@@ -36,7 +33,7 @@ ProjectModel::LayerBitmap* createBitmap(const LayerRecord& info,
   }
   const int id = IdAllocation::getInstance().allocate();
 
-  const auto bitmap = new ProjectModel::LayerBitmap(id);
+  const auto bitmap = new ProjectModel::BitmapAsset(id);
 
   bitmap->top = info.m_Top;
   bitmap->left = info.m_Left;
@@ -47,8 +44,61 @@ ProjectModel::LayerBitmap* createBitmap(const LayerRecord& info,
   return bitmap;
 }
 
+/**
+ * bitmap builder to build a BitmapLayer
+ */
+class BitmapLayerBuilder {
+ private:
+  std::optional<QIcon> icon;
+  QString name;
+  bool isVisible = true;
+  int id = -1;
+
+  int assetId = -1;
+
+ public:
+  std::unique_ptr<ProjectModel::BitmapLayer> build() {
+    if (icon == std::nullopt) {
+      icon = QIcon(":/icon/question.png");
+    }
+    if (name == "") {
+      name = "no name";
+    }
+
+    auto bitmap = std::make_unique<ProjectModel::BitmapLayer>(id, assetId);
+    bitmap->setText(name);
+    bitmap->setVisible(isVisible);
+
+    return bitmap;
+  }
+
+  /**
+   * use to set icon
+   * @param bitmap raw byte of image information
+   */
+  void setIcon(const ProjectModel::BitmapAsset* bitmap) {
+    auto image = QImage(bitmap->rawBytes, bitmap->height, bitmap->width,
+                        QImage::Format_RGBA8888);
+    image = image.scaledToHeight(20);
+    auto pixmap = QPixmap::fromImage(image);
+    this->icon = QIcon(pixmap);
+    this->assetId = bitmap->ID();
+  };
+
+  void setText(const QString& name) { this->name = name; }
+
+  void setText(std::string name) { this->name = QString::fromStdString(name); }
+
+  void setVisible(bool vis) { this->isVisible = vis; }
+
+  void allocationId() { this->id = IdAllocation::getInstance().allocate(); }
+};
+
 PsdParser::PsdParser(const QString& path) { this->path = path; }
 
+/**
+ * parse the psd file to project
+ */
 void PsdParser::Parse() {
   File f = File(path.toStdString());
   auto psFile = std::make_unique<PhotoshopFile>();
@@ -60,12 +110,11 @@ void PsdParser::Parse() {
 
   auto bitmapManagerPtr = std::make_unique<ProjectModel::BitmapManager>();
 
-  typedef ProjectModel::TreeNode<ProjectModel::Layer> nodeType;
-  auto parseStack = std::stack<nodeType*>();
-  auto psTreeManager = std::make_unique<ProjectModel::TreeManager>();
-  auto controllerTreeManger = std::make_unique<ProjectModel::TreeManager>();
+  auto parseStack = std::stack<QStandardItem*>();
+  auto psTreeManager = std::make_unique<ProjectModel::TreeItemModel>();
+  auto controllerTreeManger = std::make_unique<ProjectModel::TreeItemModel>();
 
-  parseStack.push(psTreeManager->getRoot());
+  parseStack.push(psTreeManager->invisibleRootItem());
 
   try {
     for (int i = psFile->m_LayerMaskInfo.m_LayerInfo.m_LayerRecords.size() - 1;
@@ -81,33 +130,28 @@ void PsdParser::Parse() {
           parseStack.pop();
           continue;
         }
-        auto layerInfo =
-            std::shared_ptr<ProjectModel::Layer>(new ProjectModel::PsGroupLayer(
-                QString::fromStdString(record.m_LayerName.getString())));
+        int id = IdAllocation::getInstance().allocate();
+        auto item = new ProjectModel::PsGroupLayer(id);
 
-        auto* node = new nodeType(layerInfo);
-        node->setParent(parseStack.top());
-        parseStack.top()->getChildren().push_back(node);
-        parseStack.push(node);
+        item->setIcon(QIcon(":/icon/folder.png"));
+        item->setText(QString::fromStdString(record.m_LayerName.getString()));
+        item->setVisible(!record.m_BitFlags.m_isHidden);
 
-       
+        parseStack.top()->appendRow(item);
+        parseStack.push(item);
+
       } else {
         auto* bitmap = createBitmap(record, image);
         bitmapManagerPtr->addAsset(bitmap);
 
-        auto layerInfo =
-            std::shared_ptr<ProjectModel::Layer>(new ProjectModel::BitmapLayer(
-                QString::fromStdString(record.m_LayerName.getString()),
-                *bitmap));
+        auto builder = BitmapLayerBuilder();
+        builder.setIcon(bitmap);
+        builder.setText(record.m_LayerName.getString());
+        builder.setVisible(!record.m_BitFlags.m_isHidden);
+        builder.allocationId();
 
-        auto* node = new nodeType(layerInfo);
-        parseStack.top()->getChildren().push_back(node);
-        node->setParent(parseStack.top());
-
-        auto controllerNode = new nodeType(layerInfo);
-        controllerTreeManger->getRoot()->getChildren().push_back(
-            controllerNode);
-        controllerNode->setParent(controllerTreeManger->getRoot());
+        parseStack.top()->appendRow(builder.build().release());
+        controllerTreeManger->appendRow(builder.build().release());
       }
     }
 
@@ -122,3 +166,4 @@ void PsdParser::Parse() {
 
 PsdParser::~PsdParser() = default;
 }  // namespace Parser
+

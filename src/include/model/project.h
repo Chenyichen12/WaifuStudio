@@ -3,35 +3,33 @@
 //
 #pragma once
 #include "QObject"
+#include "layer_bitmap.h"
+#include "layer_model.h"
 namespace ProjectModel{
-class LayerModel;
-class BitmapManager;
 
-class ProjectBuilder;
-class Project : public QObject {
-  Q_OBJECT
-  friend ProjectBuilder;
-
- private:
-  BitmapManager* bitmapManager = nullptr;
-  LayerModel* layerModel = nullptr;
-  Project() = default;
-
- public:
-  BitmapManager* getBitmapManager() const { return bitmapManager; }
-  LayerModel* getLayerModel() const { return layerModel; }
-};
-
+class Project;
 class ProjectBuilder {
  private:
   BitmapManager* manager = nullptr;
   LayerModel* model = nullptr;
 
  public:
-  Project* build();
+  Project* build() const;
   void setBitmapManager(BitmapManager*);
   void setLayerModel(LayerModel*);
   ProjectBuilder() = default;
 };
+class Project : public QObject {
+  friend ProjectBuilder;
+ private:
+  Project() = default;
+  BitmapManager* bitmapManager = nullptr;
+  LayerModel* layerModel = nullptr;
+ public:
+  BitmapManager* getBitmapManager() const { return bitmapManager; }
+  LayerModel* getLayerModel() const { return layerModel; }
+};
+
+
 }
 

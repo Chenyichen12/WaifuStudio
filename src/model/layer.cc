@@ -3,16 +3,29 @@
 //
 #include "model/layer.h"
 
-#include "model/id_allocation.h"
 namespace ProjectModel {
-Layer::Layer(const QString &name, bool isVisible) {
-  this->name = name;
-  this->id = IdAllocation::getInstance().allocate();
-  this->isvisible = isVisible;
-}
-const QString &Layer::getName() const { return name; }
-int Layer::getId() const { return id; }
-bool Layer::isVisible() const { return isvisible; }
-Layer::~Layer() { IdAllocation::getInstance().release(this->id); }
 
+Layer::Layer(int id) {
+  QStandardItem::setData(id, UserIdRole);
+  QStandardItem::setData(true, VisibleRole);
+}
+
+void Layer::setData(const QVariant& value, int role) {
+  if (role == UserIdRole) {
+    return;
+  }
+  QStandardItem::setData(value, role);
+}
+
+int Layer::getId() const { return this->data(UserIdRole).toInt(); }
+
+bool Layer::getVisible() const { return this->data(VisibleRole).toBool(); }
+
+void Layer::setVisible(bool vis) { this->setData(vis, VisibleRole); }
+
+BitmapLayer::BitmapLayer(int id, int bitmapId) : Layer(id) {
+  this->bitmapId = bitmapId;
+}
+
+PsGroupLayer::PsGroupLayer(int id) : Layer(id) {}
 }  // namespace ProjectModel

@@ -14,16 +14,16 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow {
   Q_OBJECT
 
-private:
+ private:
   ProjectModel::Project *currentProject;
 
-public:
+  void setUpTreeModel(const ProjectModel::LayerModel* m) const;
+ public:
   explicit MainWindow(QWidget *parent = nullptr);
   ~MainWindow() override;
 
-  void setProject(ProjectModel::Project*);
+  void setProject(const ProjectModel::Project *) const;
 
  private:
   Ui::MainWindow *ui;
 };
-

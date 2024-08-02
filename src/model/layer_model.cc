@@ -3,22 +3,16 @@
 #include "model/tree_manager.h"
 namespace ProjectModel {
 
-LayerModel::LayerModel(TreeManager *psdTreeManager,
-                       TreeManager *controllerTreeManger, QObject *parent)
+LayerModel::LayerModel(TreeItemModel *psdTreeManager,
+                       TreeItemModel *controllerTreeManger, QObject *parent)
     : QObject(parent) {
   this->controllerTreeManger = controllerTreeManger;
   this->psdTreeManager = psdTreeManager;
   psdTreeManager->setParent(this);
   controllerTreeManger->setParent(this);
 }
-TreeManager *LayerModel::getPsdTreeManager() const { return psdTreeManager; }
-TreeManager *LayerModel::getControllerTreeManger() const {
+TreeItemModel *LayerModel::getPsdTreeManager() const { return psdTreeManager; }
+TreeItemModel *LayerModel::getControllerTreeManger() const {
   return controllerTreeManger;
 }
-bool BitmapLayer::isContainer() { return false; }
-
-BitmapLayer::BitmapLayer(const QString &name, const LayerBitmap &bitmap,
-                         bool isVisible)
-    : Layer(name, isVisible), bitmap(bitmap) {}
-
 }  // namespace ProjectModel
