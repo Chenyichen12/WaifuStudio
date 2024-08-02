@@ -4,18 +4,19 @@ set(SOURCE
         mainwindow.cc
         psdparser.cc
         viewtree_model.cc
-         model/layer.cc
-         model/id_allocation.cc
-         model/tree_manager.cc
-         model/layer_model.cc
-         model/layer_bitmap.cc
+        model/layer.cc
+        model/id_allocation.cc
+        model/tree_manager.cc
+        model/layer_model.cc
+        model/layer_bitmap.cc
         model/project.cc
+
+        views/layertreeview.cc
 )
 
 file(GLOB HEADER include/*.h)
 
 file(GLOB UI ui/*.ui)
-
 
 add_library(WaifuStudio STATIC ${SOURCE} ${HEADER} ${UI} ../res/icon.qrc)
 
@@ -29,6 +30,9 @@ target_link_libraries(WaifuStudio
         Qt6::Core Qt6::Widgets Qt6::Gui
         PhotoshopAPI
 )
-add_executable(WaifuStudioApp app/main.cc)
+
+
+qt_add_resources(QRC ../res/icon.qrc)
+add_executable(WaifuStudioApp app/main.cc ${QRC})
 target_include_directories(WaifuStudioApp PRIVATE include)
 target_link_libraries(WaifuStudioApp PRIVATE WaifuStudio)

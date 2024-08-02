@@ -64,7 +64,7 @@
         </attribute>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
-          <widget class="QTreeView" name="psTree"/>
+          <widget class="views::LayerTreeView" name="psTree"/>
          </item>
         </layout>
        </widget>
@@ -118,6 +118,13 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>views::LayerTreeView</class>
+   <extends>QTreeView</extends>
+   <header>views/layertreeview.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

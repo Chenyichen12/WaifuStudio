@@ -17,8 +17,10 @@ target_link_libraries(Test PUBLIC GTest::gtest GTest::gtest_main WaifuStudio)
 target_include_directories(Test PUBLIC ../src/include)
 
 
+qt_add_resources(QRC ../res/icon.qrc)
 add_executable(UiTest
 uitest_main.cc
+${QRC}
 )
 
 target_link_libraries(UiTest PUBLIC WaifuStudio)

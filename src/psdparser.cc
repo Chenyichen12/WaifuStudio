@@ -68,7 +68,7 @@ class BitmapLayerBuilder {
     auto bitmap = std::make_unique<ProjectModel::BitmapLayer>(id, assetId);
     bitmap->setText(name);
     bitmap->setVisible(isVisible);
-
+    bitmap->setIcon(icon.value());
     return bitmap;
   }
 
@@ -77,7 +77,7 @@ class BitmapLayerBuilder {
    * @param bitmap raw byte of image information
    */
   void setIcon(const ProjectModel::BitmapAsset* bitmap) {
-    auto image = QImage(bitmap->rawBytes, bitmap->height, bitmap->width,
+    auto image = QImage(bitmap->rawBytes, bitmap->width, bitmap->height,
                         QImage::Format_RGBA8888);
     image = image.scaledToHeight(20);
     auto pixmap = QPixmap::fromImage(image);

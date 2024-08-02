@@ -10,7 +10,6 @@
 #include "model/tree_manager.h"
 namespace Parser {
 class PsdParser : public QObject {
-  Q_OBJECT
  private:
   QString path;
   int parseHeight = -1;
