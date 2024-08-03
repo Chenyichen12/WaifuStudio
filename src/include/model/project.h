@@ -3,11 +3,11 @@
 //
 #pragma once
 #include "QObject"
-#include "layer_bitmap.h"
-#include "layer_model.h"
 namespace ProjectModel{
-
+class LayerModel;
+class BitmapManager;
 class Project;
+
 class ProjectBuilder {
  private:
   BitmapManager* manager = nullptr;

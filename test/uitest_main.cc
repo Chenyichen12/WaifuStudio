@@ -4,6 +4,8 @@
 #include <QApplication>
 #include "mainwindow.h"
 #include "model/layer_model.h"
+#include "model/project.h"
+
 int main(int argc, char** argv) {
   QApplication a(argc, argv);
   std::string s = __FILE__;

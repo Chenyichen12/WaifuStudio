@@ -5,7 +5,7 @@
 #include "model/tree_manager.h"
 #include "model/layer_model.h"
 #include "ui/ui_mainwindow.h"
-
+#include "model/project.h"
 void MainWindow::setUpTreeModel(const ProjectModel::LayerModel* m) const {
   ui->psTree->setModel(m->getPsdTreeManager());
   ui->controllerTree->setModel(m->getControllerTreeManger());

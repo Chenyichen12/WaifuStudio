@@ -4,7 +4,11 @@
 #pragma once
 #include <QMainWindow>
 
-#include "model/project.h"
+namespace ProjectModel {
+class LayerModel;
+class Project;
+}
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
