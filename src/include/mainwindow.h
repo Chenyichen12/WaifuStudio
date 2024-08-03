@@ -21,12 +21,13 @@ class MainWindow : public QMainWindow {
  private:
   ProjectModel::Project *currentProject;
 
-  void setUpTreeModel(const ProjectModel::LayerModel* m) const;
+  void setUpTreeModel(const ProjectModel::LayerModel* m);
  public:
   explicit MainWindow(QWidget *parent = nullptr);
   ~MainWindow() override;
 
-  void setProject(const ProjectModel::Project *) const;
+  void setProject(const ProjectModel::Project *);
+  void setUpProjectFromPsd(const QString &path);
 
  private:
   Ui::MainWindow *ui;

@@ -1,6 +1,6 @@
-#include "model/layer_model.h"
+#include "layer_model.h"
 
-#include "model/tree_manager.h"
+#include "tree_manager.h"
 namespace ProjectModel {
 
 LayerModel::LayerModel(TreeItemModel *psdTreeManager,

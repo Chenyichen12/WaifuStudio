@@ -112,7 +112,7 @@
      <x>0</x>
      <y>0</y>
      <width>1019</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
@@ -122,7 +122,7 @@
   <customwidget>
    <class>views::LayerTreeView</class>
    <extends>QTreeView</extends>
-   <header>layertreeview.h</header>
+   <header>views/layertreeview.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

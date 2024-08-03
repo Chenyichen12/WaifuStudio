@@ -1,26 +1,18 @@
 project(WaifuStudio)
 
-set(SOURCE
-        mainwindow.cc
-        psdparser.cc
-        model/layer.cc
-        model/id_allocation.cc
-        model/tree_manager.cc
-        model/layer_model.cc
-        model/layer_bitmap.cc
-        model/project.cc
-        views/layertreeview.cc
-)
+file(GLOB ModelSource model/*.h model/*.cc)
+
+file(GLOB ViewSource views/*.h views/*.cc)
+
+set(SOURCE ${ModelSource} ${ViewSource} mainwindow.cc psdparser.cc)
 
 file(GLOB HEADER include/*.h)
 
 file(GLOB UI ui/*.ui)
 
-add_library(WaifuStudio STATIC ${SOURCE} ${HEADER} ${UI} ../res/icon.qrc)
+add_library(WaifuStudio STATIC ${SOURCE} ${HEADER} ${UI})
 
-target_include_directories(WaifuStudio PRIVATE include)
-
-target_include_directories(WaifuStudio PRIVATE ${CMAKE_BINARY_DIR})
+target_include_directories(WaifuStudio PUBLIC include)
 
 qt_finalize_target(WaifuStudio)
 

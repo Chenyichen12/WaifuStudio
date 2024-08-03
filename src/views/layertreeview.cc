@@ -3,7 +3,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-#include "model/layer.h"
+#include "../model/layer.h"
 void views::ItemStyleDelegate::paint(QPainter* painter,
                                      const QStyleOptionViewItem& option,
                                      const QModelIndex& index) const {

@@ -1,9 +1,9 @@
 //
 // Created by chenyichen on 7/31/24.
 //
-#include "model/project.h"
-#include "model/layer_model.h"
-#include "model/layer_bitmap.h"
+#include "project.h"
+#include "layer_model.h"
+#include "layer_bitmap.h"
 
 
 namespace ProjectModel {

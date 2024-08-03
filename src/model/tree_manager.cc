@@ -2,9 +2,9 @@
 // Created by chen_yichen on 2024/7/30.
 //
 
-#include "model/tree_manager.h"
+#include "tree_manager.h"
 
-#include "model/layer.h"
+#include "layer.h"
 
 namespace ProjectModel {
 

@@ -1,7 +1,7 @@
 //
 // Created by chen_yichen on 2024/7/30.
 //
-#include "model/id_allocation.h"
+#include "id_allocation.h"
 #include <algorithm>
 IdAllocation::IdAllocation()= default;
 IdAllocation &IdAllocation::getInstance() {

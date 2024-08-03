@@ -2,7 +2,7 @@
 // Created by chen_yichen on 2024/7/30.
 //
 
-#include "include/psdparser.h"
+#include "psdparser.h"
 #include <stack>
 
 #include "LayeredFile/LayeredFile.h"
