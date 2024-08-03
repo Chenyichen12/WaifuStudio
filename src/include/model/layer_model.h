@@ -14,5 +14,7 @@ class LayerModel : public QObject {
 
   TreeItemModel* getPsdTreeManager() const;
   TreeItemModel* getControllerTreeManger() const;
+
+  
 };
 }  // namespace ProjectModel

@@ -20,6 +20,8 @@ class TreeItemModel : public QStandardItemModel {
   QStandardItem *findNode(const int &id) const;
 
   static std::vector<QStandardItem *> itemChild(const QStandardItem* item);
+
+  Qt::ItemFlags flags(const QModelIndex& index) const override;
   ~TreeItemModel() override;
 };
 
