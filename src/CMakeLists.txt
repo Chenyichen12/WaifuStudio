@@ -3,14 +3,12 @@ project(WaifuStudio)
 set(SOURCE
         mainwindow.cc
         psdparser.cc
-        viewtree_model.cc
         model/layer.cc
         model/id_allocation.cc
         model/tree_manager.cc
         model/layer_model.cc
         model/layer_bitmap.cc
         model/project.cc
-
         views/layertreeview.cc
 )
 
