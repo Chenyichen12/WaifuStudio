@@ -4,6 +4,7 @@
 #include "mainwindow.h"
 
 #include "model/layer_model.h"
+#include "model/mainstagescene.h"
 #include "model/project.h"
 #include "psdparser.h"
 #include "ui/ui_mainwindow.h"
@@ -23,8 +24,13 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow() { delete ui; }
 
-void MainWindow::setProject(const ProjectModel::Project* p) {
+void MainWindow::setProject(ProjectModel::Project* p) {
+  if (this->currentProject != nullptr) {
+    this->currentProject->deleteLater();
+  }
+  this->currentProject = p;
   this->setUpTreeModel(p->getLayerModel());
+  this->setUpMainStage();
 }
 
 void MainWindow::setUpProjectFromPsd(const QString& path) {
@@ -37,4 +43,7 @@ void MainWindow::setUpProjectFromPsd(const QString& path) {
   auto project = builder.build();
   this->setProject(project);
   parser->deleteLater();
+}
+void MainWindow::setUpMainStage() {
+  ui->MainStageGraphicsView->setScene(currentProject->getScene());
 }

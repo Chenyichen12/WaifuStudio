@@ -9,6 +9,8 @@ find_package(Qt6 COMPONENTS
         Core
         Widgets
         Gui
+        OpenGLWidgets
+        OpenGL
         REQUIRED)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")

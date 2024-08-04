@@ -1,6 +1,6 @@
 project(WaifuStudio)
 
-file(GLOB ModelSource model/*.h model/*.cc)
+file(GLOB_RECURSE ModelSource model/*.h model/*.cc)
 
 file(GLOB ViewSource views/*.h views/*.cc)
 
@@ -20,6 +20,7 @@ qt_finalize_target(WaifuStudio)
 
 target_link_libraries(WaifuStudio
         Qt6::Core Qt6::Widgets Qt6::Gui
+        Qt6::OpenGLWidgets Qt6::OpenGL
         PhotoshopAPI
 )
 

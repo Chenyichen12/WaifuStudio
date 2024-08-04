@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1019</width>
-    <height>617</height>
+    <width>851</width>
+    <height>491</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -46,7 +46,7 @@
         <string notr="true"/>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="treeLayout2">
         <attribute name="title">
@@ -88,16 +88,10 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="mainStage" native="true">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
+      <widget class="views::MainGlGraphicsView" name="MainStageGraphicsView">
        <property name="minimumSize">
         <size>
-         <width>300</width>
+         <width>400</width>
          <height>0</height>
         </size>
        </property>
@@ -111,8 +105,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1019</width>
-     <height>21</height>
+     <width>851</width>
+     <height>19</height>
     </rect>
    </property>
   </widget>
@@ -123,6 +117,11 @@
    <class>views::LayerTreeView</class>
    <extends>QTreeView</extends>
    <header>views/layertreeview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>views::MainGlGraphicsView</class>
+   <extends>QGraphicsView</extends>
+   <header>views/mainglstage.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
