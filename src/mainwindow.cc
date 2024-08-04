@@ -4,7 +4,6 @@
 #include "mainwindow.h"
 
 #include "psdparser.h"
-#include "model/tree_manager.h"
 #include "model/layer_model.h"
 #include "ui/ui_mainwindow.h"
 #include "model/project.h"
@@ -34,5 +33,6 @@ void MainWindow::setUpProjectFromPsd(const QString& path) {
       parser->extractPsTree(), parser->extractControllerTree()));
   auto project = builder.build();
   this->setProject(project);
+  parser->deleteLater();
 }
 

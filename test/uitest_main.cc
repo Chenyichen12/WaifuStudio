@@ -12,5 +12,4 @@ int main(int argc, char** argv) {
   mainwindow->setUpProjectFromPsd(QString::fromStdString(resPath.string()));
   mainwindow->show();
   QApplication::exec();
-
 }

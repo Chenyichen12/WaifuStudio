@@ -3,6 +3,7 @@
 //
 
 #include "psdparser.h"
+
 #include <stack>
 
 #include "LayeredFile/LayeredFile.h"
@@ -100,7 +101,9 @@ PsdParser::PsdParser(const QString& path) { this->path = path; }
  * parse the psd file to project
  */
 void PsdParser::Parse() {
-  File f = File(path.toStdString());
+  auto utf8array = path.toUtf8().constData();
+  std::string s = utf8array;
+  File f = File(s);
   auto psFile = std::make_unique<PhotoshopFile>();
   auto callback = ProgressCallback();
   psFile->read(f, callback);
@@ -166,4 +169,3 @@ void PsdParser::Parse() {
 
 PsdParser::~PsdParser() = default;
 }  // namespace Parser
-
