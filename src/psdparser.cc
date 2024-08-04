@@ -84,11 +84,11 @@ class BitmapLayerBuilder {
     auto pixmap = QPixmap::fromImage(image);
     this->icon = QIcon(pixmap);
     this->assetId = bitmap->ID();
-  };
+  }
 
   void setText(const QString& name) { this->name = name; }
 
-  void setText(std::string name) { this->name = QString::fromStdString(name); }
+  void setText(const std::string& name) { this->name = QString::fromStdString(name); }
 
   void setVisible(bool vis) { this->isVisible = vis; }
 

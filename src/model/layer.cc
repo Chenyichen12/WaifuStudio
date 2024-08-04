@@ -25,7 +25,8 @@ void Layer::setVisible(bool vis) { this->setData(vis, VisibleRole); }
 
 BitmapLayer::BitmapLayer(int id, int bitmapId) : Layer(id) {
   this->bitmapId = bitmapId;
+  this->setDropEnabled(false);
 }
 
-PsGroupLayer::PsGroupLayer(int id) : Layer(id) {}
+PsGroupLayer::PsGroupLayer(int id) : Layer(id) { this->setDropEnabled(true); }
 }  // namespace ProjectModel

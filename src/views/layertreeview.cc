@@ -69,12 +69,14 @@ views::LayerTreeView::LayerTreeView(QWidget* parent) : QTreeView(parent) {
   this->setAcceptDrops(true);
   this->setDropIndicatorShown(true);
   this->setDefaultDropAction(Qt::MoveAction);
+  this->setEditTriggers(EditTrigger::NoEditTriggers);
+  this->setHeaderHidden(true);
 
   auto styleDelegate = new ItemStyleDelegate(this);
   this->setItemDelegate(styleDelegate);
 
   connect(styleDelegate, &ItemStyleDelegate::itemVisiblePressed, this,
-          &LayerTreeView::hanleItemVisiblePressed);
+          &LayerTreeView::handleItemVisiblePressed);
   connect(styleDelegate, &ItemStyleDelegate::itemVisibleMoved, this,
           &LayerTreeView::handleItemVisibleMoved);
 
@@ -93,11 +95,13 @@ void views::LayerTreeView::startDrag(Qt::DropActions supportedActions) {
   QTreeView::startDrag(supportedActions);
 }
 
-void views::LayerTreeView::hanleItemVisiblePressed(const QModelIndex& index) {
+
+void views::LayerTreeView::handleItemVisiblePressed(const QModelIndex& index) {
   this->inVisibleDrag = true;
   cacheVisibleChangedIndex.push_back(index);
-  this->model()->setData(index, !index.data(ProjectModel::VisibleRole).toBool(),
-                         ProjectModel::VisibleRole);
+
+  auto visible = index.data(ProjectModel::VisibleRole).toBool();
+  emit shouldSetVisible(index, !visible);
 }
 
 void views::LayerTreeView::handleItemVisibleMoved(const QModelIndex& index) {
@@ -107,7 +111,7 @@ void views::LayerTreeView::handleItemVisibleMoved(const QModelIndex& index) {
     return;
   }
 
-  this->model()->setData(index, !index.data(ProjectModel::VisibleRole).toBool(),
-                         ProjectModel::VisibleRole);
+  auto visible = index.data(ProjectModel::VisibleRole).toBool();
+  emit shouldSetVisible(index, !visible);
   cacheVisibleChangedIndex.push_back(index);
 }

@@ -10,7 +10,8 @@ namespace ProjectModel {
 
 // TreeItemModel::TreeItemModel(QObject *parent) : QStandardItemModel(parent) {}
 
-TreeItemModel::TreeItemModel(QObject *parent) : QStandardItemModel(parent) {}
+TreeItemModel::TreeItemModel(QObject *parent) : QStandardItemModel(parent) {
+}
 
 void TreeItemModel::forEach(const std::function<callBack> &c) const {
   TreeItemModel::forEach(this->invisibleRootItem(), c);
@@ -48,20 +49,7 @@ std::vector<QStandardItem *> TreeItemModel::itemChild(
 }
 
 Qt::ItemFlags TreeItemModel::flags(const QModelIndex& index) const {
-  if (!index.isValid()) {
-    return QStandardItemModel::flags(index);
-  }
-  auto itemCanDrop =
-      this->itemFromIndex(index)->type() == LayerTypes::PsGroupLayerType;
-  auto flags = QStandardItemModel::flags(index);
-
-  if (itemCanDrop) {
-    flags.setFlag(Qt::ItemIsDropEnabled, true);
-  } else {
-    flags.setFlag(Qt::ItemIsDropEnabled, false);
-  }
-
-  return flags;
+  return QStandardItemModel::flags(index);
 }
 
 TreeItemModel::~TreeItemModel() = default;

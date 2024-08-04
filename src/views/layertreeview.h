@@ -5,6 +5,7 @@
 // QT_BEGIN_NAMESPACE
 namespace views {
 class LayerTreeView : public QTreeView {
+  Q_OBJECT
  private:
   std::list<QModelIndex> cacheVisibleChangedIndex = {};
   bool inVisibleDrag = false;
@@ -15,10 +16,10 @@ class LayerTreeView : public QTreeView {
  protected:
   void mouseReleaseEvent(QMouseEvent* event) override;
   void startDrag(Qt::DropActions supportedActions) override;
-
-
+signals:
+  void shouldSetVisible(const QModelIndex& index, bool isVisible);
  protected:
-  void hanleItemVisiblePressed(const QModelIndex&);
+  void handleItemVisiblePressed(const QModelIndex&);
   void handleItemVisibleMoved(const QModelIndex&);
 };
 class ItemStyleDelegate : public QStyledItemDelegate {

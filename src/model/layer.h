@@ -14,10 +14,10 @@ enum LayerTypes {
 constexpr int UserIdRole = Qt::UserRole + 1;
 constexpr int VisibleRole = Qt::UserRole + 2;
 class Layer : public QStandardItem {
-
-protected:
+ protected:
   bool visible;
-public:
+
+ public:
   int type() const override = 0;
   Layer(int id);
   void setData(const QVariant& value, int role) override;
