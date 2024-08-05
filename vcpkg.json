@@ -1,6 +1,9 @@
 {
-  "dependencies" : [ {
-    "name" : "gtest",
-    "version>=" : "1.15.0"
-  } ]
+  "dependencies": [
+    {
+      "name": "gtest",
+      "version>=": "1.15.0"
+    },
+    "glm"
+  ]
 }

@@ -7,12 +7,20 @@
 #include <QGraphicsEllipseItem>
 
 #include "sprite.h"
-
 namespace ProjectModel {
-MainStageScene::MainStageScene(QObject *parent) : QGraphicsScene(parent) {
+MainStageScene::MainStageScene(int width, int height,
+                               QList<Sprite *> spriteList, QObject *parent)
+    : QGraphicsScene(parent) {
+  this->projectWidth = width;
+  this->projectHeight = height;
   this->spriteGroup = new QGraphicsItemGroup();
-  this->backgroundRect = new QGraphicsRectItem(QRectF(0,0,800,600));
-  this->sceneRect = new QGraphicsRectItem(QRectF(-1000,-1000,2000,2000));
+  auto backRect = QRectF(0, 0, width, height);
+  this->backgroundRect = new QGraphicsRectItem(backRect);
+  this->projectImageList = spriteList;
+
+  auto bound = backRect.marginsAdded(
+      QMarginsF(width / 2, height / 2, width / 2, height / 2));
+  this->sceneRect = new QGraphicsRectItem(bound);
 
   sceneRect->setBrush(QBrush(Qt::white));
   backgroundRect->setBrush(QBrush(Qt::green));
@@ -20,8 +28,16 @@ MainStageScene::MainStageScene(QObject *parent) : QGraphicsScene(parent) {
   this->addItem(sceneRect);
   this->addItem(spriteGroup);
   spriteGroup->addToGroup(backgroundRect);
-
-  auto s = new Sprite();
-  spriteGroup->addToGroup(s);
+  setUpSprite();
+}
+void MainStageScene::setUpSprite() {
+  for (const auto &item : this->projectImageList) {
+    this->spriteGroup->addToGroup(item);
+  }
+}
+void MainStageScene::setUpGL() {
+  for (const auto &item : this->projectImageList) {
+    item->upDateBuffer(projectWidth, projectHeight);
+  }
 }
 }  // namespace ProjectModel

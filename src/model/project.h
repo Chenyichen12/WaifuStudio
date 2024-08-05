@@ -19,6 +19,9 @@ class ProjectBuilder {
   void setUpScene();
 
  public:
+  int projectWidth;
+  int projectHeight;
+
   Project* build();
   void setBitmapManager(BitmapManager*);
   void setLayerModel(LayerModel*);

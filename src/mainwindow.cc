@@ -20,6 +20,11 @@ void MainWindow::setUpTreeModel(const ProjectModel::LayerModel* m) {
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
+  auto glViewPort = new views::MainGlViewPort();
+  ui->MainStageGraphicsView->setViewport(glViewPort);
+  connect(glViewPort, &views::MainGlViewPort::glHasInit, this,[&](){
+    emit this->windowInited();
+  });
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -40,10 +45,17 @@ void MainWindow::setUpProjectFromPsd(const QString& path) {
   builder.setBitmapManager(parser->extractBitmapManager());
   builder.setLayerModel(new ProjectModel::LayerModel(
       parser->extractPsTree(), parser->extractControllerTree()));
+  builder.projectWidth = parser->width();
+  builder.projectHeight = parser->height();
   auto project = builder.build();
   this->setProject(project);
   parser->deleteLater();
 }
 void MainWindow::setUpMainStage() {
   ui->MainStageGraphicsView->setScene(currentProject->getScene());
+  currentProject->getScene()->setUpGL();
+  //  connect(glViewPort,&views::MainGlViewPort::glHasInit,this,&MainWindow::windowInited);
+  //  connect(glViewPort, &views::MainGlViewPort::glHasInit,
+  //          currentProject->getScene(),
+  //          [&]() { currentProject->getScene()->setUpGL(); });
 }

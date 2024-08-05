@@ -9,11 +9,14 @@ views::MainGlViewPort::MainGlViewPort(QWidget* parent) : QOpenGLWidget(parent) {
   format.setProfile(QSurfaceFormat::CoreProfile);
   setFormat(format);
 }
+void views::MainGlViewPort::initializeGL() {
+  QOpenGLWidget::initializeGL();
+  initializeOpenGLFunctions();
+  emit glHasInit();
+}
 
 views::MainGlGraphicsView::MainGlGraphicsView(QWidget* parent)
     : QGraphicsView(parent) {
-  auto openglViewPort = new QWidget(this);
-  setViewport(openglViewPort);
   this->setDragMode(DragMode::NoDrag);
   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -36,5 +39,5 @@ void views::MainGlGraphicsView::keyReleaseEvent(QKeyEvent* event) {
 void views::MainGlGraphicsView::wheelEvent(QWheelEvent* event) {
   int angle = event->angleDelta().y();
   double factor = angle > 0 ? 1.1 : 0.9;
-  scale(factor,factor);
+  scale(factor, factor);
 }

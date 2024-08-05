@@ -30,6 +30,8 @@ class MainWindow : public QMainWindow {
   void setProject(ProjectModel::Project *);
   void setUpProjectFromPsd(const QString &path);
 
+signals:
+  void windowInited();
  private:
   Ui::MainWindow *ui;
 };
