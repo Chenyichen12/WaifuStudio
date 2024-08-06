@@ -5,8 +5,5 @@
         <file>folder.png</file>
         <file>question.png</file>
     </qresource>
-    <qresource prefix="/shader">
-        <file>bitmapshow.frag</file>
-        <file>bitmapshow.vert</file>
-    </qresource>
+
 </RCC>

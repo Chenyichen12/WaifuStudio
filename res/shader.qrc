@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/shader">
+        <file>bitmapshow.frag</file>
+        <file>bitmapshow.vert</file>
+    </qresource>
+</RCC>

@@ -16,7 +16,7 @@ target_link_libraries(Test PUBLIC GTest::gtest GTest::gtest_main WaifuStudio)
 target_include_directories(Test PRIVATE ../src)
 
 
-qt_add_resources(QRC ../res/icon.qrc)
+qt_add_resources(QRC ../res/icon.qrc ../res/shader.qrc)
 
 add_executable(UiTest
 uitest_main.cc

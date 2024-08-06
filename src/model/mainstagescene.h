@@ -7,23 +7,15 @@
 namespace ProjectModel {
 
 class Sprite;
-
+class SpriteRenderGroup;
 class MainStageScene : public QGraphicsScene {
   Q_OBJECT
  private:
-  int projectWidth;
-  int projectHeight;
-  QGraphicsItemGroup* spriteGroup;
-  QGraphicsRectItem* backgroundRect;
-  QGraphicsRectItem* sceneRect;
-
-  QList<Sprite*> projectImageList;
-
- protected:
-  void setUpSprite();
+  QGraphicsRectItem* boundRect;
+  SpriteRenderGroup* renderGroup;
 
  public:
-  explicit MainStageScene(int width, int height, QList<Sprite*> = {},
+  explicit MainStageScene(int width, int height, SpriteRenderGroup* renderGroup,
                           QObject* parent = nullptr);
 
  public slots:

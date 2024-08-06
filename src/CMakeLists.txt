@@ -28,7 +28,7 @@ target_link_libraries(WaifuStudio
 )
 
 
-qt_add_resources(QRC ../res/icon.qrc)
+qt_add_resources(QRC ../res/icon.qrc ../res/shader.qrc)
 add_executable(WaifuStudioApp app/main.cc ${QRC})
 target_include_directories(WaifuStudioApp PRIVATE include)
 target_link_libraries(WaifuStudioApp PRIVATE WaifuStudio)

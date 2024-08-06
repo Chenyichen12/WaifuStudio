@@ -12,6 +12,9 @@ views::MainGlViewPort::MainGlViewPort(QWidget* parent) : QOpenGLWidget(parent) {
 void views::MainGlViewPort::initializeGL() {
   QOpenGLWidget::initializeGL();
   initializeOpenGLFunctions();
+  glEnable(GL_BLEND);
+  glBlendFuncSeparate(GL_BLEND_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
+                      GL_ONE);
   emit glHasInit();
 }
 
