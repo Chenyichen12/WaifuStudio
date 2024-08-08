@@ -22,9 +22,8 @@ MainWindow::MainWindow(QWidget* parent)
   ui->setupUi(this);
   auto glViewPort = new views::MainGlViewPort();
   ui->MainStageGraphicsView->setViewport(glViewPort);
-  connect(glViewPort, &views::MainGlViewPort::glHasInit, this,[&](){
-    emit this->windowInited();
-  });
+  connect(glViewPort, &views::MainGlViewPort::glHasInit, this,
+          [&]() { emit this->windowInited(); });
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -34,6 +33,7 @@ void MainWindow::setProject(ProjectModel::Project* p) {
     this->currentProject->deleteLater();
   }
   this->currentProject = p;
+  currentProject->setParent(this);
   this->setUpTreeModel(p->getLayerModel());
   this->setUpMainStage();
 }
