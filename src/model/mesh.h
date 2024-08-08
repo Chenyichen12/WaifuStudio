@@ -59,6 +59,9 @@ class MeshBuilder {
 
  public:
   void setUpDefault(const BitmapAsset* bitmap);
+  void setUpVertices(const std::vector<MeshVertex>& vertices,
+                     const std::vector<unsigned int>& index);
+  void setUpTexture(const QImage& image);
   Mesh* extractMesh();
 };
 }  // namespace ProjectModel

@@ -9,6 +9,7 @@ set(TestSource
     main.cc
     psdparser_test.cc
     tree_manager_test.cc
+    spriterendergroup_test.cc
 )
 add_executable(Test ${TestSource})
 target_link_libraries(Test PUBLIC GTest::gtest GTest::gtest_main WaifuStudio)

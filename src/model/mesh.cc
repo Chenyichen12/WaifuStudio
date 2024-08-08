@@ -162,11 +162,23 @@ void MeshBuilder::setUpDefault(const BitmapAsset* bitmap) {
   this->bitmapImage.reset(new QImage(bitmap->rawBytes, bitmap->width,
                                      bitmap->height, QImage::Format_RGBA8888));
 }
+
+void MeshBuilder::setUpVertices(const std::vector<MeshVertex>& vertices,
+    const std::vector<unsigned int>& index) {
+
+  this->vertices = vertices;
+  this->verticesIndex = index;
+}
+
 Mesh* MeshBuilder::extractMesh() {
   if (this->bitmapImage == nullptr) {
     return nullptr;
   }
   auto s = new Mesh(this->vertices, this->verticesIndex);
   return s;
+}
+
+void MeshBuilder::setUpTexture(const QImage& image) {
+  this->bitmapImage.reset(new QImage(image));
 }
 }  // namespace ProjectModel
