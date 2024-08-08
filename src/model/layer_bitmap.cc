@@ -16,7 +16,7 @@ void BitmapManager::deleteAsset(BitmapAsset *map) {
     delete map;
   }
 }
-const BitmapAsset *BitmapManager::getBitmap(int id) const {
+BitmapAsset *BitmapManager::getBitmap(int id) const {
   if (this->assetsMap.contains(id)) {
     return this->assetsMap.at(id);
   }

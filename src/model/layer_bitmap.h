@@ -33,7 +33,7 @@ class BitmapManager : public QObject {
   ~BitmapManager() override;
   void addAsset(BitmapAsset* map);
   void deleteAsset(BitmapAsset* map);
-  const BitmapAsset* getBitmap(int id) const;
+  BitmapAsset* getBitmap(int id) const;
 };
 }
 

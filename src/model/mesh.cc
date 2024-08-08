@@ -5,11 +5,9 @@
 #include "mesh.h"
 
 #include "QOpenGLBuffer"
-#include "QOpenGLTexture"
 #include "QOpenGLVertexArrayObject"
 #include "QPainter"
 #include "QWidget"
-#include "layer_bitmap.h"
 #include "spriterendergroup.h"
 namespace ProjectModel {
 
@@ -112,11 +110,11 @@ Mesh::~Mesh() {
   delete ibo;
 }
 
-void MeshBuilder::setUpDefault(const BitmapAsset& bitmap) {
-  auto left = bitmap.left;
-  auto right = bitmap.left + bitmap.width;
-  auto top = bitmap.top;
-  auto button = bitmap.top + bitmap.height;
+void MeshBuilder::setUpDefault(const BitmapAsset* bitmap) {
+  auto left = bitmap->left;
+  auto right = bitmap->left + bitmap->width;
+  auto top = bitmap->top;
+  auto button = bitmap->top + bitmap->height;
 
   auto v1 = MeshVertex();
   v1.pos.x = static_cast<float>(right);
@@ -155,8 +153,8 @@ void MeshBuilder::setUpDefault(const BitmapAsset& bitmap) {
   verticesIndex.push_back(2);
   verticesIndex.push_back(3);
 
-  this->bitmapImage.reset(new QImage(bitmap.rawBytes, bitmap.width,
-                                     bitmap.height, QImage::Format_RGBA8888));
+  this->bitmapImage.reset(new QImage(bitmap->rawBytes, bitmap->width,
+                                     bitmap->height, QImage::Format_RGBA8888));
 }
 Mesh* MeshBuilder::extractMesh() {
   if (this->bitmapImage == nullptr || this->projectRect == std::nullopt) {

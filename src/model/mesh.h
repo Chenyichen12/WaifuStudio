@@ -8,13 +8,12 @@
 #include "QOpenGLShaderProgram"
 #include "QOpenGLTexture"
 #include "glm/glm.hpp"
+#include "layer_bitmap.h"
 class QOpenGLBuffer;
 class QOpenGLVertexArrayObject;
 
 namespace ProjectModel {
-class BitmapAsset;
 class SpriteRenderGroup;
-
 struct MeshVertex {
   glm::vec2 pos;
   glm::vec2 uv;
@@ -54,7 +53,7 @@ class MeshBuilder {
   std::optional<QRect> projectRect;
 
  public:
-  void setUpDefault(const BitmapAsset& bitmap);
+  void setUpDefault(const BitmapAsset* bitmap);
   void setUpProjectRect(QRect project);
   Mesh* extractMesh();
 };

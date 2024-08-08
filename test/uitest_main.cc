@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 
   auto mainwindow = new MainWindow();
   auto init = new InitObject(mainwindow);
-  init->resPath = resPath;
+  init->resPath = resPath.string();
   mainwindow->show();
   QApplication::exec();
 }
