@@ -4,11 +4,10 @@
 
 #include "spriterendergroup.h"
 
-#include "QBrush"
 #include "QFile"
 #include "QPainter"
 #include "mesh.h"
-namespace ProjectModel {
+namespace Scene {
 SpriteRenderGroup::SpriteRenderGroup(int renderWidth, int renderHeight,
                                      QGraphicsItem *parent)
     : QGraphicsItemGroup(parent),

@@ -4,9 +4,9 @@
 #include "project.h"
 #include "layer.h"
 #include "layer_model.h"
-#include "mainstagescene.h"
-#include "mesh.h"
-#include "spriterendergroup.h"
+#include "scene/mainstagescene.h"
+#include "scene/mesh.h"
+#include "scene/spriterendergroup.h"
 #include "tree_manager.h"
 namespace ProjectModel {
 Project* ProjectBuilder::build() {
@@ -28,13 +28,16 @@ Project* ProjectBuilder::build() {
 }
 void ProjectBuilder::setBitmapManager(BitmapManager* m) { this->manager = m; }
 void ProjectBuilder::setLayerModel(LayerModel* m) { this->model = m; }
+
+Scene::MainStageScene* Project::getScene() const { return scene; }
+
 void ProjectBuilder::setUpScene() {
   auto tree = this->model->getControllerTreeManger();
-  auto mainRenderGroup = new SpriteRenderGroup(projectWidth, projectHeight);
+  auto mainRenderGroup = new Scene::SpriteRenderGroup(projectWidth, projectHeight);
   tree->forEach([&](QStandardItem* item) {
     if (item->type() == LayerTypes::BitmapLayerType) {
       auto bitmapLayer = static_cast<BitmapLayer*>(item);
-      auto builder = MeshBuilder();
+      auto builder = Scene::MeshBuilder();
       auto bitmap = manager->getBitmap(bitmapLayer->getBitmapId());
       builder.setUpDefault(bitmap);
       auto mesh = builder.extractMesh();
@@ -47,7 +50,7 @@ void ProjectBuilder::setUpScene() {
     return true;
   });
   this->sceneModel =
-      new MainStageScene(projectWidth, projectHeight, mainRenderGroup);
+      new Scene::MainStageScene(projectWidth, projectHeight, mainRenderGroup);
 }
 
 }  // namespace ProjectModel

@@ -9,7 +9,7 @@
 #include "QPainter"
 #include "QWidget"
 #include "spriterendergroup.h"
-namespace ProjectModel {
+namespace Scene {
 
 std::unique_ptr<MeshVertex[]> normalization(
     const std::vector<MeshVertex>& vertices, int width, int height) {
@@ -116,7 +116,7 @@ Mesh::~Mesh() {
   delete ibo;
 }
 
-void MeshBuilder::setUpDefault(const BitmapAsset* bitmap) {
+void MeshBuilder::setUpDefault(const ProjectModel::BitmapAsset* bitmap) {
   auto left = bitmap->left;
   auto right = bitmap->left + bitmap->width;
   auto top = bitmap->top;

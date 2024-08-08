@@ -4,10 +4,10 @@
 #include "mainwindow.h"
 
 #include "model/layer_model.h"
-#include "model/mainstagescene.h"
 #include "model/project.h"
 #include "psdparser.h"
 #include "ui/ui_mainwindow.h"
+#include "model/scene/mainstagescene.h"
 void MainWindow::setUpTreeModel(const ProjectModel::LayerModel* m) {
   ui->psTree->setModel(m->getPsdTreeManager());
   ui->controllerTree->setModel(m->getControllerTreeManger());

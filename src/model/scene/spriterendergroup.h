@@ -4,7 +4,7 @@
 #pragma once
 #include <QGraphicsItemGroup>
 #include <QOpenGLShaderProgram>
-namespace ProjectModel {
+namespace Scene {
 class Mesh;
 class SpriteRenderGroup : public QGraphicsItemGroup {
  private:

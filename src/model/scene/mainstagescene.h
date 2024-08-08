@@ -5,7 +5,7 @@
 #pragma once
 #include <QGraphicsScene>
 #include <QOpenGLFunctions>
-namespace ProjectModel {
+namespace Scene {
 
 class Sprite;
 class SpriteRenderGroup;

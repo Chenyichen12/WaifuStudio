@@ -5,14 +5,12 @@
 
 #include "QGraphicsItem"
 #include "QOpenGLFunctions"
-#include "QOpenGLShaderProgram"
 #include "QOpenGLTexture"
 #include "glm/glm.hpp"
-#include "layer_bitmap.h"
+#include "../layer_bitmap.h"
 class QOpenGLBuffer;
 class QOpenGLVertexArrayObject;
-
-namespace ProjectModel {
+namespace Scene {
 class SpriteRenderGroup;
 
 struct MeshVertex {
@@ -58,7 +56,7 @@ class MeshBuilder {
   std::unique_ptr<QImage> bitmapImage;
 
  public:
-  void setUpDefault(const BitmapAsset* bitmap);
+  void setUpDefault(const ProjectModel::BitmapAsset* bitmap);
   void setUpVertices(const std::vector<MeshVertex>& vertices,
                      const std::vector<unsigned int>& index);
   void setUpTexture(const QImage& image);

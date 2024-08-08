@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <model/mesh.h>
-#include <model/spriterendergroup.h>
+#include <model/scene/mesh.h>
+#include <model/scene/spriterendergroup.h>
 #include <psdparser.h>
 
 #include <filesystem>
@@ -20,11 +20,11 @@ class SpriteRenderGroupTest : public testing::Test {
     auto psTree = parser.extractPsTree();
     auto manager = parser.extractBitmapManager();
     render_group =
-        new ProjectModel::SpriteRenderGroup(parser.width(), parser.height());
+        new Scene::SpriteRenderGroup(parser.width(), parser.height());
     psTree->forEach([&](auto&& c) {
       if (c->type() == ProjectModel::LayerTypes::BitmapLayerType) {
         auto item = static_cast<ProjectModel::BitmapLayer*>(c);
-        auto builder = ProjectModel::MeshBuilder();
+        auto builder = Scene::MeshBuilder();
         builder.setUpDefault(manager->getBitmap(item->getBitmapId()));
         auto mesh = builder.extractMesh();
 
@@ -54,12 +54,12 @@ class SpriteRenderGroupTest : public testing::Test {
   ~SpriteRenderGroupTest() override { delete render_group; }
 
  public:
-  ProjectModel::SpriteRenderGroup* render_group;
+  Scene::SpriteRenderGroup* render_group;
 
-  ProjectModel::Mesh* redLayer = nullptr;
-  ProjectModel::Mesh* greenLayer = nullptr;
-  ProjectModel::Mesh* blueLayer = nullptr;
-  ProjectModel::Mesh* textLayer = nullptr;
+  Scene::Mesh* redLayer = nullptr;
+  Scene::Mesh* greenLayer = nullptr;
+  Scene::Mesh* blueLayer = nullptr;
+  Scene::Mesh* textLayer = nullptr;
 };
 
 TEST_F(SpriteRenderGroupTest, testvertices_bound) {

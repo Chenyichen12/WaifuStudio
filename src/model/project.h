@@ -3,17 +3,18 @@
 //
 #pragma once
 #include "QObject"
+namespace Scene {
+class MainStageScene;
+}
 namespace ProjectModel {
 class LayerModel;
 class BitmapManager;
 class Project;
-class MainStageScene;
-
 class ProjectBuilder {
  private:
   BitmapManager* manager = nullptr;
   LayerModel* model = nullptr;
-  MainStageScene* sceneModel = nullptr;
+  Scene::MainStageScene* sceneModel = nullptr;
 
  protected:
   void setUpScene();
@@ -34,12 +35,12 @@ class Project : public QObject {
   Project() = default;
   BitmapManager* bitmapManager = nullptr;
   LayerModel* layerModel = nullptr;
-  MainStageScene* scene = nullptr;
+  Scene::MainStageScene* scene = nullptr;
 
  public:
   BitmapManager* getBitmapManager() const { return bitmapManager; }
   LayerModel* getLayerModel() const { return layerModel; }
-  MainStageScene* getScene() const { return scene; }
+  Scene::MainStageScene* getScene() const;
 };
 
 }  // namespace ProjectModel

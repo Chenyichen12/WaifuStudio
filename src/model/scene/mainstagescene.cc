@@ -7,7 +7,7 @@
 #include <QPainter>
 #include "mesh.h"
 #include "spriterendergroup.h"
-namespace ProjectModel {
+namespace Scene {
 MainStageScene::MainStageScene(int width, int height, SpriteRenderGroup* group,
                                QObject* parent)
     : QGraphicsScene(parent) {
