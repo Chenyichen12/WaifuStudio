@@ -23,14 +23,16 @@ MainWindow::MainWindow(QWidget* parent)
   auto glViewPort = new views::MainGlViewPort();
   ui->MainStageGraphicsView->setViewport(glViewPort);
   connect(glViewPort, &views::MainGlViewPort::glHasInit, this,
-          [&]() { emit this->windowInited(); });
+          &MainWindow::windowInited);
+  this->currentProject = nullptr;
 }
 
 MainWindow::~MainWindow() { delete ui; }
 
 void MainWindow::setProject(ProjectModel::Project* p) {
   if (this->currentProject != nullptr) {
-    this->currentProject->deleteLater();
+    delete currentProject;
+    currentProject = nullptr;
   }
   this->currentProject = p;
   currentProject->setParent(this);
@@ -47,15 +49,11 @@ void MainWindow::setUpProjectFromPsd(const QString& path) {
       parser->extractPsTree(), parser->extractControllerTree()));
   builder.projectWidth = parser->width();
   builder.projectHeight = parser->height();
-  auto project = builder.build();
-  this->setProject(project);
+  auto p = builder.build();
+  this->setProject(p);
   parser->deleteLater();
 }
 void MainWindow::setUpMainStage() {
   ui->MainStageGraphicsView->setScene(currentProject->getScene());
-  currentProject->getScene()->setUpGL();
-  //  connect(glViewPort,&views::MainGlViewPort::glHasInit,this,&MainWindow::windowInited);
-  //  connect(glViewPort, &views::MainGlViewPort::glHasInit,
-  //          currentProject->getScene(),
-  //          [&]() { currentProject->getScene()->setUpGL(); });
+  currentProject->getScene()->initGL();
 }

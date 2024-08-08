@@ -35,7 +35,6 @@ void ProjectBuilder::setUpScene() {
     if (item->type() == LayerTypes::BitmapLayerType) {
       auto bitmapLayer = static_cast<BitmapLayer*>(item);
       auto builder = MeshBuilder();
-      builder.setUpProjectRect(QRect(0, 0, projectWidth, projectHeight));
       auto bitmap = manager->getBitmap(bitmapLayer->getBitmapId());
       builder.setUpDefault(bitmap);
       auto mesh = builder.extractMesh();

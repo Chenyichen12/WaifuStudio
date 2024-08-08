@@ -29,7 +29,7 @@ std::unique_ptr<MeshVertex[]> normalization(
   return res;
 }
 
-QRectF calculateBoundRect(std::vector<MeshVertex> vector) {
+QRectF calculateBoundRect(const std::vector<MeshVertex>& vector) {
   float left = FLT_MAX;
   float top = FLT_MAX;
   float right = FLT_MIN;
@@ -51,19 +51,14 @@ QRectF calculateBoundRect(std::vector<MeshVertex> vector) {
 
   return QRectF(QPointF(left, top), QPointF(right, button));
 }
-Mesh::Mesh(std::vector<MeshVertex> vertices, std::vector<unsigned int> incident,
-           QRect relativeRect, SpriteRenderGroup* parent)
-    : QGraphicsItem(parent), vertices(vertices), incident(incident) {
+
+void Mesh::initializeGL(QRect relativeRect) {
   initializeOpenGLFunctions();
-  this->boundRect = calculateBoundRect(vertices);
   auto normalize =
       normalization(vertices, relativeRect.width(), relativeRect.height());
-
-  this->vao = new QOpenGLVertexArrayObject();
   vao->create();
   vao->bind();
 
-  this->vbo = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
   vbo->create();
   vbo->setUsagePattern(QOpenGLBuffer::DynamicDraw);
   vbo->bind();
@@ -81,6 +76,14 @@ Mesh::Mesh(std::vector<MeshVertex> vertices, std::vector<unsigned int> incident,
                         (void*)MeshVertexOffset::UV);
   glEnableVertexAttribArray(1);
   vao->release();
+}
+
+Mesh::Mesh(const std::vector<MeshVertex>& vertices, const std::vector<unsigned int>& incident,SpriteRenderGroup* parent)
+    : QGraphicsItem(parent), vertices(vertices), incident(incident) {
+  this->boundRect = calculateBoundRect(vertices);
+  this->vao = new QOpenGLVertexArrayObject();
+  this->vbo = new QOpenGLBuffer();
+  this->ibo = new QOpenGLBuffer();
 }
 QRectF Mesh::boundingRect() const { return this->boundRect; }
 void Mesh::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
@@ -105,6 +108,9 @@ void Mesh::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
   painter->endNativePainting();
 }
 Mesh::~Mesh() {
+  vao->destroy();
+  vbo->destroy();
+  ibo->destroy();
   delete vao;
   delete vbo;
   delete ibo;
@@ -157,13 +163,10 @@ void MeshBuilder::setUpDefault(const BitmapAsset* bitmap) {
                                      bitmap->height, QImage::Format_RGBA8888));
 }
 Mesh* MeshBuilder::extractMesh() {
-  if (this->bitmapImage == nullptr || this->projectRect == std::nullopt) {
+  if (this->bitmapImage == nullptr) {
     return nullptr;
   }
-  auto s = new Mesh(this->vertices, this->verticesIndex, projectRect.value());
+  auto s = new Mesh(this->vertices, this->verticesIndex);
   return s;
-}
-void MeshBuilder::setUpProjectRect(QRect project) {
-  this->projectRect = project;
 }
 }  // namespace ProjectModel

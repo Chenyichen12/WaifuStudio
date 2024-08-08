@@ -19,11 +19,6 @@ SpriteRenderGroup::SpriteRenderGroup(int renderWidth, int renderHeight,
   addToGroup(backGroundItem);
   backGroundItem->setBrush(QBrush(Qt::gray));
   program = new QOpenGLShaderProgram();
-  program->addShaderFromSourceFile(QOpenGLShader::Vertex,
-                                   ":/shader/bitmapshow.vert");
-  program->addShaderFromSourceFile(QOpenGLShader::Fragment,
-                                   ":/shader/bitmapshow.frag");
-  program->link();
 }
 SpriteRenderGroup::~SpriteRenderGroup() { program->deleteLater(); }
 void SpriteRenderGroup::paint(QPainter *painter,
@@ -33,6 +28,18 @@ void SpriteRenderGroup::paint(QPainter *painter,
 }
 int SpriteRenderGroup::getRenderWidth() const { return renderWidth; }
 int SpriteRenderGroup::getRenderHeight() const { return renderHeight; }
+
+void SpriteRenderGroup::initializeGL() {
+  program->addShaderFromSourceFile(QOpenGLShader::Vertex,
+                                   ":/shader/bitmapshow.vert");
+  program->addShaderFromSourceFile(QOpenGLShader::Fragment,
+                                   ":/shader/bitmapshow.frag");
+  program->link();
+  for (auto mesh : meshList) {
+    mesh->initializeGL(QRect(0, 0, renderWidth, renderHeight));
+  }
+}
+
 QOpenGLShaderProgram *SpriteRenderGroup::getProgram() const { return program; }
 void SpriteRenderGroup::pushBackMesh(Mesh *mesh) {
   this->addToGroup(mesh);

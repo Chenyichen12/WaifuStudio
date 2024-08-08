@@ -24,9 +24,13 @@ class SpriteRenderGroup : public QGraphicsItemGroup {
              QWidget *widget) override;
   int getRenderWidth() const;
   int getRenderHeight() const;
+
+  void initializeGL();
+
   QOpenGLShaderProgram *getProgram() const;
 
   void pushBackMesh(Mesh* mesh);
   void pushFrontMesh(Mesh* mesh);
+
 };
 }  // namespace ProjectModel

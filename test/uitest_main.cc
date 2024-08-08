@@ -3,17 +3,6 @@
 #include <filesystem>
 
 #include "mainwindow.h"
-class InitObject : public QObject {
-  Q_OBJECT
- public:
-  std::string resPath;
-  InitObject(MainWindow* mainWindow) {
-    this->setParent(mainWindow);
-    connect(mainWindow, &MainWindow::windowInited, this, [&]() {
-      mainWindow->setUpProjectFromPsd(QString::fromStdString(resPath));
-    });
-  }
-};
 int main(int argc, char** argv) {
   QApplication a(argc, argv);
   std::string s = __FILE__;
@@ -22,10 +11,10 @@ int main(int argc, char** argv) {
       pathObj.parent_path() / "test_res" / "example.psd";
 
   auto mainwindow = new MainWindow();
-  auto init = new InitObject(mainwindow);
-  init->resPath = resPath.string();
+  QObject::connect(mainwindow, &MainWindow::windowInited, mainwindow, [&]() {
+    mainwindow->setUpProjectFromPsd(QString::fromStdString(resPath.string()));
+  });
   mainwindow->show();
   QApplication::exec();
+  delete mainwindow;
 }
-
-#include "uitest_main.moc"

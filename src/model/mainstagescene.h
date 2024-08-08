@@ -4,11 +4,12 @@
 
 #pragma once
 #include <QGraphicsScene>
+#include <QOpenGLFunctions>
 namespace ProjectModel {
 
 class Sprite;
 class SpriteRenderGroup;
-class MainStageScene : public QGraphicsScene {
+class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
   Q_OBJECT
  private:
   QGraphicsRectItem* boundRect;
@@ -19,6 +20,9 @@ class MainStageScene : public QGraphicsScene {
                           QObject* parent = nullptr);
 
  public slots:
-  void setUpGL();
+  void initGL();
+
+ protected:
+  void drawBackground(QPainter* painter, const QRectF& rect) override;
 };
 }  // namespace ProjectModel
