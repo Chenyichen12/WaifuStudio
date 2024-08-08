@@ -4,11 +4,11 @@
 
 #include "mesh.h"
 
+#include "MeshRenderGroup.h"
 #include "QOpenGLBuffer"
 #include "QOpenGLVertexArrayObject"
 #include "QPainter"
 #include "QWidget"
-#include "MeshRenderGroup.h"
 namespace Scene {
 
 std::unique_ptr<MeshVertex[]> normalization(
@@ -76,14 +76,19 @@ void Mesh::initializeGL(QRect relativeRect) {
                         (void*)MeshVertexOffset::UV);
   glEnableVertexAttribArray(1);
   vao->release();
+
+  tex->create();
+  tex->setData(image);
 }
 
-Mesh::Mesh(const std::vector<MeshVertex>& vertices, const std::vector<unsigned int>& incident,MeshRenderGroup* parent)
+Mesh::Mesh(const std::vector<MeshVertex>& vertices,
+           const std::vector<unsigned int>& incident, MeshRenderGroup* parent)
     : QGraphicsItem(parent), vertices(vertices), incident(incident) {
   this->boundRect = calculateBoundRect(vertices);
   this->vao = new QOpenGLVertexArrayObject();
   this->vbo = new QOpenGLBuffer();
   this->ibo = new QOpenGLBuffer();
+  this->tex = new QOpenGLTexture(QOpenGLTexture::Target2D);
 }
 QRectF Mesh::boundingRect() const { return this->boundRect; }
 void Mesh::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
@@ -93,6 +98,8 @@ void Mesh::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     return;
   }
   painter->beginNativePainting();
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   auto parent = static_cast<MeshRenderGroup*>(this->parentItem());
   auto totalPoint =
       QLineF(0, 0, parent->getRenderWidth(), parent->getRenderHeight());
@@ -103,17 +110,25 @@ void Mesh::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              widget->height() - painter->transform().dy() - totalPoint.dy(),
              totalPoint.dx(), totalPoint.dy());
   vao->bind();
+  tex->bind(0);
+  parent->getProgram()->setUniformValue("ourTexture", 0);
+
   glDrawElements(GL_TRIANGLES, incident.size(), GL_UNSIGNED_INT, nullptr);
   vao->release();
   painter->endNativePainting();
 }
+
+void Mesh::setTexture(const QImage& image) { this->image = image; }
+
 Mesh::~Mesh() {
   vao->destroy();
   vbo->destroy();
   ibo->destroy();
+  tex->destroy();
   delete vao;
   delete vbo;
   delete ibo;
+  delete tex;
 }
 
 void MeshBuilder::setUpDefault(const ProjectModel::BitmapAsset* bitmap) {
@@ -164,8 +179,7 @@ void MeshBuilder::setUpDefault(const ProjectModel::BitmapAsset* bitmap) {
 }
 
 void MeshBuilder::setUpVertices(const std::vector<MeshVertex>& vertices,
-    const std::vector<unsigned int>& index) {
-
+                                const std::vector<unsigned int>& index) {
   this->vertices = vertices;
   this->verticesIndex = index;
 }
@@ -175,10 +189,11 @@ Mesh* MeshBuilder::extractMesh() {
     return nullptr;
   }
   auto s = new Mesh(this->vertices, this->verticesIndex);
+  s->setTexture(*bitmapImage);
   return s;
 }
 
 void MeshBuilder::setUpTexture(const QImage& image) {
   this->bitmapImage.reset(new QImage(image));
 }
-}  // namespace ProjectModel
+}  // namespace Scene

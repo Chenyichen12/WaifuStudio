@@ -3,11 +3,11 @@
 //
 #pragma once
 
+#include "../layer_bitmap.h"
 #include "QGraphicsItem"
 #include "QOpenGLFunctions"
 #include "QOpenGLTexture"
 #include "glm/glm.hpp"
-#include "../layer_bitmap.h"
 class QOpenGLBuffer;
 class QOpenGLVertexArrayObject;
 namespace Scene {
@@ -29,12 +29,14 @@ class Mesh : public QGraphicsItem, protected QOpenGLFunctions {
   std::vector<unsigned int> incident;
   QRectF boundRect;
   int layerId = 0;
+  QImage image;
 
  private:
   // gl data struct
   QOpenGLVertexArrayObject* vao;
   QOpenGLBuffer* vbo;
   QOpenGLBuffer* ibo;
+  QOpenGLTexture* tex;
 
  protected:
   void initializeGL(QRect relativeRect);
@@ -46,6 +48,8 @@ class Mesh : public QGraphicsItem, protected QOpenGLFunctions {
   QRectF boundingRect() const override;
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget) override;
+
+  void setTexture(const QImage& image);
   void bindId(int id) { layerId = id; }
 };
 
@@ -62,4 +66,4 @@ class MeshBuilder {
   void setUpTexture(const QImage& image);
   Mesh* extractMesh();
 };
-}  // namespace ProjectModel
+}  // namespace Scene
