@@ -6,7 +6,7 @@
 #include "layer_model.h"
 #include "scene/mainstagescene.h"
 #include "scene/mesh.h"
-#include "scene/spriterendergroup.h"
+#include "scene/MeshRenderGroup.h"
 #include "tree_manager.h"
 namespace ProjectModel {
 Project* ProjectBuilder::build() {
@@ -33,7 +33,7 @@ Scene::MainStageScene* Project::getScene() const { return scene; }
 
 void ProjectBuilder::setUpScene() {
   auto tree = this->model->getControllerTreeManger();
-  auto mainRenderGroup = new Scene::SpriteRenderGroup(projectWidth, projectHeight);
+  auto mainRenderGroup = new Scene::MeshRenderGroup(projectWidth, projectHeight);
   tree->forEach([&](QStandardItem* item) {
     if (item->type() == LayerTypes::BitmapLayerType) {
       auto bitmapLayer = static_cast<BitmapLayer*>(item);

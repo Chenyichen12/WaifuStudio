@@ -6,9 +6,9 @@
 
 #include <QPainter>
 #include "mesh.h"
-#include "spriterendergroup.h"
+#include "MeshRenderGroup.h"
 namespace Scene {
-MainStageScene::MainStageScene(int width, int height, SpriteRenderGroup* group,
+MainStageScene::MainStageScene(int width, int height, MeshRenderGroup* group,
                                QObject* parent)
     : QGraphicsScene(parent) {
 

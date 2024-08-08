@@ -8,7 +8,7 @@
 #include "QOpenGLVertexArrayObject"
 #include "QPainter"
 #include "QWidget"
-#include "spriterendergroup.h"
+#include "MeshRenderGroup.h"
 namespace Scene {
 
 std::unique_ptr<MeshVertex[]> normalization(
@@ -78,7 +78,7 @@ void Mesh::initializeGL(QRect relativeRect) {
   vao->release();
 }
 
-Mesh::Mesh(const std::vector<MeshVertex>& vertices, const std::vector<unsigned int>& incident,SpriteRenderGroup* parent)
+Mesh::Mesh(const std::vector<MeshVertex>& vertices, const std::vector<unsigned int>& incident,MeshRenderGroup* parent)
     : QGraphicsItem(parent), vertices(vertices), incident(incident) {
   this->boundRect = calculateBoundRect(vertices);
   this->vao = new QOpenGLVertexArrayObject();
@@ -93,7 +93,7 @@ void Mesh::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     return;
   }
   painter->beginNativePainting();
-  auto parent = static_cast<SpriteRenderGroup*>(this->parentItem());
+  auto parent = static_cast<MeshRenderGroup*>(this->parentItem());
   auto totalPoint =
       QLineF(0, 0, parent->getRenderWidth(), parent->getRenderHeight());
   totalPoint = painter->transform().map(totalPoint);

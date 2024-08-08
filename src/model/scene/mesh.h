@@ -11,7 +11,7 @@
 class QOpenGLBuffer;
 class QOpenGLVertexArrayObject;
 namespace Scene {
-class SpriteRenderGroup;
+class MeshRenderGroup;
 
 struct MeshVertex {
   glm::vec2 pos;
@@ -22,7 +22,7 @@ enum MeshVertexOffset {
   UV = offsetof(MeshVertex, uv)
 };
 class Mesh : public QGraphicsItem, protected QOpenGLFunctions {
-  friend SpriteRenderGroup;
+  friend MeshRenderGroup;
 
  private:
   std::vector<MeshVertex> vertices;
@@ -41,7 +41,7 @@ class Mesh : public QGraphicsItem, protected QOpenGLFunctions {
 
  public:
   Mesh(const std::vector<MeshVertex>&, const std::vector<unsigned int>&,
-       SpriteRenderGroup* parent = nullptr);
+       MeshRenderGroup* parent = nullptr);
   ~Mesh() override;
   QRectF boundingRect() const override;
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,

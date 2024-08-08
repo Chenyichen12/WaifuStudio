@@ -2,13 +2,13 @@
 // Created by chenyichen on 8/6/24.
 //
 
-#include "spriterendergroup.h"
+#include "MeshRenderGroup.h"
 
 #include "QFile"
 #include "QPainter"
 #include "mesh.h"
 namespace Scene {
-SpriteRenderGroup::SpriteRenderGroup(int renderWidth, int renderHeight,
+MeshRenderGroup::MeshRenderGroup(int renderWidth, int renderHeight,
                                      QGraphicsItem *parent)
     : QGraphicsItemGroup(parent),
       renderWidth(renderWidth),
@@ -19,16 +19,16 @@ SpriteRenderGroup::SpriteRenderGroup(int renderWidth, int renderHeight,
   backGroundItem->setBrush(QBrush(Qt::gray));
   program = new QOpenGLShaderProgram();
 }
-SpriteRenderGroup::~SpriteRenderGroup() { program->deleteLater(); }
-void SpriteRenderGroup::paint(QPainter *painter,
+MeshRenderGroup::~MeshRenderGroup() { program->deleteLater(); }
+void MeshRenderGroup::paint(QPainter *painter,
                               const QStyleOptionGraphicsItem *option,
                               QWidget *widget) {
   QGraphicsItemGroup::paint(painter, option, widget);
 }
-int SpriteRenderGroup::getRenderWidth() const { return renderWidth; }
-int SpriteRenderGroup::getRenderHeight() const { return renderHeight; }
+int MeshRenderGroup::getRenderWidth() const { return renderWidth; }
+int MeshRenderGroup::getRenderHeight() const { return renderHeight; }
 
-void SpriteRenderGroup::initializeGL() {
+void MeshRenderGroup::initializeGL() {
   program->addShaderFromSourceFile(QOpenGLShader::Vertex,
                                    ":/shader/bitmapshow.vert");
   program->addShaderFromSourceFile(QOpenGLShader::Fragment,
@@ -39,14 +39,14 @@ void SpriteRenderGroup::initializeGL() {
   }
 }
 
-QOpenGLShaderProgram *SpriteRenderGroup::getProgram() const { return program; }
-void SpriteRenderGroup::pushBackMesh(Mesh *mesh) {
+QOpenGLShaderProgram *MeshRenderGroup::getProgram() const { return program; }
+void MeshRenderGroup::pushBackMesh(Mesh *mesh) {
   this->addToGroup(mesh);
   meshList.push_back(mesh);
 
   mesh->setZValue(meshList.size());
 }
-void SpriteRenderGroup::pushFrontMesh(Mesh *mesh) {
+void MeshRenderGroup::pushFrontMesh(Mesh *mesh) {
   this->addToGroup(mesh);
   meshList.push_front(mesh);
   for (int i = 0; i < meshList.size(); ++i) {

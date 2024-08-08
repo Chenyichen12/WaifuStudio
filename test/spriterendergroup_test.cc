@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <model/scene/mesh.h>
-#include <model/scene/spriterendergroup.h>
+#include <model/scene/meshrendergroup.h>
 #include <psdparser.h>
 
 #include <filesystem>
@@ -20,7 +20,7 @@ class SpriteRenderGroupTest : public testing::Test {
     auto psTree = parser.extractPsTree();
     auto manager = parser.extractBitmapManager();
     render_group =
-        new Scene::SpriteRenderGroup(parser.width(), parser.height());
+        new Scene::MeshRenderGroup(parser.width(), parser.height());
     psTree->forEach([&](auto&& c) {
       if (c->type() == ProjectModel::LayerTypes::BitmapLayerType) {
         auto item = static_cast<ProjectModel::BitmapLayer*>(c);
@@ -54,7 +54,7 @@ class SpriteRenderGroupTest : public testing::Test {
   ~SpriteRenderGroupTest() override { delete render_group; }
 
  public:
-  Scene::SpriteRenderGroup* render_group;
+  Scene::MeshRenderGroup* render_group;
 
   Scene::Mesh* redLayer = nullptr;
   Scene::Mesh* greenLayer = nullptr;

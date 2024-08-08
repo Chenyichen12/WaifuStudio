@@ -6,7 +6,7 @@
 #include <QOpenGLShaderProgram>
 namespace Scene {
 class Mesh;
-class SpriteRenderGroup : public QGraphicsItemGroup {
+class MeshRenderGroup : public QGraphicsItemGroup {
  private:
   QGraphicsRectItem *backGroundItem;
   int renderWidth;
@@ -17,9 +17,9 @@ class SpriteRenderGroup : public QGraphicsItemGroup {
   QList<Mesh *> meshList;
 
  public:
-  SpriteRenderGroup(int renderWidth, int renderHeight,
+  MeshRenderGroup(int renderWidth, int renderHeight,
                     QGraphicsItem *parent = nullptr);
-  ~SpriteRenderGroup() override;
+  ~MeshRenderGroup() override;
   void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
              QWidget *widget) override;
   int getRenderWidth() const;
