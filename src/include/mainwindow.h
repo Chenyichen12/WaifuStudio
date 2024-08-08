@@ -23,6 +23,7 @@ class MainWindow : public QMainWindow {
 
   void setUpTreeModel(const ProjectModel::LayerModel* m);
   void setUpMainStage();
+  void setUpMenu();
  public:
   explicit MainWindow(QWidget *parent = nullptr);
   ~MainWindow() override;
@@ -30,7 +31,9 @@ class MainWindow : public QMainWindow {
   void setProject(ProjectModel::Project *);
   void setUpProjectFromPsd(const QString &path);
 
-signals:
+  public slots:
+  void handlePsdOpen();
+ signals:
   void windowInited();
  private:
   Ui::MainWindow *ui;

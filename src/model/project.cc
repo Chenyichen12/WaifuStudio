@@ -40,12 +40,12 @@ void ProjectBuilder::setUpScene() {
       auto builder = Scene::MeshBuilder();
       auto bitmap = manager->getBitmap(bitmapLayer->getBitmapId());
       builder.setUpDefault(bitmap);
-      auto mesh = builder.extractMesh();
+      auto mesh = builder.buildMesh();
 
       // store id of the layer
       mesh->bindId(bitmapLayer->getId());
 
-      mainRenderGroup->pushFrontMesh(mesh);
+      mainRenderGroup->pushFrontMesh(mesh.release());
     }
     return true;
   });

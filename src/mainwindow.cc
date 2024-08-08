@@ -3,11 +3,12 @@
 //
 #include "mainwindow.h"
 
+#include "QFileDialog"
 #include "model/layer_model.h"
 #include "model/project.h"
+#include "model/scene/mainstagescene.h"
 #include "psdparser.h"
 #include "ui/ui_mainwindow.h"
-#include "model/scene/mainstagescene.h"
 void MainWindow::setUpTreeModel(const ProjectModel::LayerModel* m) {
   ui->psTree->setModel(m->getPsdTreeManager());
   ui->controllerTree->setModel(m->getControllerTreeManger());
@@ -20,10 +21,7 @@ void MainWindow::setUpTreeModel(const ProjectModel::LayerModel* m) {
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
-  auto glViewPort = new views::MainGlViewPort();
-  ui->MainStageGraphicsView->setViewport(glViewPort);
-  connect(glViewPort, &views::MainGlViewPort::glHasInit, this,
-          &MainWindow::windowInited);
+  setUpMenu();
   this->currentProject = nullptr;
 }
 
@@ -53,7 +51,24 @@ void MainWindow::setUpProjectFromPsd(const QString& path) {
   this->setProject(p);
   parser->deleteLater();
 }
+
+void MainWindow::handlePsdOpen() {
+  auto fileName = QFileDialog::getOpenFileName(this, tr("open psd file"), "",
+                                               "PsFiles (*.psd *.psb)");
+  if (fileName == "") return;
+
+  setUpProjectFromPsd(fileName);
+}
+
 void MainWindow::setUpMainStage() {
   ui->MainStageGraphicsView->setScene(currentProject->getScene());
+  ui->MainStageGraphicsView->makeCurrent();
   currentProject->getScene()->initGL();
+  ui->MainStageGraphicsView->doneCurrent();
+}
+
+void MainWindow::setUpMenu() {
+  auto openMenu = ui->menubar->addMenu(tr("Open"));
+  openMenu->addAction(tr("Open from ps file"), this,
+                                           &MainWindow::handlePsdOpen);
 }

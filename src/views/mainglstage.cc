@@ -12,9 +12,6 @@ views::MainGlViewPort::MainGlViewPort(QWidget* parent) : QOpenGLWidget(parent) {
 void views::MainGlViewPort::initializeGL() {
   QOpenGLWidget::initializeGL();
   initializeOpenGLFunctions();
-  glEnable(GL_BLEND);
-  glBlendFuncSeparate(GL_BLEND_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
-                      GL_ONE);
   emit glHasInit();
 }
 
@@ -24,6 +21,8 @@ views::MainGlGraphicsView::MainGlGraphicsView(QWidget* parent)
   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   this->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+  this->glViewport = new MainGlViewPort(this);
+  this->setViewport(glViewport);
 }
 void views::MainGlGraphicsView::keyPressEvent(QKeyEvent* event) {
   if (!event->isAutoRepeat()) {
@@ -44,3 +43,7 @@ void views::MainGlGraphicsView::wheelEvent(QWheelEvent* event) {
   double factor = angle > 0 ? 1.1 : 0.9;
   scale(factor, factor);
 }
+
+void views::MainGlGraphicsView::makeCurrent() { glViewport->makeCurrent(); }
+
+void views::MainGlGraphicsView::doneCurrent() { glViewport->doneCurrent(); }

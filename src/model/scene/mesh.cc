@@ -64,7 +64,6 @@ void Mesh::initializeGL(QRect relativeRect) {
   vbo->bind();
   vbo->allocate(normalize.get(), vertices.size() * sizeof(MeshVertex));
 
-  this->ibo = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
   ibo->create();
   ibo->bind();
   ibo->allocate(incident.data(), incident.size() * sizeof(unsigned int));
@@ -86,8 +85,8 @@ Mesh::Mesh(const std::vector<MeshVertex>& vertices,
     : QGraphicsItem(parent), vertices(vertices), incident(incident) {
   this->boundRect = calculateBoundRect(vertices);
   this->vao = new QOpenGLVertexArrayObject();
-  this->vbo = new QOpenGLBuffer();
-  this->ibo = new QOpenGLBuffer();
+  this->vbo = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+  this->ibo = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
   this->tex = new QOpenGLTexture(QOpenGLTexture::Target2D);
 }
 QRectF Mesh::boundingRect() const { return this->boundRect; }
@@ -183,12 +182,11 @@ void MeshBuilder::setUpVertices(const std::vector<MeshVertex>& vertices,
   this->vertices = vertices;
   this->verticesIndex = index;
 }
-
-Mesh* MeshBuilder::extractMesh() {
+std::unique_ptr<Mesh> MeshBuilder::buildMesh() {
   if (this->bitmapImage == nullptr) {
     return nullptr;
   }
-  auto s = new Mesh(this->vertices, this->verticesIndex);
+  auto s = std::make_unique<Mesh>(vertices, verticesIndex);
   s->setTexture(*bitmapImage);
   return s;
 }

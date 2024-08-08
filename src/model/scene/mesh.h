@@ -64,6 +64,6 @@ class MeshBuilder {
   void setUpVertices(const std::vector<MeshVertex>& vertices,
                      const std::vector<unsigned int>& index);
   void setUpTexture(const QImage& image);
-  Mesh* extractMesh();
+  std::unique_ptr<Mesh> buildMesh();
 };
 }  // namespace Scene

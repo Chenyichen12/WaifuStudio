@@ -1,5 +1,7 @@
 
 #include <QApplication>
+#include <QSurfaceFormat>
+#include <QTimer>
 #include <filesystem>
 
 #include "mainwindow.h"
@@ -11,10 +13,8 @@ int main(int argc, char** argv) {
       pathObj.parent_path() / "test_res" / "example.psd";
 
   auto mainwindow = new MainWindow();
-  QObject::connect(mainwindow, &MainWindow::windowInited, mainwindow, [&]() {
-    mainwindow->setUpProjectFromPsd(QString::fromStdString(resPath.string()));
-  });
   mainwindow->show();
+  mainwindow->setUpProjectFromPsd(QString::fromStdString(resPath.string()));
   QApplication::exec();
   delete mainwindow;
 }
