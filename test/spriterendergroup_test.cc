@@ -26,7 +26,7 @@ class SpriteRenderGroupTest : public testing::Test {
         auto item = static_cast<ProjectModel::BitmapLayer*>(c);
         auto builder = Scene::MeshBuilder();
         builder.setUpDefault(manager->getBitmap(item->getBitmapId()));
-        auto mesh = builder.extractMesh();
+        auto mesh = builder.buildMesh().release();
 
         render_group->pushFrontMesh(mesh);
 

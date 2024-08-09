@@ -6,7 +6,9 @@
 #include "layer_model.h"
 #include "scene/mainstagescene.h"
 #include "scene/mesh.h"
-#include "scene/MeshRenderGroup.h"
+#include "scene/meshrendergroup.h"
+#include "scene/scenecontrollergroup.h"
+#include "scene/scenecontroller.h"
 #include "tree_manager.h"
 namespace ProjectModel {
 Project* ProjectBuilder::build() {
@@ -34,23 +36,26 @@ Scene::MainStageScene* Project::getScene() const { return scene; }
 void ProjectBuilder::setUpScene() {
   auto tree = this->model->getControllerTreeManger();
   auto mainRenderGroup = new Scene::MeshRenderGroup(projectWidth, projectHeight);
+  auto controllerGroup = new Scene::SceneControllerGroup();
   tree->forEach([&](QStandardItem* item) {
     if (item->type() == LayerTypes::BitmapLayerType) {
       auto bitmapLayer = static_cast<BitmapLayer*>(item);
       auto builder = Scene::MeshBuilder();
       auto bitmap = manager->getBitmap(bitmapLayer->getBitmapId());
       builder.setUpDefault(bitmap);
-      auto mesh = builder.buildMesh();
+      auto mesh = builder.buildMesh().release();
 
       // store id of the layer
       mesh->bindId(bitmapLayer->getId());
+      auto meshController = new Scene::MeshController(mesh);
 
-      mainRenderGroup->pushFrontMesh(mesh.release());
+      mainRenderGroup->pushFrontMesh(mesh);
+      controllerGroup->pushFrontController(meshController);
     }
     return true;
   });
   this->sceneModel =
-      new Scene::MainStageScene(projectWidth, projectHeight, mainRenderGroup);
+      new Scene::MainStageScene(mainRenderGroup,controllerGroup);
 }
 
 }  // namespace ProjectModel

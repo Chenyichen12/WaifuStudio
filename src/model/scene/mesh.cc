@@ -117,6 +117,12 @@ void Mesh::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
   painter->endNativePainting();
 }
 
+void Mesh::upDateBuffer() {
+  //TODO: update opengl buffer
+
+  qDebug() << "opengl buffer update start";
+}
+
 void Mesh::setTexture(const QImage& image) { this->image = image; }
 
 Mesh::~Mesh() {

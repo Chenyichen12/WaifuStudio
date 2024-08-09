@@ -49,8 +49,22 @@ class Mesh : public QGraphicsItem, protected QOpenGLFunctions {
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget) override;
 
+  const std::vector<MeshVertex>& getVertices() const { return vertices; }
+
+  const std::vector<unsigned int>& getIncident() const { return incident; }
+
+  void setVerticesAt(int index, const MeshVertex& vertex) {
+    vertices[index] = vertex;
+  }
+
+  void upDateBuffer();
+
   void setTexture(const QImage& image);
   void bindId(int id) { layerId = id; }
+
+  int getLayerId() const {
+    return layerId;
+  }
 };
 
 class MeshBuilder {
