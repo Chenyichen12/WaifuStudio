@@ -7,10 +7,9 @@
 #include <QPainter>
 #include "mesh.h"
 #include "meshrendergroup.h"
-#include "scenecontrollergroup.h"
+#include "scenecontroller.h"
 namespace Scene {
-MainStageScene::MainStageScene(MeshRenderGroup* group,
-                               SceneControllerGroup* controllerGroup,
+MainStageScene::MainStageScene(MeshRenderGroup* group,RootController* controllerGroup,
                                QObject* parent)
     : QGraphicsScene(parent) {
   int width = group->getRenderWidth();
@@ -22,7 +21,7 @@ MainStageScene::MainStageScene(MeshRenderGroup* group,
   boundRect = new QGraphicsRectItem(bound);
   this->addItem(boundRect);
   renderGroup = group;
-  this->controllerGroup = controllerGroup;
+  this->controllerRoot = controllerGroup;
   this->addItem(renderGroup);
   this->addItem(controllerGroup);
 }

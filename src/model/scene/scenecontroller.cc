@@ -4,7 +4,16 @@
 
 #include "mesh.h"
 namespace Scene {
-MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
+RootController::RootController(int width, int height) {
+  this->width = width;
+  this->height = height;
+}
+
+QRectF RootController::boundingRect() const {
+  return QRectF(0, 0, width, height);
+}
+
+MeshController::MeshController(Mesh* controlMesh, AbstractController* parent)
     : AbstractController(parent) {
   this->controlMesh = controlMesh;
 }
@@ -20,7 +29,7 @@ void MeshController::paint(QPainter* painter,
   auto scale = painter->transform().m11();
 
   auto pen = QPen(Qt::black);
-  pen.setWidth(1/scale);
+  pen.setWidth(1 / scale);
   painter->setBrush(QBrush(Qt::white));
   painter->setPen(pen);
 
@@ -35,7 +44,6 @@ void MeshController::paint(QPainter* painter,
     painter->drawLine(QPointF(v3.pos.x, v3.pos.y), QPointF(v1.pos.x, v1.pos.y));
   }
 
-
   for (const auto& mesh_point : meshPoint) {
     painter->drawEllipse(QPointF(mesh_point.pos.x, mesh_point.pos.y), 3 / scale,
                          3 / scale);
@@ -45,4 +53,34 @@ void MeshController::paint(QPainter* painter,
 int MeshController::controllerId() { return controlMesh->getLayerId(); }
 
 int MeshController::type() const { return ControllerType::MeshControllerType; }
+
+QPointF MeshController::localPointToScene(const QPointF& point) {
+  auto par = static_cast<AbstractController*>(this->parentItem());
+  return par->localPointToScene(point);
+}
+
+QPointF MeshController::scenePointToLocal(const QPointF& point) {
+  auto par = static_cast<AbstractController*>(this->parentItem());
+  return par->scenePointToLocal(point);
+}
+
+void RootController::paint(QPainter* painter,
+                           const QStyleOptionGraphicsItem* option,
+                           QWidget* widget) {}
+
+int RootController::controllerId() { return -1; }
+
+int RootController::type() const { return ControllerType::RootControllerType; }
+
+QPointF RootController::localPointToScene(const QPointF& point) {
+  auto x = point.x() * this->width;
+  auto y = point.y() * this->height;
+  return {x, y};
+}
+
+QPointF RootController::scenePointToLocal(const QPointF& point) {
+  auto x = point.x() / this->width;
+  auto y = point.y() / this->height;
+  return {x, y};
+}
 }  // namespace Scene

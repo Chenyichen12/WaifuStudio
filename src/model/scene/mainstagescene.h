@@ -9,17 +9,17 @@ namespace Scene {
 
 class Sprite;
 class MeshRenderGroup;
-class SceneControllerGroup;
+class RootController;
 class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
   Q_OBJECT
  private:
   QGraphicsRectItem* boundRect;
 
   MeshRenderGroup* renderGroup;
-  SceneControllerGroup* controllerGroup;
+  RootController* controllerRoot;
  public:
   explicit MainStageScene(MeshRenderGroup* renderGroup,
-                          SceneControllerGroup* controllerGroup,
+                          RootController* controllerGroup,
                           QObject* parent = nullptr);
 
  public slots:
