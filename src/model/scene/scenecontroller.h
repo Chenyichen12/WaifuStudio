@@ -1,3 +1,10 @@
+
+/**
+ * source file
+ * scenecontroller.cc
+ * meshcontroller.cc
+ */
+
 #pragma once
 #include <QGraphicsItem>
 
