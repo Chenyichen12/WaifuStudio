@@ -1,21 +1,45 @@
 #include "scenecontroller.h"
 
+#include <qevent.h>
+
+#include <QGraphicsScene>
+#include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 
 #include "mesh.h"
 namespace Scene {
-RootController::RootController(int width, int height) {
-  this->width = width;
-  this->height = height;
+void AbstractController::setControllerParent(AbstractController* controller) {
+  if (controllerParent != nullptr) {
+    auto& child = controllerParent->controllerChildren;
+    auto findIter = std::find(child.begin(), child.end(), this);
+    if (findIter != child.end()) {
+      child.erase(findIter);
+    }
+  }
+  this->controllerParent = controller;
+  controller->controllerChildren.push_back(this);
 }
 
 QRectF RootController::boundingRect() const {
   return QRectF(0, 0, width, height);
 }
 
-MeshController::MeshController(Mesh* controlMesh, AbstractController* parent)
+void MeshController::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+  qDebug() << event->type();
+  qDebug() << this->controllerId();
+  qDebug() << event->pos();
+  AbstractController::mousePressEvent(event);
+}
+
+
+
+MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
     : AbstractController(parent) {
   this->controlMesh = controlMesh;
+  // default false for selected point
+  this->selectedPoint =
+      std::vector<bool>(controlMesh->getVertices().size(), false);
+  this->setVisible(true);
 }
 
 QRectF MeshController::boundingRect() const {
@@ -44,8 +68,14 @@ void MeshController::paint(QPainter* painter,
     painter->drawLine(QPointF(v3.pos.x, v3.pos.y), QPointF(v1.pos.x, v1.pos.y));
   }
 
-  for (const auto& mesh_point : meshPoint) {
-    painter->drawEllipse(QPointF(mesh_point.pos.x, mesh_point.pos.y), 3 / scale,
+  for (int i = 0; i < selectedPoint.size(); ++i) {
+    auto& point = meshPoint[i];
+    if (selectedPoint[i]) {
+      painter->setBrush(QBrush(Qt::red));
+    } else {
+      painter->setBrush(QBrush(Qt::white));
+    }
+    painter->drawEllipse(QPointF(point.pos.x, point.pos.y), 3 / scale,
                          3 / scale);
   }
 }
@@ -55,13 +85,33 @@ int MeshController::controllerId() { return controlMesh->getLayerId(); }
 int MeshController::type() const { return ControllerType::MeshControllerType; }
 
 QPointF MeshController::localPointToScene(const QPointF& point) {
-  auto par = static_cast<AbstractController*>(this->parentItem());
-  return par->localPointToScene(point);
+  return controllerParent->localPointToScene(point);
 }
 
 QPointF MeshController::scenePointToLocal(const QPointF& point) {
-  auto par = static_cast<AbstractController*>(this->parentItem());
-  return par->scenePointToLocal(point);
+  return controllerParent->scenePointToLocal(point);
+}
+
+void MeshController::unSelectPoint() {
+  for (auto&& selected_point : this->selectedPoint) {
+    selected_point = false;
+  }
+  this->update();
+}
+
+void MeshController::selectPoint(int index) {
+  if (index < 0 || index >= selectedPoint.size()) {
+    return;
+  }
+  this->selectedPoint[index] = true;
+  this->update();
+}
+
+
+RootController::RootController(int width, int height) {
+  this->width = width;
+  this->height = height;
+  this->setVisible(true);
 }
 
 void RootController::paint(QPainter* painter,

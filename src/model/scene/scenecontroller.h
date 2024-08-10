@@ -1,5 +1,6 @@
 #pragma once
 #include <QGraphicsItem>
+
 namespace Scene {
 
 class Mesh;
@@ -10,26 +11,41 @@ enum ControllerType {
 };
 
 class AbstractController : public QGraphicsItem {
+ protected:
+  /**
+   * the parent and children is different from graphics items parent and children
+   * its parent is represented to project controller parent, its relative position is from controllerParent all controller
+   * all controllers' GraphicsItemParent should be a root controller
+   */
+  AbstractController* controllerParent = nullptr;
+  std::vector<AbstractController*> controllerChildren;
+
  public:
   virtual int controllerId() = 0;
   int type() const override = 0;
   virtual QPointF localPointToScene(const QPointF& point) = 0;
   virtual QPointF scenePointToLocal(const QPointF& point) = 0;
-  AbstractController(AbstractController* parent = nullptr)
-      : QGraphicsItem(parent) {}
+  AbstractController(QGraphicsItem* parent = nullptr)
+      : QGraphicsItem(parent) {
+    // controller default is invisible
+    this->setVisible(false);
+  }
+
+  virtual void setControllerParent(AbstractController* controller);
 };
 
 /**
  * the root controller witch is a rectangle with project width and height
  * should be added into the scene
- * all controllers local position should >0 and <1 expect the point outside the project
+ * all controllers local position should >0 and <1 expect the point outside the
+ * project
  */
 class RootController : public AbstractController {
  private:
   int width;
   int height;
-
- public:
+  bool handle = true;
+public:
   RootController(int width, int height);
   QRectF boundingRect() const override;
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
@@ -41,16 +57,21 @@ class RootController : public AbstractController {
 };
 
 /**
- * the normal controller to control the mesh, you should not control mesh without MeshController
- * controller should not have any children so its local point only make scene in keyframe module
- * when the keyframe module going to set position of the vertex it will call the function in local point
+ * the normal controller to control the mesh, you should not control mesh
+ * without MeshController controller should not have any children so its local
+ * point only make scene in keyframe module when the keyframe module going to
+ * set position of the vertex it will call the function in local point
  */
 class MeshController : public AbstractController {
  private:
   Mesh* controlMesh;
+  std::vector<bool> selectedPoint;
 
- public:
-  MeshController(Mesh* controlMesh, AbstractController* parent);
+protected:
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+
+public:
+  MeshController(Mesh* controlMesh, QGraphicsItem* parent = nullptr);
   QRectF boundingRect() const override;
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget) override;
@@ -58,5 +79,8 @@ class MeshController : public AbstractController {
   int type() const override;
   QPointF localPointToScene(const QPointF& point) override;
   QPointF scenePointToLocal(const QPointF& point) override;
+  void unSelectPoint();
+  void selectPoint(int index);
+
 };
 }  // namespace Scene

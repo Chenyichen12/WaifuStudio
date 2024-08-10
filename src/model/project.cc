@@ -61,7 +61,8 @@ void ProjectBuilder::setUpScene() {
       }
 
       // has set parent will not leak memory
-      auto meshController = new Scene::MeshController(mesh,controllerStack.top().second);
+      auto meshController = new Scene::MeshController(mesh,controllerRoot);
+      meshController->setControllerParent(controllerStack.top().second);
       mainRenderGroup->pushFrontMesh(mesh);
     }
     return true;

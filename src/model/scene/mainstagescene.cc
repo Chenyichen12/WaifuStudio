@@ -4,6 +4,7 @@
 
 #include "mainstagescene.h"
 
+#include <QKeyEvent>
 #include <QPainter>
 #include "mesh.h"
 #include "meshrendergroup.h"
@@ -39,5 +40,30 @@ void MainStageScene::drawBackground(QPainter* painter, const QRectF& rect) {
   glClear(GL_COLOR_BUFFER_BIT);
   painter->endNativePainting();
   QGraphicsScene::drawBackground(painter, rect);
+}
+
+void MainStageScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+  if (handle) {
+    QGraphicsScene::mousePressEvent(event);
+  }
+}
+
+void MainStageScene::keyPressEvent(QKeyEvent* event) {
+
+  // when the space key pressed the view should be move
+  // so the item shouldn't handle mouse event when view move
+  if (event->key() == Qt::Key_Space && !event->isAutoRepeat()) {
+    handle = false;
+    this->controllerRoot->setSelected(false);
+  }
+  QGraphicsScene::keyPressEvent(event);
+}
+
+void MainStageScene::keyReleaseEvent(QKeyEvent* event) {
+  if (event->key() == Qt::Key_Space && !event->isAutoRepeat()) {
+    controllerRoot->setSelected(true);
+    handle = true;
+  }
+  QGraphicsScene::keyReleaseEvent(event);
 }
 }  // namespace ProjectModel

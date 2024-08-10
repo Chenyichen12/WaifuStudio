@@ -17,11 +17,15 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
 
   MeshRenderGroup* renderGroup;
   RootController* controllerRoot;
+  bool handle = true; // whether the item handle event
+
  public:
   /**
-   * @param renderGroup which is the actual gl group witch render mesh of the character
+   * @param renderGroup which is the actual gl group witch render mesh of the
+   * character
    * @param controllerGroup the controller root.
-   * its children are the actual controller can render controller and control mesh
+   * its children are the actual controller can render controller and control
+   * mesh
    */
   explicit MainStageScene(MeshRenderGroup* renderGroup,
                           RootController* controllerGroup,
@@ -29,11 +33,16 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
 
  public slots:
   /**
-   * when the gl is prepared should call init. otherwise you won't see the texture
+   * when the gl is prepared should call init. otherwise you won't see the
+   * texture
    */
   void initGL();
 
  protected:
   void drawBackground(QPainter* painter, const QRectF& rect) override;
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+
+  void keyPressEvent(QKeyEvent* event) override;
+  void keyReleaseEvent(QKeyEvent* event) override;
 };
-}  // namespace ProjectModel
+}  // namespace Scene
