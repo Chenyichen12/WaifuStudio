@@ -130,6 +130,12 @@ void Mesh::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
   painter->endNativePainting();
 }
 
+void Mesh::setVerticesAt(int index, const MeshVertex& vertex) {
+  vertices[index] = vertex;
+  this->boundRect = calculateBoundRect(vertices);
+  update();
+}
+
 void Mesh::upDateBuffer() {
   //TODO: update opengl buffer
 

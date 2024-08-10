@@ -64,9 +64,7 @@ class Mesh : public QGraphicsItem, protected QOpenGLFunctions {
 
   const std::vector<unsigned int>& getIncident() const { return incident; }
 
-  void setVerticesAt(int index, const MeshVertex& vertex) {
-    vertices[index] = vertex;
-  }
+  void setVerticesAt(int index, const MeshVertex& vertex);
 
   /**
    * when the vertex change, should call upDate to refresh the gl buffer

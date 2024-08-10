@@ -1,13 +1,104 @@
-#include "scenecontroller.h"
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsView>
+
 #include "mesh.h"
-#include <QPainter>
+#include "scenecontroller.h"
 namespace Scene {
+
+double getScaleFromTheView(const QGraphicsScene* whichScene, const QWidget*whichWidget){
+  for (const auto& view : whichScene->views()) {
+    if (view->viewport() == whichWidget) {
+      return view->transform().m11();
+    }
+  }
+  return 1;
+  
+}
+class MeshController::MeshControllerEventHandler {
+ private:
+  MeshController* controller;
+  int currentPressedIndex = -1;
+
+  /**
+   * check if the testPoint circle is close enough to another point
+   * @param x1 firstPoint 
+   * @param y1 
+   * @param x2 secondPoint
+   * @param y2 
+   * @param scale which is the scale of the event view
+   * used to define the testPoint is close enough
+   * @return 
+   */
+  bool contain(float x1, float y1, float x2, float y2,double scale) {
+    // normally one view in a project
+    float length = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+    auto testRadius = AbsolutePointRadius / scale;
+    return length < testRadius * testRadius;
+  }
+
+  /**
+   * find the controller mesh point index contain the testPoint
+   * @param x testPoint
+   * @param y 
+   * @param scale testLength
+   * @return if not found return nullopt
+   */
+  std::optional<int> gabPointAt(float x, float y,double scale) {
+    const auto& vec = controller->controlMesh->getVertices();
+    for (int i = 0; i < vec.size(); ++i) {
+      const auto& testPoint = vec[i].pos;
+      if (contain(x, y, testPoint.x, testPoint.y,scale)) {
+        return i;
+      }
+    }
+    return std::nullopt;
+  }
+
+ public:
+  static constexpr float AbsolutePointRadius = 3;
+
+  MeshControllerEventHandler(MeshController* controller) {
+    this->controller = controller;
+  }
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) {
+    const auto& pos = event->scenePos();
+    double scale = getScaleFromTheView(controller->scene(), event->widget());
+    auto index = gabPointAt(pos.x(), pos.y(),scale);
+    if (index.has_value()) {
+      if (event->modifiers()!=Qt::ShiftModifier) {
+        controller->unSelectPoint();
+      }
+
+      controller->selectPoint(index.value());
+      currentPressedIndex = index.value();
+      event->accept();
+    } else {
+      controller->unSelectPoint();
+      currentPressedIndex = -1;
+      event->ignore();
+    }
+  }
+
+  void mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+    const auto& pos = event->scenePos();
+    if (currentPressedIndex == -1) {
+      return;
+    }
+    auto vec = controller->controlMesh->getVertices()[currentPressedIndex];
+    vec.pos.x = pos.x();
+    vec.pos.y = pos.y();
+    controller->controlMesh->setVerticesAt(currentPressedIndex, vec);
+    controller->update();
+  }
+};
 void MeshController::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-  qDebug() << event->type();
-  qDebug() << this->controllerId();
-  qDebug() << event->pos();
-  AbstractController::mousePressEvent(event);
+  handler->mousePressEvent(event);
+  // AbstractController::mousePressEvent(event);
+}
+
+void MeshController::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+  handler->mouseMoveEvent(event);
+  AbstractController::mouseMoveEvent(event);
 }
 
 MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
@@ -17,10 +108,21 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
   this->selectedPoint =
       std::vector<bool>(controlMesh->getVertices().size(), false);
   this->setVisible(true);
+  handler = new MeshControllerEventHandler(this);
 }
 
 QRectF MeshController::boundingRect() const {
-  return controlMesh->boundingRect();
+  // normally this project should only have one view
+  auto view = this->scene()->views().first();
+  double scale = 1;
+  if (view == nullptr) {
+    scale = 1;
+  } else {
+    scale = view->transform().m11();
+  }
+  double scaleWidth = 5 / scale;
+  return controlMesh->boundingRect().marginsAdded(
+      QMargins(scaleWidth, scaleWidth, scaleWidth, scaleWidth));
 }
 
 void MeshController::paint(QPainter* painter,
@@ -53,7 +155,7 @@ void MeshController::paint(QPainter* painter,
       painter->setBrush(QBrush(Qt::white));
     }
     painter->drawEllipse(QPointF(point.pos.x, point.pos.y), 3 / scale,
-                         3 / scale);
+                         handler->AbsolutePointRadius / scale);
   }
 }
 
@@ -83,4 +185,5 @@ void MeshController::selectPoint(int index) {
   this->selectedPoint[index] = true;
   this->update();
 }
+MeshController::~MeshController() { delete handler; }
 }  // namespace Scene

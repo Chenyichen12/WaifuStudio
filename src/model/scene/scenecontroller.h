@@ -20,9 +20,10 @@ enum ControllerType {
 class AbstractController : public QGraphicsItem {
  protected:
   /**
-   * the parent and children is different from graphics items parent and children
-   * its parent is represented to project controller parent, its relative position is from controllerParent all controller
-   * all controllers' GraphicsItemParent should be a root controller
+   * the parent and children is different from graphics items parent and
+   * children its parent is represented to project controller parent, its
+   * relative position is from controllerParent all controller all controllers'
+   * GraphicsItemParent should be a root controller
    */
   AbstractController* controllerParent = nullptr;
   std::vector<AbstractController*> controllerChildren;
@@ -32,11 +33,13 @@ class AbstractController : public QGraphicsItem {
   int type() const override = 0;
   virtual QPointF localPointToScene(const QPointF& point) = 0;
   virtual QPointF scenePointToLocal(const QPointF& point) = 0;
-  AbstractController(QGraphicsItem* parent = nullptr)
-      : QGraphicsItem(parent) {
+  AbstractController(QGraphicsItem* parent = nullptr) : QGraphicsItem(parent) {
     // controller default is invisible
     this->setVisible(false);
   }
+
+  // call select the rect to select controller point
+  // virtual void selectFromRect(const QRectF&){}
 
   virtual void setControllerParent(AbstractController* controller);
 };
@@ -51,8 +54,8 @@ class RootController : public AbstractController {
  private:
   int width;
   int height;
-  bool handle = true;
-public:
+
+ public:
   RootController(int width, int height);
   QRectF boundingRect() const override;
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
@@ -70,15 +73,18 @@ public:
  * set position of the vertex it will call the function in local point
  */
 class MeshController : public AbstractController {
+  class MeshControllerEventHandler;
+  friend MeshControllerEventHandler;
  private:
   Mesh* controlMesh;
   std::vector<bool> selectedPoint;
-
-protected:
+  MeshControllerEventHandler* handler;
+ protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
-
-public:
+  void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+ public:
   MeshController(Mesh* controlMesh, QGraphicsItem* parent = nullptr);
+  ~MeshController() override;
   QRectF boundingRect() const override;
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget) override;
@@ -87,7 +93,11 @@ public:
   QPointF localPointToScene(const QPointF& point) override;
   QPointF scenePointToLocal(const QPointF& point) override;
   void unSelectPoint();
+  /**
+   * select the mesh point
+   * will auto update the scene appearance
+   * @param index 
+   */
   void selectPoint(int index);
-
 };
 }  // namespace Scene

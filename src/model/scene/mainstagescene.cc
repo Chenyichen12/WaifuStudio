@@ -4,14 +4,50 @@
 
 #include "mainstagescene.h"
 
+#include <QGraphicsSceneMouseEvent>
 #include <QKeyEvent>
 #include <QPainter>
+
 #include "mesh.h"
 #include "meshrendergroup.h"
 #include "scenecontroller.h"
+#include "views/layertreeview.h"
+
 namespace Scene {
-MainStageScene::MainStageScene(MeshRenderGroup* group,RootController* controllerGroup,
-                               QObject* parent)
+
+class MainStageEventHandler {
+ private:
+  MainStageScene* context;
+
+  bool handle = true;
+
+ public:
+  MainStageEventHandler(MainStageScene* scene) { context = scene; }
+
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) {
+    if (handle) {
+      context->QGraphicsScene::mousePressEvent(event);
+    }
+  }
+
+  void keyPressEvent(QKeyEvent* event) {
+    // when the space key pressed the view should be move
+    // so the item shouldn't handle mouse event when view move
+    if (event->key() == Qt::Key_Space && !event->isAutoRepeat()) {
+      handle = false;
+    }
+    context->QGraphicsScene::keyPressEvent(event);
+  }
+  void keyReleaseEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Space && !event->isAutoRepeat()) {
+      handle = true;
+    }
+    context->QGraphicsScene::keyReleaseEvent(event);
+  }
+};
+
+MainStageScene::MainStageScene(MeshRenderGroup* group,
+                               RootController* controllerGroup, QObject* parent)
     : QGraphicsScene(parent) {
   int width = group->getRenderWidth();
   int height = group->getRenderHeight();
@@ -25,7 +61,11 @@ MainStageScene::MainStageScene(MeshRenderGroup* group,RootController* controller
   this->controllerRoot = controllerGroup;
   this->addItem(renderGroup);
   this->addItem(controllerGroup);
+
+  this->handler = new MainStageEventHandler(this);
 }
+
+MainStageScene::~MainStageScene() { delete handler; }
 
 void MainStageScene::initGL() {
   initializeOpenGLFunctions();
@@ -43,27 +83,14 @@ void MainStageScene::drawBackground(QPainter* painter, const QRectF& rect) {
 }
 
 void MainStageScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-  if (handle) {
-    QGraphicsScene::mousePressEvent(event);
-  }
+  handler->mousePressEvent(event);
 }
 
 void MainStageScene::keyPressEvent(QKeyEvent* event) {
-
-  // when the space key pressed the view should be move
-  // so the item shouldn't handle mouse event when view move
-  if (event->key() == Qt::Key_Space && !event->isAutoRepeat()) {
-    handle = false;
-    this->controllerRoot->setSelected(false);
-  }
-  QGraphicsScene::keyPressEvent(event);
+  handler->keyPressEvent(event);
 }
 
 void MainStageScene::keyReleaseEvent(QKeyEvent* event) {
-  if (event->key() == Qt::Key_Space && !event->isAutoRepeat()) {
-    controllerRoot->setSelected(true);
-    handle = true;
-  }
-  QGraphicsScene::keyReleaseEvent(event);
+  handler->keyReleaseEvent(event);
 }
-}  // namespace ProjectModel
+}  // namespace Scene

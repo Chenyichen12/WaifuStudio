@@ -10,14 +10,20 @@ namespace Scene {
 class Sprite;
 class MeshRenderGroup;
 class RootController;
+
+class MainStageEventHandler;
 class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
   Q_OBJECT
+  friend MainStageEventHandler;
+
  private:
   QGraphicsRectItem* boundRect;
 
   MeshRenderGroup* renderGroup;
   RootController* controllerRoot;
-  bool handle = true; // whether the item handle event
+
+ protected:
+  MainStageEventHandler* handler; //event handler
 
  public:
   /**
@@ -30,8 +36,9 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
   explicit MainStageScene(MeshRenderGroup* renderGroup,
                           RootController* controllerGroup,
                           QObject* parent = nullptr);
+  ~MainStageScene() override;
 
- public slots:
+public slots:
   /**
    * when the gl is prepared should call init. otherwise you won't see the
    * texture
@@ -44,5 +51,6 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
 
   void keyPressEvent(QKeyEvent* event) override;
   void keyReleaseEvent(QKeyEvent* event) override;
+
 };
 }  // namespace Scene

@@ -44,4 +44,6 @@ QPointF RootController::scenePointToLocal(const QPointF& point) {
   auto y = point.y() / this->height;
   return {x, y};
 }
+
+
 }  // namespace Scene
