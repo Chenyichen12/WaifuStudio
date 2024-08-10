@@ -10,7 +10,13 @@
 #include "QPainter"
 #include "QWidget"
 namespace Scene {
-
+/**
+ * map the scene position to the gl position
+ * @param vertices scene position vertices
+ * @param width scene width
+ * @param height scene height
+ * @return map gl vertices
+ */
 std::unique_ptr<MeshVertex[]> normalization(
     const std::vector<MeshVertex>& vertices, int width, int height) {
   auto res = std::make_unique<MeshVertex[]>(vertices.size());
@@ -29,6 +35,11 @@ std::unique_ptr<MeshVertex[]> normalization(
   return res;
 }
 
+/**
+ * use to calculate Graphics item bound
+ * @param vector scene position
+ * @return bound
+ */
 QRectF calculateBoundRect(const std::vector<MeshVertex>& vector) {
   float left = FLT_MAX;
   float top = FLT_MAX;
@@ -80,6 +91,7 @@ void Mesh::initializeGL(QRect relativeRect) {
   tex->setData(image);
 }
 
+
 Mesh::Mesh(const std::vector<MeshVertex>& vertices,
            const std::vector<unsigned int>& incident, MeshRenderGroup* parent)
     : QGraphicsItem(parent), vertices(vertices), incident(incident) {
@@ -89,6 +101,7 @@ Mesh::Mesh(const std::vector<MeshVertex>& vertices,
   this->ibo = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
   this->tex = new QOpenGLTexture(QOpenGLTexture::Target2D);
 }
+
 QRectF Mesh::boundingRect() const { return this->boundRect; }
 void Mesh::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                  QWidget* widget) {

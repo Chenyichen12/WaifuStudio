@@ -18,11 +18,19 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
   MeshRenderGroup* renderGroup;
   RootController* controllerRoot;
  public:
+  /**
+   * @param renderGroup which is the actual gl group witch render mesh of the character
+   * @param controllerGroup the controller root.
+   * its children are the actual controller can render controller and control mesh
+   */
   explicit MainStageScene(MeshRenderGroup* renderGroup,
                           RootController* controllerGroup,
                           QObject* parent = nullptr);
 
  public slots:
+  /**
+   * when the gl is prepared should call init. otherwise you won't see the texture
+   */
   void initGL();
 
  protected:

@@ -11,8 +11,10 @@ enum LayerTypes {
   BitmapLayerType = QStandardItem::UserType + 1,
   PsGroupLayerType = QStandardItem::UserType + 2,
 };
-constexpr int UserIdRole = Qt::UserRole + 1;
-constexpr int VisibleRole = Qt::UserRole + 2;
+enum LayerRoles {
+  UserIdRole = Qt::UserRole + 1,
+  VisibleRole = Qt::UserRole + 2
+};
 class Layer : public QStandardItem {
  protected:
   bool visible;
