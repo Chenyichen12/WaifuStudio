@@ -2,7 +2,7 @@
 // Created by chenyichen on 8/6/24.
 //
 
-#include "MeshRenderGroup.h"
+#include "meshrendergroup.h"
 
 #include "QFile"
 #include "QPainter"

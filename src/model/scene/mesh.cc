@@ -4,7 +4,7 @@
 
 #include "mesh.h"
 
-#include "MeshRenderGroup.h"
+#include "meshrendergroup.h"
 #include "QOpenGLBuffer"
 #include "QOpenGLVertexArrayObject"
 #include "QPainter"
