@@ -72,6 +72,10 @@ void MainStageScene::initGL() {
   renderGroup->initializeGL();
 }
 
+void MainStageScene::handleRubberSelect(QRectF sceneRect) {
+  qDebug() << sceneRect;
+}
+
 void MainStageScene::drawBackground(QPainter* painter, const QRectF& rect) {
   Q_UNUSED(rect)
 

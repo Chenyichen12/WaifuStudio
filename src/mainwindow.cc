@@ -62,6 +62,9 @@ void MainWindow::handlePsdOpen() {
 
 void MainWindow::setUpMainStage() {
   ui->MainStageGraphicsView->setScene(currentProject->getScene());
+  connect(ui->MainStageGraphicsView, &views::MainGlGraphicsView::rubberSelected,
+          currentProject->getScene(),
+          &Scene::MainStageScene::handleRubberSelect);
   ui->MainStageGraphicsView->makeCurrent();
   currentProject->getScene()->initGL();
   ui->MainStageGraphicsView->doneCurrent();

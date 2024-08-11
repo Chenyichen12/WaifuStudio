@@ -44,6 +44,7 @@ public slots:
    * texture
    */
   void initGL();
+ void handleRubberSelect(QRectF sceneRect);
 
  protected:
   void drawBackground(QPainter* painter, const QRectF& rect) override;

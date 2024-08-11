@@ -21,6 +21,10 @@ views::MainGlGraphicsView::MainGlGraphicsView(QWidget* parent)
   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   this->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+  this->setDragMode(DragMode::RubberBandDrag);
+
+  connect(this, &MainGlGraphicsView::rubberBandChanged, this,
+          &MainGlGraphicsView::handleRubberChanged);
   this->glViewport = new MainGlViewPort(this);
   this->setViewport(glViewport);
 }
@@ -34,7 +38,7 @@ void views::MainGlGraphicsView::keyPressEvent(QKeyEvent* event) {
 }
 void views::MainGlGraphicsView::keyReleaseEvent(QKeyEvent* event) {
   if (!event->isAutoRepeat()) {
-    this->setDragMode(DragMode::NoDrag);
+    this->setDragMode(DragMode::RubberBandDrag);
   }
   QGraphicsView::keyReleaseEvent(event);
 }
@@ -43,6 +47,15 @@ void views::MainGlGraphicsView::wheelEvent(QWheelEvent* event) {
   double factor = angle > 0 ? 1.1 : 0.9;
   scale(factor, factor);
 }
+
+void views::MainGlGraphicsView::handleRubberChanged(QRect rubberBandRect,QPointF fromScenePoint, QPointF toScenePoint) {
+  if (rubberBandRect.width() == 0 || rubberBandRect.height() == 0) {
+    emit rubberSelected(this->sceneRubberRect);
+  }else {
+    this->sceneRubberRect = QRectF(fromScenePoint, toScenePoint);
+  }
+}
+
 
 void views::MainGlGraphicsView::makeCurrent() { glViewport->makeCurrent(); }
 
