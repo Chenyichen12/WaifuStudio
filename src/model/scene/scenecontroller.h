@@ -91,6 +91,13 @@ class MeshController : public AbstractController {
   int controllerId() override;
   int type() const override;
 
+  /**
+   * use to control the mesh point, the basic control function
+   * you should also call upDateMeshBuffer after set all the mesh control point
+   * to update the opengl buffer of the actual mesh
+   * @param index mesh point index
+   * @param scenePosition scene position
+   */
   void setMeshPointScene(int index,const QPointF& scenePosition);
   void setMeshPointFromLocal(int index,const QPointF& localPosition);
 
