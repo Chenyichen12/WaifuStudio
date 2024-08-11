@@ -74,6 +74,12 @@ void MainStageScene::initGL() {
 
 void MainStageScene::handleRubberSelect(QRectF sceneRect) {
   qDebug() << sceneRect;
+  this->controllerRoot->forEachController([&](auto* controller) {
+    if (controller->isVisible()) {
+      controller->selectAtScene(sceneRect); 
+    }
+    return true;
+  });
 }
 
 void MainStageScene::drawBackground(QPainter* painter, const QRectF& rect) {

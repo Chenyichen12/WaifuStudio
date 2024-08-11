@@ -33,6 +33,20 @@ int RootController::controllerId() { return -1; }
 
 int RootController::type() const { return ControllerType::RootControllerType; }
 
+void controllerRur(AbstractController* parent,const std::function<RootController::forEachCallBack>& callback) {
+  for (auto& controller : parent->getControllerChildren()) {
+    if (!callback(controller)) {
+      return;
+    }
+    controllerRur(controller, callback);
+  }
+}
+
+void RootController::
+forEachController(const std::function<forEachCallBack>& callback) {
+  controllerRur(this, callback);
+}
+
 QPointF RootController::localPointToScene(const QPointF& point) {
   auto x = point.x() * this->width;
   auto y = point.y() * this->height;
@@ -44,6 +58,4 @@ QPointF RootController::scenePointToLocal(const QPointF& point) {
   auto y = point.y() / this->height;
   return {x, y};
 }
-
-
 }  // namespace Scene

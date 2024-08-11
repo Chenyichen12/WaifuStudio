@@ -38,10 +38,19 @@ class AbstractController : public QGraphicsItem {
     this->setVisible(false);
   }
 
-  // call select the rect to select controller point
-  // virtual void selectFromRect(const QRectF&){}
 
   virtual void setControllerParent(AbstractController* controller);
+  /**
+   * call select the rect to select controller point
+   * it will be called by scene when it is visible.
+   * override to handle select point
+   * @param sceneRect scene position of the selection rect
+   */
+  virtual void selectAtScene(QRectF sceneRect) {}
+
+  const std::vector<AbstractController*>& getControllerChildren() {
+    return controllerChildren;
+  }
 };
 
 /**
@@ -62,6 +71,10 @@ class RootController : public AbstractController {
              QWidget* widget) override;
   int controllerId() override;
   int type() const override;
+
+  typedef bool forEachCallBack(AbstractController* controller);
+  void forEachController(const std::function<forEachCallBack>& callback);
+
   QPointF localPointToScene(const QPointF& point) override;
   QPointF scenePointToLocal(const QPointF& point) override;
 };
@@ -112,5 +125,7 @@ class MeshController : public AbstractController {
   void selectPoint(int index);
 
   void upDateMeshBuffer() const;
+
+  void selectAtScene(QRectF sceneRect) override;
 };
 }  // namespace Scene

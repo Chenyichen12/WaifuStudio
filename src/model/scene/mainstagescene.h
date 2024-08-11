@@ -23,7 +23,7 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
   RootController* controllerRoot;
 
  protected:
-  MainStageEventHandler* handler; //event handler
+  MainStageEventHandler* handler;  // event handler
 
  public:
   /**
@@ -38,13 +38,17 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
                           QObject* parent = nullptr);
   ~MainStageScene() override;
 
-public slots:
+ public slots:
   /**
    * when the gl is prepared should call init. otherwise you won't see the
    * texture
    */
   void initGL();
- void handleRubberSelect(QRectF sceneRect);
+  /**
+   * handle the event when the view use rubber to select point
+   * @param sceneRect rect of the rubber
+   */
+  void handleRubberSelect(QRectF sceneRect);
 
  protected:
   void drawBackground(QPainter* painter, const QRectF& rect) override;
@@ -52,6 +56,5 @@ public slots:
 
   void keyPressEvent(QKeyEvent* event) override;
   void keyReleaseEvent(QKeyEvent* event) override;
-
 };
 }  // namespace Scene

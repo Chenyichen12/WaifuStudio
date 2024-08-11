@@ -183,7 +183,9 @@ void MeshController::selectPoint(int index) {
   this->update();
 }
 
-void MeshController::upDateMeshBuffer() const { this->controlMesh->upDateBuffer(); }
+void MeshController::upDateMeshBuffer() const {
+  this->controlMesh->upDateBuffer();
+}
 
 void MeshController::setMeshPointScene(int index,
                                        const QPointF& scenePosition) {
@@ -198,7 +200,18 @@ void MeshController::setMeshPointFromLocal(int index,
                                            const QPointF& localPosition) {
   auto scenePos = localPointToScene(localPosition);
   setMeshPointScene(index, scenePos);
-
+}
+void MeshController::selectAtScene(QRectF sceneRect) {
+  AbstractController::selectAtScene(sceneRect);
+  this->unSelectPoint();
+  for (int i = 0; i < controlMesh->getVertices().size(); ++i) {
+    const auto& point = controlMesh->getVertices()[i].pos;
+    auto qPoint = QPointF(point.x, point.y);
+    if (sceneRect.contains(qPoint)) {
+      selectPoint(i);
+    }
+  }
 }
 MeshController::~MeshController() { delete handler; }
+
 }  // namespace Scene
