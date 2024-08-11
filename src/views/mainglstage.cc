@@ -57,7 +57,8 @@ void views::MainGlGraphicsView::mouseMoveEvent(QMouseEvent* event) {
 void views::MainGlGraphicsView::mouseReleaseEvent(QMouseEvent* event) {
   QGraphicsView::mouseReleaseEvent(event);
   if (!isMousePressAndMove) {
-    emit mouseSelectClick(mapToScene(event->pos()));
+    emit mouseSelectClick(mapToScene(event->pos()),
+                          event->modifiers() == Qt::ShiftModifier);
   }
   isMousePressAndMove = false;
   isMousePressed = false;

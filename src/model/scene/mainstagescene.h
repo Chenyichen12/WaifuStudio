@@ -50,6 +50,11 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
    */
   void handleRubberSelect(QRectF sceneRect);
 
+  /**
+   * view connect this slot when the user click at one point
+   * @param scenePoint 
+   * @param isMultiple 
+   */
   void handleSelectClick(QPointF scenePoint,bool isMultiple);
  protected:
   void drawBackground(QPainter* painter, const QRectF& rect) override;

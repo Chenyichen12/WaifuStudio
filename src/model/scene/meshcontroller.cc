@@ -98,6 +98,15 @@ void MeshController::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
   AbstractController::mouseMoveEvent(event);
 }
 
+QVariant MeshController::itemChange(GraphicsItemChange change,
+    const QVariant& value) {
+  // when it becomes unVisible that is unselected. Unselect all the selected controller point
+  if (change == ItemVisibleChange&&value == false) {
+    this->unSelectPoint();
+  }
+  return AbstractController::itemChange(change, value);
+}
+
 MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
     : AbstractController(parent) {
   this->controlMesh = controlMesh;

@@ -96,6 +96,8 @@ class MeshController : public AbstractController {
  protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+  QVariant itemChange(GraphicsItemChange change,
+                      const QVariant& value) override;
 
  public:
   MeshController(Mesh* controlMesh, QGraphicsItem* parent = nullptr);
