@@ -7,7 +7,6 @@
 
 #pragma once
 #include <QGraphicsItem>
-
 namespace Scene {
 
 class Mesh;
@@ -27,7 +26,7 @@ class AbstractController : public QGraphicsItem {
    */
   AbstractController* controllerParent = nullptr;
   std::vector<AbstractController*> controllerChildren;
-
+  
  public:
   virtual int controllerId() = 0;
   int type() const override = 0;
@@ -50,6 +49,7 @@ class AbstractController : public QGraphicsItem {
   const std::vector<AbstractController*>& getControllerChildren() {
     return controllerChildren;
   }
+  AbstractController* getControllerParent() const { return controllerParent; }
 };
 
 /**
@@ -86,13 +86,14 @@ class RootController : public AbstractController {
  */
 class MeshController : public AbstractController {
   class MeshControllerEventHandler;
+  class MutiSelectRectItem;
   friend MeshControllerEventHandler;
 
  private:
   Mesh* controlMesh;
   std::vector<bool> selectedPoint;
   MeshControllerEventHandler* handler;
-
+  MutiSelectRectItem* selectRectItem;
  protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;

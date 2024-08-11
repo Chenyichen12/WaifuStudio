@@ -5,6 +5,17 @@
 #include "scenecontroller.h"
 namespace Scene {
 
+RootController* findRootController(const QGraphicsItem* controller) {
+  auto parent = controller->parentItem();
+  while (parent != nullptr) {
+    if (parent->type() == ControllerType::RootControllerType) {
+      return static_cast<RootController*>(parent);
+    }
+    parent = parent->parentItem();
+  }
+  return nullptr;
+}
+
 double getScaleFromTheView(const QGraphicsScene* whichScene,
                            const QWidget* whichWidget) {
   for (const auto& view : whichScene->views()) {
@@ -88,6 +99,84 @@ class MeshController::MeshControllerEventHandler {
     controller->upDateMeshBuffer();
   }
 };
+
+class MeshController::MutiSelectRectItem : public QGraphicsItem {
+ private:
+  std::vector<QPointF> sceneSelectPointPosition;
+
+  bool ifHitRectBorder(const QPointF& p) const {
+    const auto& rect = boundingRect();
+    const auto& insideRect = rect.marginsRemoved(
+        QMarginsF(rectWidth, rectWidth, rectWidth, rectWidth));
+    return rect.contains(p) && !insideRect.contains(p);
+  }
+
+ public:
+  MutiSelectRectItem(QGraphicsItem* parent) : QGraphicsItem(parent) {}
+
+  double rectWidth = 5;
+  double bestPadding = 10;
+  QRectF boundingRect() const override {
+    if (sceneSelectPointPosition.empty() ||
+        sceneSelectPointPosition.size() == 1) {
+      return {};
+    }
+    float leftMost = FLT_MAX;
+    float topMost = FLT_MAX;
+    float rightMost = FLT_MIN;
+    float bottomMost = FLT_MIN;
+    for (const auto& scenePoint : sceneSelectPointPosition) {
+      if (scenePoint.x() > rightMost) {
+        rightMost = scenePoint.x();
+      }
+      if (scenePoint.x() < leftMost) {
+        leftMost = scenePoint.x();
+      }
+      if (scenePoint.y() > bottomMost) {
+        bottomMost = scenePoint.y();
+      }
+      if (scenePoint.y() < topMost) {
+        topMost = scenePoint.y();
+      }
+    }
+    return {QPointF(leftMost - bestPadding - rectWidth / 2,
+                    topMost - bestPadding - rectWidth / 2),
+            QPointF(rightMost + bestPadding + rectWidth / 2,
+                    bottomMost + bestPadding + rectWidth / 2)};
+  }
+
+  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
+             QWidget* widget) override {
+    painter->setBrush(QBrush(Qt::transparent));
+    auto pen = QPen(Qt::red);
+    pen.setWidth(rectWidth);
+    painter->setPen(pen);
+    painter->drawRect(boundingRect().marginsRemoved(
+        {rectWidth / 2.0, rectWidth / 2.0, rectWidth / 2.0, rectWidth / 2.0}));
+  }
+
+  void addSelectPoint(QPointF scenePoint) {
+    this->sceneSelectPointPosition.push_back(scenePoint);
+    if (this->sceneSelectPointPosition.size() > 1) {
+      this->setVisible(true);
+    }
+    update();
+  }
+
+  void unSelectPoints() {
+    this->sceneSelectPointPosition.clear();
+    this->setVisible(false);
+  }
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
+    if (this->ifHitRectBorder(event->scenePos())) {
+      event->accept();
+
+    } else {
+      event->ignore();
+    }
+  }
+};
+
 void MeshController::mousePressEvent(QGraphicsSceneMouseEvent* event) {
   handler->mousePressEvent(event);
   // AbstractController::mousePressEvent(event);
@@ -99,9 +188,10 @@ void MeshController::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 }
 
 QVariant MeshController::itemChange(GraphicsItemChange change,
-    const QVariant& value) {
-  // when it becomes unVisible that is unselected. Unselect all the selected controller point
-  if (change == ItemVisibleChange&&value == false) {
+                                    const QVariant& value) {
+  // when it becomes unVisible that is unselected. Unselect all the selected
+  // controller point
+  if (change == ItemVisibleChange && value == false) {
     this->unSelectPoint();
   }
   return AbstractController::itemChange(change, value);
@@ -114,20 +204,28 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
   this->selectedPoint =
       std::vector<bool>(controlMesh->getVertices().size(), false);
   handler = new MeshControllerEventHandler(this);
+  this->selectRectItem = new MutiSelectRectItem(this);
+  selectRectItem->setVisible(false);
+  auto r = findRootController(this);
+  if (r != nullptr) {
+    auto betterPaddint = r->boundingRect().width() / 100;
+    auto betterWidth = r->boundingRect().width() / 500;
+    selectRectItem->bestPadding = betterPaddint;
+    selectRectItem->rectWidth = betterWidth;
+  }
 }
 
 QRectF MeshController::boundingRect() const {
   // normally this project should only have one view
   auto view = this->scene()->views().first();
-  double scale = 1;
-  if (view == nullptr) {
-    scale = 1;
-  } else {
-    scale = view->transform().m11();
+
+  auto r = findRootController(this);
+  double betterPadding = 10;
+  if (r != nullptr) {
+    betterPadding = r->boundingRect().width() / 300;
   }
-  double scaleWidth = 5 / scale;
   return controlMesh->boundingRect().marginsAdded(
-      QMargins(scaleWidth, scaleWidth, scaleWidth, scaleWidth));
+      QMarginsF(betterPadding, betterPadding, betterPadding, betterPadding));
 }
 
 void MeshController::paint(QPainter* painter,
@@ -180,6 +278,7 @@ void MeshController::unSelectPoint() {
   for (auto&& selected_point : this->selectedPoint) {
     selected_point = false;
   }
+  selectRectItem->unSelectPoints();
   this->update();
 }
 
@@ -188,6 +287,11 @@ void MeshController::selectPoint(int index) {
     return;
   }
   this->selectedPoint[index] = true;
+
+  selectRectItem->addSelectPoint(
+      QPointF(controlMesh->getVertices()[index].pos.x,
+              controlMesh->getVertices()[index].pos.y));
+  selectRectItem->update();
   this->update();
 }
 
