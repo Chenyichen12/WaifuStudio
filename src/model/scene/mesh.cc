@@ -147,10 +147,6 @@ void Mesh::upDateBuffer() {
 void Mesh::setTexture(const QImage& image) { this->image = image; }
 
 Mesh::~Mesh() {
-  vao->destroy();
-  vbo->destroy();
-  ibo->destroy();
-  tex->destroy();
   delete vao;
   delete vbo;
   delete ibo;
