@@ -4,11 +4,11 @@
 
 #include "mesh.h"
 
-#include "meshrendergroup.h"
 #include "QOpenGLBuffer"
 #include "QOpenGLVertexArrayObject"
 #include "QPainter"
 #include "QWidget"
+#include "meshrendergroup.h"
 namespace Scene {
 /**
  * map the scene position to the gl position
@@ -91,7 +91,6 @@ void Mesh::initializeGL(QRect relativeRect) {
   tex->setData(image);
 }
 
-
 Mesh::Mesh(const std::vector<MeshVertex>& vertices,
            const std::vector<unsigned int>& incident, MeshRenderGroup* parent)
     : QGraphicsItem(parent), vertices(vertices), incident(incident) {
@@ -133,13 +132,16 @@ void Mesh::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 void Mesh::setVerticesAt(int index, const MeshVertex& vertex) {
   vertices[index] = vertex;
   this->boundRect = calculateBoundRect(vertices);
-  update();
 }
 
 void Mesh::upDateBuffer() {
-  //TODO: update opengl buffer
-
-  qDebug() << "opengl buffer update start";
+  auto par = static_cast<MeshRenderGroup*>(parentItem());
+  auto normalize =
+      normalization(vertices, par->getRenderWidth(), par->getRenderHeight());
+  vbo->bind();
+  vbo->write(0, normalize.get(), vertices.size() * sizeof(MeshVertex));
+  vbo->release();
+  update();
 }
 
 void Mesh::setTexture(const QImage& image) { this->image = image; }

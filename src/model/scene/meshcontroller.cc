@@ -5,14 +5,14 @@
 #include "scenecontroller.h"
 namespace Scene {
 
-double getScaleFromTheView(const QGraphicsScene* whichScene, const QWidget*whichWidget){
+double getScaleFromTheView(const QGraphicsScene* whichScene,
+                           const QWidget* whichWidget) {
   for (const auto& view : whichScene->views()) {
     if (view->viewport() == whichWidget) {
       return view->transform().m11();
     }
   }
   return 1;
-  
 }
 class MeshController::MeshControllerEventHandler {
  private:
@@ -21,15 +21,15 @@ class MeshController::MeshControllerEventHandler {
 
   /**
    * check if the testPoint circle is close enough to another point
-   * @param x1 firstPoint 
-   * @param y1 
+   * @param x1 firstPoint
+   * @param y1
    * @param x2 secondPoint
-   * @param y2 
+   * @param y2
    * @param scale which is the scale of the event view
    * used to define the testPoint is close enough
-   * @return 
+   * @return
    */
-  bool contain(float x1, float y1, float x2, float y2,double scale) {
+  bool contain(float x1, float y1, float x2, float y2, double scale) {
     // normally one view in a project
     float length = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
     auto testRadius = AbsolutePointRadius / scale;
@@ -39,15 +39,15 @@ class MeshController::MeshControllerEventHandler {
   /**
    * find the controller mesh point index contain the testPoint
    * @param x testPoint
-   * @param y 
+   * @param y
    * @param scale testLength
    * @return if not found return nullopt
    */
-  std::optional<int> gabPointAt(float x, float y,double scale) {
+  std::optional<int> gabPointAt(float x, float y, double scale) {
     const auto& vec = controller->controlMesh->getVertices();
     for (int i = 0; i < vec.size(); ++i) {
       const auto& testPoint = vec[i].pos;
-      if (contain(x, y, testPoint.x, testPoint.y,scale)) {
+      if (contain(x, y, testPoint.x, testPoint.y, scale)) {
         return i;
       }
     }
@@ -63,9 +63,9 @@ class MeshController::MeshControllerEventHandler {
   void mousePressEvent(QGraphicsSceneMouseEvent* event) {
     const auto& pos = event->scenePos();
     double scale = getScaleFromTheView(controller->scene(), event->widget());
-    auto index = gabPointAt(pos.x(), pos.y(),scale);
+    auto index = gabPointAt(pos.x(), pos.y(), scale);
     if (index.has_value()) {
-      if (event->modifiers()!=Qt::ShiftModifier) {
+      if (event->modifiers() != Qt::ShiftModifier) {
         controller->unSelectPoint();
       }
 
@@ -84,11 +84,8 @@ class MeshController::MeshControllerEventHandler {
     if (currentPressedIndex == -1) {
       return;
     }
-    auto vec = controller->controlMesh->getVertices()[currentPressedIndex];
-    vec.pos.x = pos.x();
-    vec.pos.y = pos.y();
-    controller->controlMesh->setVerticesAt(currentPressedIndex, vec);
-    controller->update();
+    controller->setMeshPointScene(currentPressedIndex, pos);
+    controller->upDateMeshBuffer();
   }
 };
 void MeshController::mousePressEvent(QGraphicsSceneMouseEvent* event) {
@@ -184,6 +181,24 @@ void MeshController::selectPoint(int index) {
   }
   this->selectedPoint[index] = true;
   this->update();
+}
+
+void MeshController::upDateMeshBuffer() const { this->controlMesh->upDateBuffer(); }
+
+void MeshController::setMeshPointScene(int index,
+                                       const QPointF& scenePosition) {
+  auto vec = controlMesh->getVertices()[index];
+  vec.pos.x = scenePosition.x();
+  vec.pos.y = scenePosition.y();
+  controlMesh->setVerticesAt(index, vec);
+  this->update();
+}
+
+void MeshController::setMeshPointFromLocal(int index,
+                                           const QPointF& localPosition) {
+  auto scenePos = localPointToScene(localPosition);
+  setMeshPointScene(index, scenePos);
+
 }
 MeshController::~MeshController() { delete handler; }
 }  // namespace Scene

@@ -90,6 +90,10 @@ class MeshController : public AbstractController {
              QWidget* widget) override;
   int controllerId() override;
   int type() const override;
+
+  void setMeshPointScene(int index,const QPointF& scenePosition);
+  void setMeshPointFromLocal(int index,const QPointF& localPosition);
+
   QPointF localPointToScene(const QPointF& point) override;
   QPointF scenePointToLocal(const QPointF& point) override;
   void unSelectPoint();
@@ -99,5 +103,7 @@ class MeshController : public AbstractController {
    * @param index 
    */
   void selectPoint(int index);
+
+  void upDateMeshBuffer() const;
 };
 }  // namespace Scene
