@@ -65,6 +65,9 @@ void MainWindow::setUpMainStage() {
   connect(ui->MainStageGraphicsView, &views::MainGlGraphicsView::rubberSelected,
           currentProject->getScene(),
           &Scene::MainStageScene::handleRubberSelect);
+  connect(
+      ui->MainStageGraphicsView, &views::MainGlGraphicsView::mouseSelectClick,
+      currentProject->getScene(), &Scene::MainStageScene::handleSelectClick);
   ui->MainStageGraphicsView->makeCurrent();
   currentProject->getScene()->initGL();
   ui->MainStageGraphicsView->doneCurrent();

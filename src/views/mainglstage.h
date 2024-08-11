@@ -10,15 +10,21 @@ class MainGlGraphicsView : public QGraphicsView {
   MainGlViewPort* glViewport;
   QRectF sceneRubberRect;
 
+  bool isMousePressed = false;
+  bool isMousePressAndMove = false;
  public:
   explicit MainGlGraphicsView(QWidget* parent = nullptr);
   void makeCurrent();
   void doneCurrent();
  signals:
   void rubberSelected(QRectF rubberRect);
+  void mouseSelectClick(QPointF scenePoint,bool isMultiple = false);
 
  protected:
   void keyPressEvent(QKeyEvent* event) override;
+  void mousePressEvent(QMouseEvent* event) override;
+  void mouseMoveEvent(QMouseEvent* event) override;
+  void mouseReleaseEvent(QMouseEvent* event) override;
   void keyReleaseEvent(QKeyEvent* event) override;
   void wheelEvent(QWheelEvent* event) override;
  protected slots:

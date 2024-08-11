@@ -73,13 +73,51 @@ void MainStageScene::initGL() {
 }
 
 void MainStageScene::handleRubberSelect(QRectF sceneRect) {
-  qDebug() << sceneRect;
   this->controllerRoot->forEachController([&](auto* controller) {
     if (controller->isVisible()) {
-      controller->selectAtScene(sceneRect); 
+      controller->selectAtScene(sceneRect);
     }
     return true;
   });
+}
+
+/**
+ * basic logic
+ * click the point to find all the controller under this scene point
+ * if one of the controller is visible that is we call selected. we won't select anymore
+ * if all the controller is invisible that is we call unselected. we will select the Top one
+ * if isMultiple is false we will unselect all the controller.
+ * so that if the user click outside all the controller he will unselect all controller
+ * @param scenePoint 
+ * @param isMultiple 
+ */
+void MainStageScene::handleSelectClick(QPointF scenePoint, bool isMultiple) {
+  bool shouldSelect = true;
+  std::vector<AbstractController*> hitController;
+  this->controllerRoot->forEachController([&](auto* controller) {
+    auto localPos = controller->mapFromScene(scenePoint);
+    if (controller->contains(localPos)) {
+      if (controller->isVisible()) {
+        shouldSelect = false;
+        return false;
+      }
+      hitController.push_back(controller);
+    }
+    return true;
+  });
+  if (!shouldSelect) {
+    return;
+  }
+
+  if (!isMultiple) {
+    this->controllerRoot->forEachController([&](auto* controller) {
+      controller->setVisible(false);
+      return true;
+    });
+  }
+  if (!hitController.empty()) {
+    hitController[0]->setVisible(true);
+  }
 }
 
 void MainStageScene::drawBackground(QPainter* painter, const QRectF& rect) {

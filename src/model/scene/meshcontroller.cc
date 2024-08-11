@@ -104,7 +104,6 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
   // default false for selected point
   this->selectedPoint =
       std::vector<bool>(controlMesh->getVertices().size(), false);
-  this->setVisible(true);
   handler = new MeshControllerEventHandler(this);
 }
 

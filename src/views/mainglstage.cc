@@ -36,6 +36,33 @@ void views::MainGlGraphicsView::keyPressEvent(QKeyEvent* event) {
   }
   QGraphicsView::keyPressEvent(event);
 }
+
+/**
+ * mouse handle event
+ * use to distinguish the click and drag
+ * @param event
+ */
+void views::MainGlGraphicsView::mousePressEvent(QMouseEvent* event) {
+  QGraphicsView::mousePressEvent(event);
+  isMousePressed = true;
+}
+
+void views::MainGlGraphicsView::mouseMoveEvent(QMouseEvent* event) {
+  QGraphicsView::mouseMoveEvent(event);
+  if (isMousePressed) {
+    isMousePressAndMove = true;
+  }
+}
+
+void views::MainGlGraphicsView::mouseReleaseEvent(QMouseEvent* event) {
+  QGraphicsView::mouseReleaseEvent(event);
+  if (!isMousePressAndMove) {
+    emit mouseSelectClick(mapToScene(event->pos()));
+  }
+  isMousePressAndMove = false;
+  isMousePressed = false;
+}
+
 void views::MainGlGraphicsView::keyReleaseEvent(QKeyEvent* event) {
   if (!event->isAutoRepeat()) {
     this->setDragMode(DragMode::RubberBandDrag);
@@ -48,14 +75,15 @@ void views::MainGlGraphicsView::wheelEvent(QWheelEvent* event) {
   scale(factor, factor);
 }
 
-void views::MainGlGraphicsView::handleRubberChanged(QRect rubberBandRect,QPointF fromScenePoint, QPointF toScenePoint) {
+void views::MainGlGraphicsView::handleRubberChanged(QRect rubberBandRect,
+                                                    QPointF fromScenePoint,
+                                                    QPointF toScenePoint) {
   if (rubberBandRect.width() == 0 || rubberBandRect.height() == 0) {
     emit rubberSelected(this->sceneRubberRect);
-  }else {
+  } else {
     this->sceneRubberRect = QRectF(fromScenePoint, toScenePoint);
   }
 }
-
 
 void views::MainGlGraphicsView::makeCurrent() { glViewport->makeCurrent(); }
 

@@ -50,6 +50,7 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
    */
   void handleRubberSelect(QRectF sceneRect);
 
+  void handleSelectClick(QPointF scenePoint,bool isMultiple);
  protected:
   void drawBackground(QPainter* painter, const QRectF& rect) override;
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

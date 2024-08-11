@@ -38,7 +38,6 @@ class AbstractController : public QGraphicsItem {
     this->setVisible(false);
   }
 
-
   virtual void setControllerParent(AbstractController* controller);
   /**
    * call select the rect to select controller point
@@ -88,13 +87,16 @@ class RootController : public AbstractController {
 class MeshController : public AbstractController {
   class MeshControllerEventHandler;
   friend MeshControllerEventHandler;
+
  private:
   Mesh* controlMesh;
   std::vector<bool> selectedPoint;
   MeshControllerEventHandler* handler;
+
  protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+
  public:
   MeshController(Mesh* controlMesh, QGraphicsItem* parent = nullptr);
   ~MeshController() override;
@@ -111,8 +113,8 @@ class MeshController : public AbstractController {
    * @param index mesh point index
    * @param scenePosition scene position
    */
-  void setMeshPointScene(int index,const QPointF& scenePosition);
-  void setMeshPointFromLocal(int index,const QPointF& localPosition);
+  void setMeshPointScene(int index, const QPointF& scenePosition);
+  void setMeshPointFromLocal(int index, const QPointF& localPosition);
 
   QPointF localPointToScene(const QPointF& point) override;
   QPointF scenePointToLocal(const QPointF& point) override;
@@ -120,12 +122,10 @@ class MeshController : public AbstractController {
   /**
    * select the mesh point
    * will auto update the scene appearance
-   * @param index 
+   * @param index
    */
   void selectPoint(int index);
-
   void upDateMeshBuffer() const;
-
   void selectAtScene(QRectF sceneRect) override;
 };
 }  // namespace Scene
