@@ -103,19 +103,50 @@ class MeshController::MeshControllerEventHandler {
 class MeshController::MutiSelectRectItem : public QGraphicsItem {
  private:
   std::vector<QPointF> sceneSelectPointPosition;
-
+  QPointF lastMovePoint = {};
+ protected:
   bool ifHitRectBorder(const QPointF& p) const {
     const auto& rect = boundingRect();
     const auto& insideRect = rect.marginsRemoved(
         QMarginsF(rectWidth, rectWidth, rectWidth, rectWidth));
     return rect.contains(p) && !insideRect.contains(p);
   }
+  void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override {
+    if (ifHitRectBorder(event->scenePos())) {
+      setCursor(QCursor(Qt::SizeAllCursor));
+      this->lastMovePoint = event->scenePos();
+    } else {
+      setCursor(QCursor(Qt::ArrowCursor));
+    }
+  }
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
+    if (this->ifHitRectBorder(event->scenePos())) {
+      event->accept();
+    } else {
+      event->ignore();
+    }
+  }
+  void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override {
+    lastMovePoint.setX(0);
+    lastMovePoint.setY(0);
+    this->moveEndCallBack();
+  }
+
+  void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override {
+    this->moveCallBack(lastMovePoint,event->scenePos());
+    lastMovePoint = event->scenePos();
+  }
 
  public:
-  MutiSelectRectItem(QGraphicsItem* parent) : QGraphicsItem(parent) {}
+  MutiSelectRectItem(QGraphicsItem* parent) : QGraphicsItem(parent) {
+    setAcceptHoverEvents(true);
+  }
 
   double rectWidth = 5;
   double bestPadding = 10;
+  std::function<void(const QPointF&, const QPointF&)> moveCallBack = [](const auto& a,const auto& b){};
+  std::function<void()> moveEndCallBack = [](){};
+
   QRectF boundingRect() const override {
     if (sceneSelectPointPosition.empty() ||
         sceneSelectPointPosition.size() == 1) {
@@ -167,14 +198,6 @@ class MeshController::MutiSelectRectItem : public QGraphicsItem {
     this->sceneSelectPointPosition.clear();
     this->setVisible(false);
   }
-  void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
-    if (this->ifHitRectBorder(event->scenePos())) {
-      event->accept();
-
-    } else {
-      event->ignore();
-    }
-  }
 };
 
 void MeshController::mousePressEvent(QGraphicsSceneMouseEvent* event) {
@@ -204,8 +227,24 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
   this->selectedPoint =
       std::vector<bool>(controlMesh->getVertices().size(), false);
   handler = new MeshControllerEventHandler(this);
+
+  // setup select rect item
   this->selectRectItem = new MutiSelectRectItem(this);
   selectRectItem->setVisible(false);
+
+  selectRectItem->moveCallBack = [this](const auto& p1, const auto& p2) {
+    auto delta = p2 - p1;
+    for (int i = 0; i < selectedPoint.size(); ++i) {
+      if (selectedPoint[i]) {
+        auto point = this->controlMesh->getVertices()[i].pos;
+        point.x += delta.x();
+        point.y += delta.y();
+        this->setMeshPointScene(i,QPointF(point.x,point.y));
+      }
+    }
+    this->upDateMeshBuffer();
+  };
+
   auto r = findRootController(this);
   if (r != nullptr) {
     auto betterPaddint = r->boundingRect().width() / 100;
