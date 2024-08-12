@@ -100,106 +100,6 @@ class MeshController::MeshControllerEventHandler {
   }
 };
 
-class MeshController::MutiSelectRectItem : public QGraphicsItem {
- private:
-  std::vector<QPointF> sceneSelectPointPosition;
-  QPointF lastMovePoint = {};
- protected:
-  bool ifHitRectBorder(const QPointF& p) const {
-    const auto& rect = boundingRect();
-    const auto& insideRect = rect.marginsRemoved(
-        QMarginsF(rectWidth, rectWidth, rectWidth, rectWidth));
-    return rect.contains(p) && !insideRect.contains(p);
-  }
-  void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override {
-    if (ifHitRectBorder(event->scenePos())) {
-      setCursor(QCursor(Qt::SizeAllCursor));
-      this->lastMovePoint = event->scenePos();
-    } else {
-      setCursor(QCursor(Qt::ArrowCursor));
-    }
-  }
-  void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
-    if (this->ifHitRectBorder(event->scenePos())) {
-      event->accept();
-    } else {
-      event->ignore();
-    }
-  }
-  void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override {
-    lastMovePoint.setX(0);
-    lastMovePoint.setY(0);
-    this->moveEndCallBack();
-  }
-
-  void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override {
-    this->moveCallBack(lastMovePoint,event->scenePos());
-    lastMovePoint = event->scenePos();
-  }
-
- public:
-  MutiSelectRectItem(QGraphicsItem* parent) : QGraphicsItem(parent) {
-    setAcceptHoverEvents(true);
-  }
-
-  double rectWidth = 5;
-  double bestPadding = 10;
-  std::function<void(const QPointF&, const QPointF&)> moveCallBack = [](const auto& a,const auto& b){};
-  std::function<void()> moveEndCallBack = [](){};
-
-  QRectF boundingRect() const override {
-    if (sceneSelectPointPosition.empty() ||
-        sceneSelectPointPosition.size() == 1) {
-      return {};
-    }
-    float leftMost = FLT_MAX;
-    float topMost = FLT_MAX;
-    float rightMost = FLT_MIN;
-    float bottomMost = FLT_MIN;
-    for (const auto& scenePoint : sceneSelectPointPosition) {
-      if (scenePoint.x() > rightMost) {
-        rightMost = scenePoint.x();
-      }
-      if (scenePoint.x() < leftMost) {
-        leftMost = scenePoint.x();
-      }
-      if (scenePoint.y() > bottomMost) {
-        bottomMost = scenePoint.y();
-      }
-      if (scenePoint.y() < topMost) {
-        topMost = scenePoint.y();
-      }
-    }
-    return {QPointF(leftMost - bestPadding - rectWidth / 2,
-                    topMost - bestPadding - rectWidth / 2),
-            QPointF(rightMost + bestPadding + rectWidth / 2,
-                    bottomMost + bestPadding + rectWidth / 2)};
-  }
-
-  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
-             QWidget* widget) override {
-    painter->setBrush(QBrush(Qt::transparent));
-    auto pen = QPen(Qt::red);
-    pen.setWidth(rectWidth);
-    painter->setPen(pen);
-    painter->drawRect(boundingRect().marginsRemoved(
-        {rectWidth / 2.0, rectWidth / 2.0, rectWidth / 2.0, rectWidth / 2.0}));
-  }
-
-  void addSelectPoint(QPointF scenePoint) {
-    this->sceneSelectPointPosition.push_back(scenePoint);
-    if (this->sceneSelectPointPosition.size() > 1) {
-      this->setVisible(true);
-    }
-    update();
-  }
-
-  void unSelectPoints() {
-    this->sceneSelectPointPosition.clear();
-    this->setVisible(false);
-  }
-};
-
 void MeshController::mousePressEvent(QGraphicsSceneMouseEvent* event) {
   handler->mousePressEvent(event);
   // AbstractController::mousePressEvent(event);
@@ -220,6 +120,17 @@ QVariant MeshController::itemChange(GraphicsItemChange change,
   return AbstractController::itemChange(change, value);
 }
 
+std::vector<QPointF> MeshController::getSelectedPointScenePosition() const {
+  std::vector<QPointF> result;
+  for (int i = 0; i < selectedPoint.size(); ++i) {
+    if (selectedPoint[i]) {
+      const auto& point = controlMesh->getVertices()[i].pos;
+      result.emplace_back(point.x, point.y);
+    }
+  }
+  return result;
+}
+
 MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
     : AbstractController(parent) {
   this->controlMesh = controlMesh;
@@ -229,8 +140,7 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
   handler = new MeshControllerEventHandler(this);
 
   // setup select rect item
-  this->selectRectItem = new MutiSelectRectItem(this);
-  selectRectItem->setVisible(false);
+  this->selectRectItem = new RectSelectController(this);
 
   selectRectItem->moveCallBack = [this](const auto& p1, const auto& p2) {
     auto delta = p2 - p1;
@@ -247,10 +157,8 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
 
   auto r = findRootController(this);
   if (r != nullptr) {
-    auto betterPaddint = r->boundingRect().width() / 100;
-    auto betterWidth = r->boundingRect().width() / 500;
-    selectRectItem->bestPadding = betterPaddint;
-    selectRectItem->rectWidth = betterWidth;
+    selectRectItem->setPadding(r->boundingRect().width() / 100);
+    selectRectItem->setLineWidth(r->boundingRect().width() / 500);
   }
 }
 
@@ -317,7 +225,7 @@ void MeshController::unSelectPoint() {
   for (auto&& selected_point : this->selectedPoint) {
     selected_point = false;
   }
-  selectRectItem->unSelectPoints();
+  selectRectItem->setBoundRect({});
   this->update();
 }
 
@@ -326,11 +234,9 @@ void MeshController::selectPoint(int index) {
     return;
   }
   this->selectedPoint[index] = true;
-
-  selectRectItem->addSelectPoint(
-      QPointF(controlMesh->getVertices()[index].pos.x,
-              controlMesh->getVertices()[index].pos.y));
-  selectRectItem->update();
+  const auto& vec = getSelectedPointScenePosition();
+  const auto& rect = RectSelectController::boundRectFromPoints(vec);
+  selectRectItem->setBoundRect(rect);
   this->update();
 }
 

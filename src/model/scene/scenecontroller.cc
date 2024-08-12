@@ -1,7 +1,4 @@
 #include "scenecontroller.h"
-
-#include <qevent.h>
-#include <QGraphicsScene>
 namespace Scene {
 void AbstractController::setControllerParent(AbstractController* controller) {
   if (controllerParent != nullptr) {
@@ -13,10 +10,6 @@ void AbstractController::setControllerParent(AbstractController* controller) {
   }
   this->controllerParent = controller;
   controller->controllerChildren.push_back(this);
-}
-
-QRectF RootController::boundingRect() const {
-  return QRectF(0, 0, width, height);
 }
 
 RootController::RootController(int width, int height) {

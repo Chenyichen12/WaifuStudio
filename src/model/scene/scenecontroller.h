@@ -3,6 +3,7 @@
  * source file
  * scenecontroller.cc
  * meshcontroller.cc
+ * rectselectcontroller.cc
  */
 
 #pragma once
@@ -26,7 +27,7 @@ class AbstractController : public QGraphicsItem {
    */
   AbstractController* controllerParent = nullptr;
   std::vector<AbstractController*> controllerChildren;
-  
+
  public:
   virtual int controllerId() = 0;
   int type() const override = 0;
@@ -50,6 +51,70 @@ class AbstractController : public QGraphicsItem {
     return controllerChildren;
   }
   AbstractController* getControllerParent() const { return controllerParent; }
+};
+
+/**
+ * one special controller not has controller id, just a helper controller to
+ * help control the point
+ */
+class RectSelectController : public QGraphicsItem {
+ private:
+  QRectF boundRect;
+
+  double padding = 10;
+  double lineWidth = 5;
+
+  QPointF lastMovePoint;
+  /**
+   * test the rect hit, default the rect will be hit at border
+   * @param p scene hit point
+   * @return 
+   */
+  virtual bool ifHitRectBorder(const QPointF& p) const;
+
+ public:
+  QRectF boundingRect() const override;
+  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
+             QWidget* widget) override;
+
+  /**
+   * get the bound from the list of point from scene
+   * @param list scene point list
+   * @return bound rect, not contain padding
+   */
+  static QRectF boundRectFromPoints(const std::vector<QPointF>& list);
+
+  /**
+   * the appearance information of rect
+   * also affect the event hit test
+   * position from scene
+   */
+  void setBoundRect(const QRectF& rect);
+  void setPadding(double padding);
+  void setLineWidth(double lineWidth);
+
+  RectSelectController(QGraphicsItem* parent = nullptr);
+
+  /**
+   * call the function when the rect is moving
+   * get the delta by  p2 - p1
+   * point position is in scene position
+   */
+  std::function<void(const QPointF&, const QPointF&)> moveCallBack =
+      [](const auto& a, const auto& b) {};
+  /**
+   * call the function when the rect move end
+   */
+  std::function<void()> moveEndCallBack = []() {};
+
+ protected:
+  /**
+   * when the mouse hit the item rect select controller will grab the event
+   */
+  void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+  void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+  void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
 };
 
 /**
@@ -86,19 +151,21 @@ class RootController : public AbstractController {
  */
 class MeshController : public AbstractController {
   class MeshControllerEventHandler;
-  class MutiSelectRectItem;
   friend MeshControllerEventHandler;
 
  private:
   Mesh* controlMesh;
   std::vector<bool> selectedPoint;
   MeshControllerEventHandler* handler;
-  MutiSelectRectItem* selectRectItem;
+  RectSelectController* selectRectItem;
+
  protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
   QVariant itemChange(GraphicsItemChange change,
                       const QVariant& value) override;
+
+  std::vector<QPointF> getSelectedPointScenePosition() const;
 
  public:
   MeshController(Mesh* controlMesh, QGraphicsItem* parent = nullptr);
@@ -131,4 +198,5 @@ class MeshController : public AbstractController {
   void upDateMeshBuffer() const;
   void selectAtScene(QRectF sceneRect) override;
 };
+
 }  // namespace Scene
