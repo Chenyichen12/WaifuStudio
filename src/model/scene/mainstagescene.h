@@ -38,6 +38,8 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
                           QObject* parent = nullptr);
   ~MainStageScene() override;
 
+ signals:
+  void selectionChanged(const std::vector<int>& indexId);
  public slots:
   /**
    * when the gl is prepared should call init. otherwise you won't see the
@@ -52,10 +54,17 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
 
   /**
    * view connect this slot when the user click at one point
-   * @param scenePoint 
-   * @param isMultiple 
+   * @param scenePoint
+   * @param isMultiple
    */
-  void handleSelectClick(QPointF scenePoint,bool isMultiple);
+  void handleSelectClick(QPointF scenePoint, bool isMultiple);
+
+  /**
+   * emit when the scene select layer by itself
+   * @param selectionId the id of the layer. normally from controllerLayerModel
+   */
+  void selectLayers(const std::vector<int>& selectionId);
+
  protected:
   void drawBackground(QPainter* painter, const QRectF& rect) override;
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

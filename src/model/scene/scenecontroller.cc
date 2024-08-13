@@ -26,7 +26,9 @@ int RootController::controllerId() { return -1; }
 
 int RootController::type() const { return ControllerType::RootControllerType; }
 
-void controllerRur(AbstractController* parent,const std::function<RootController::forEachCallBack>& callback) {
+void controllerRur(
+    const AbstractController* parent,
+    const std::function<RootController::forEachCallBack>& callback) {
   for (auto& controller : parent->getControllerChildren()) {
     if (!callback(controller)) {
       return;
@@ -35,9 +37,20 @@ void controllerRur(AbstractController* parent,const std::function<RootController
   }
 }
 
-void RootController::
-forEachController(const std::function<forEachCallBack>& callback) {
+void RootController::forEachController(
+    const std::function<forEachCallBack>& callback) const {
   controllerRur(this, callback);
+}
+
+std::vector<AbstractController*> RootController::getSelectedChildren() const {
+  auto res = std::vector<AbstractController*>();
+  this->forEachController([&res](auto* controller) {
+    if (controller->isVisible()) {
+      res.emplace_back(controller);
+    }
+    return true;
+  });
+  return res;
 }
 
 QPointF RootController::localPointToScene(const QPointF& point) {

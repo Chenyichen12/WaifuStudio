@@ -71,6 +71,7 @@ views::LayerTreeView::LayerTreeView(QWidget* parent) : QTreeView(parent) {
   this->setDefaultDropAction(Qt::MoveAction);
   this->setEditTriggers(EditTrigger::NoEditTriggers);
   this->setHeaderHidden(true);
+  this->setSelectionMode(SelectionMode::ContiguousSelection);
 
   auto styleDelegate = new ItemStyleDelegate(this);
   this->setItemDelegate(styleDelegate);

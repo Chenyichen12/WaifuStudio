@@ -47,7 +47,7 @@ class AbstractController : public QGraphicsItem {
    */
   virtual void selectAtScene(QRectF sceneRect) {}
 
-  const std::vector<AbstractController*>& getControllerChildren() {
+  const std::vector<AbstractController*>& getControllerChildren() const {
     return controllerChildren;
   }
   AbstractController* getControllerParent() const { return controllerParent; }
@@ -68,7 +68,7 @@ class RectSelectController : public QGraphicsItem {
   /**
    * test the rect hit, default the rect will be hit at border
    * @param p scene hit point
-   * @return 
+   * @return
    */
   virtual bool ifHitRectBorder(const QPointF& p) const;
 
@@ -137,7 +137,9 @@ class RootController : public AbstractController {
   int type() const override;
 
   typedef bool forEachCallBack(AbstractController* controller);
-  void forEachController(const std::function<forEachCallBack>& callback);
+  void forEachController(const std::function<forEachCallBack>& callback) const;
+
+  std::vector<AbstractController*> getSelectedChildren() const;
 
   QPointF localPointToScene(const QPointF& point) override;
   QPointF scenePointToLocal(const QPointF& point) override;

@@ -28,6 +28,13 @@ Project* ProjectBuilder::build() {
   manager->setParent(project);
   sceneModel->setParent(project);
 
+  // connect model communication
+
+  QObject::connect(model, &LayerModel::selectionChanged, sceneModel,
+                   &Scene::MainStageScene::selectLayers);
+  QObject::connect(sceneModel, &Scene::MainStageScene::selectionChanged, model,
+                     &LayerModel::selectItems);
+
   return project;
 }
 void ProjectBuilder::setBitmapManager(BitmapManager* m) { this->manager = m; }

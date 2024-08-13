@@ -84,12 +84,13 @@ void MainStageScene::handleRubberSelect(QRectF sceneRect) {
 /**
  * basic logic
  * click the point to find all the controller under this scene point
- * if one of the controller is visible that is we call selected. we won't select anymore
- * if all the controller is invisible that is we call unselected. we will select the Top one
- * if isMultiple is false we will unselect all the controller.
- * so that if the user click outside all the controller he will unselect all controller
- * @param scenePoint 
- * @param isMultiple 
+ * if one of the controller is visible that is we call selected. we won't select
+ * anymore if all the controller is invisible that is we call unselected. we
+ * will select the Top one if isMultiple is false we will unselect all the
+ * controller. so that if the user click outside all the controller he will
+ * unselect all controller
+ * @param scenePoint
+ * @param isMultiple
  */
 void MainStageScene::handleSelectClick(QPointF scenePoint, bool isMultiple) {
   bool shouldSelect = true;
@@ -109,15 +110,35 @@ void MainStageScene::handleSelectClick(QPointF scenePoint, bool isMultiple) {
     return;
   }
 
-  if (!isMultiple) {
-    this->controllerRoot->forEachController([&](auto* controller) {
-      controller->setVisible(false);
-      return true;
-    });
+  // we need to get the item now still visible to emit the sections
+  auto visibleItems = this->controllerRoot->getSelectedChildren();
+
+  auto nowSelectItemId = std::vector<int>();
+  for (const auto& visItem : visibleItems) {
+    if (!isMultiple) {
+      visItem->setVisible(false);
+    } else {
+      nowSelectItemId.push_back(visItem->controllerId());
+    }
   }
+
   if (!hitController.empty()) {
     hitController[0]->setVisible(true);
+    nowSelectItemId.push_back(hitController[0]->controllerId());
   }
+  emit selectionChanged(nowSelectItemId);
+}
+
+void MainStageScene::selectLayers(const std::vector<int>& selectionId) {
+  this->controllerRoot->forEachController([&](auto* controller) {
+    if (std::find(selectionId.begin(), selectionId.end(),
+                  controller->controllerId()) != selectionId.end()) {
+      controller->setVisible(true);
+    } else {
+      controller->setVisible(false);
+    }
+    return true;
+  });
 }
 
 void MainStageScene::drawBackground(QPainter* painter, const QRectF& rect) {

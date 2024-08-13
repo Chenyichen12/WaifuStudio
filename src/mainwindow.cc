@@ -12,6 +12,9 @@
 void MainWindow::setUpTreeModel(const ProjectModel::LayerModel* m) {
   ui->psTree->setModel(m->getPsdTreeManager());
   ui->controllerTree->setModel(m->getControllerTreeManger());
+  ui->psTree->setSelectionModel(m->getPsdTreeSelectionModel());
+  ui->controllerTree->setSelectionModel(m->getControllerTreeSelectionModel());
+
   connect(ui->psTree, &views::LayerTreeView::shouldSetVisible, m,
           &ProjectModel::LayerModel::setItemVisible);
   connect(ui->controllerTree, &views::LayerTreeView::shouldSetVisible, m,
@@ -76,5 +79,5 @@ void MainWindow::setUpMainStage() {
 void MainWindow::setUpMenu() {
   auto openMenu = ui->menubar->addMenu(tr("Open"));
   openMenu->addAction(tr("Open from ps file"), this,
-                                           &MainWindow::handlePsdOpen);
+                      &MainWindow::handlePsdOpen);
 }
