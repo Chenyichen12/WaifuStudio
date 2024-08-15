@@ -7,7 +7,7 @@
 namespace ProjectModel {
 class LayerModel;
 class Project;
-}
+}  // namespace ProjectModel
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -21,9 +21,10 @@ class MainWindow : public QMainWindow {
  private:
   ProjectModel::Project *currentProject = nullptr;
 
-  void setUpTreeModel(const ProjectModel::LayerModel* m);
+  void setUpTreeModel(const ProjectModel::LayerModel *m);
   void setUpMainStage();
   void setUpMenu();
+
  public:
   explicit MainWindow(QWidget *parent = nullptr);
   ~MainWindow() override;
@@ -31,10 +32,13 @@ class MainWindow : public QMainWindow {
   void setProject(ProjectModel::Project *);
   void setUpProjectFromPsd(const QString &path);
 
-  public slots:
+ public slots:
   void handlePsdOpen();
+  void handleUndoAction();
+  void handleRedoAction();
  signals:
   void windowInited();
+
  private:
   Ui::MainWindow *ui;
 };

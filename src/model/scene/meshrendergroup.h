@@ -25,6 +25,8 @@ class MeshRenderGroup : public QGraphicsItemGroup {
   int getRenderWidth() const;
   int getRenderHeight() const;
 
+  void setMeshVisible(int id, bool visible);
+
   void initializeGL();
 
   QOpenGLShaderProgram *getProgram() const;

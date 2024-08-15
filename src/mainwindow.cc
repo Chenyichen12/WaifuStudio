@@ -16,9 +16,13 @@ void MainWindow::setUpTreeModel(const ProjectModel::LayerModel* m) {
   ui->controllerTree->setSelectionModel(m->getControllerTreeSelectionModel());
 
   connect(ui->psTree, &views::LayerTreeView::shouldSetVisible, m,
-          &ProjectModel::LayerModel::setItemVisible);
+          &ProjectModel::LayerModel::handleItemSetVisible);
   connect(ui->controllerTree, &views::LayerTreeView::shouldSetVisible, m,
-          &ProjectModel::LayerModel::setItemVisible);
+          &ProjectModel::LayerModel::handleItemSetVisible);
+  connect(ui->psTree, &views::LayerTreeView::itemVisibleEnd, m,
+          &ProjectModel::LayerModel::handleVisibleSelectEnd);
+  connect(ui->controllerTree, &views::LayerTreeView::itemVisibleEnd, m,
+          &ProjectModel::LayerModel::handleVisibleSelectEnd);
 }
 
 MainWindow::MainWindow(QWidget* parent)
@@ -63,6 +67,19 @@ void MainWindow::handlePsdOpen() {
   setUpProjectFromPsd(fileName);
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
+void MainWindow::handleUndoAction() {
+  if (this->currentProject != nullptr) {
+    this->currentProject->undo();
+  }
+}
+// ReSharper disable once CppMemberFunctionMayBeConst
+void MainWindow::handleRedoAction() {
+    if (this->currentProject != nullptr) {
+      	this->currentProject->redo();
+  }
+}
+
 void MainWindow::setUpMainStage() {
   ui->MainStageGraphicsView->setScene(currentProject->getScene());
   connect(ui->MainStageGraphicsView, &views::MainGlGraphicsView::rubberSelected,
@@ -80,4 +97,11 @@ void MainWindow::setUpMenu() {
   auto openMenu = ui->menubar->addMenu(tr("Open"));
   openMenu->addAction(tr("Open from ps file"), this,
                       &MainWindow::handlePsdOpen);
+
+  auto editMenu = ui->menubar->addMenu(tr("Edit"));
+  editMenu->addAction(tr("Undo"), QKeySequence(QKeySequence::Undo), this,
+                      &MainWindow::handleUndoAction);
+
+  editMenu->addAction(tr("Redo"), QKeySequence::Redo, this,
+                      &MainWindow::handleRedoAction);
 }

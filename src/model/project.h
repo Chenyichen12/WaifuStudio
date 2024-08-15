@@ -3,6 +3,8 @@
 //
 #pragma once
 #include "QObject"
+class QUndoStack;
+
 namespace Scene {
 class MainStageScene;
 }
@@ -10,6 +12,7 @@ namespace ProjectModel {
 class LayerModel;
 class BitmapManager;
 class Project;
+
 class ProjectBuilder {
  private:
   BitmapManager* manager = nullptr;
@@ -36,11 +39,15 @@ class Project : public QObject {
   BitmapManager* bitmapManager = nullptr;
   LayerModel* layerModel = nullptr;
   Scene::MainStageScene* scene = nullptr;
+  QUndoStack* undoStack;
 
  public:
   BitmapManager* getBitmapManager() const { return bitmapManager; }
   LayerModel* getLayerModel() const { return layerModel; }
   Scene::MainStageScene* getScene() const;
+  
+  void undo();
+  void redo();
 };
 
 }  // namespace ProjectModel

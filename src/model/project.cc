@@ -5,6 +5,7 @@
 
 #include <stack>
 
+#include <QUndoStack>
 #include "layer.h"
 #include "layer_model.h"
 #include "scene/mainstagescene.h"
@@ -23,18 +24,25 @@ Project* ProjectBuilder::build() {
   project->layerModel = this->model;
   project->bitmapManager = this->manager;
   project->scene = sceneModel;
+  project->undoStack = new QUndoStack();
+  project->undoStack->setParent(project);
 
   model->setParent(project);
+  model->setUndoStack(project->undoStack);
+
   manager->setParent(project);
   sceneModel->setParent(project);
 
   // connect model communication
-
+  // two-way select connect signal
   QObject::connect(model, &LayerModel::selectionChanged, sceneModel,
                    &Scene::MainStageScene::selectLayers);
   QObject::connect(sceneModel, &Scene::MainStageScene::selectionChanged, model,
                      &LayerModel::selectItems);
 
+  // set visible connect signal
+  QObject::connect(model, &LayerModel::visibleChanged, sceneModel,
+                     &Scene::MainStageScene::setVisibleOfLayer);
   return project;
 }
 void ProjectBuilder::setBitmapManager(BitmapManager* m) { this->manager = m; }
@@ -78,4 +86,8 @@ void ProjectBuilder::setUpScene() {
       new Scene::MainStageScene(mainRenderGroup, controllerRoot);
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
+void Project::undo() { undoStack->undo(); }
+// ReSharper disable once CppMemberFunctionMayBeConst
+void Project::redo() { undoStack->redo(); }
 }  // namespace ProjectModel

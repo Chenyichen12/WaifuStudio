@@ -2,14 +2,13 @@
 // Created by chenyichen on 8/6/24.
 //
 
-#include "meshrendergroup.h"
-
 #include "QFile"
 #include "QPainter"
 #include "mesh.h"
+#include "meshrendergroup.h"
 namespace Scene {
 MeshRenderGroup::MeshRenderGroup(int renderWidth, int renderHeight,
-                                     QGraphicsItem *parent)
+                                 QGraphicsItem *parent)
     : QGraphicsItemGroup(parent),
       renderWidth(renderWidth),
       renderHeight(renderHeight) {
@@ -21,12 +20,21 @@ MeshRenderGroup::MeshRenderGroup(int renderWidth, int renderHeight,
 }
 MeshRenderGroup::~MeshRenderGroup() { program->deleteLater(); }
 void MeshRenderGroup::paint(QPainter *painter,
-                              const QStyleOptionGraphicsItem *option,
-                              QWidget *widget) {
+                            const QStyleOptionGraphicsItem *option,
+                            QWidget *widget) {
   QGraphicsItemGroup::paint(painter, option, widget);
 }
 int MeshRenderGroup::getRenderWidth() const { return renderWidth; }
 int MeshRenderGroup::getRenderHeight() const { return renderHeight; }
+
+void MeshRenderGroup::setMeshVisible(int id, bool visible) {
+  for (auto mesh : this->meshList) {
+    if (mesh->getLayerId() == id) {
+      mesh->setVisible(visible);
+      break;
+    }
+  }
+}
 
 void MeshRenderGroup::initializeGL() {
   program->addShaderFromSourceFile(QOpenGLShader::Vertex,
@@ -55,4 +63,4 @@ void MeshRenderGroup::pushFrontMesh(Mesh *mesh) {
   }
 }
 
-}  // namespace ProjectModel
+}  // namespace Scene

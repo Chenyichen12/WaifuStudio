@@ -38,6 +38,7 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
                           QObject* parent = nullptr);
   ~MainStageScene() override;
 
+  void setVisibleOfLayer(int controllerOrMeshId, bool visible);
  signals:
   void selectionChanged(const std::vector<int>& indexId);
  public slots:

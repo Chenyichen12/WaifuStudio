@@ -1,10 +1,45 @@
 #include "layer_model.h"
 
 #include <QItemSelectionModel>
-
+#include <QUndoStack>
 #include "layer.h"
 #include "tree_manager.h"
 namespace ProjectModel {
+
+struct VisibleUndoInfo {
+  int id;
+  bool visible;
+};
+class LayerVisibleCommand : public QUndoCommand {
+  QList<VisibleUndoInfo> info;
+  LayerModel *model;
+  bool first = true;
+
+ public:
+  LayerVisibleCommand(LayerModel *model, const QList<VisibleUndoInfo> &info,
+                      QUndoCommand *parent = nullptr)
+      : QUndoCommand(parent), info(info) {
+    this->model = model;
+  }
+
+  void redo() override {
+    if (first) {
+      first = false;
+      return;
+    }
+
+    for (const auto &visible_undo_info : info) {
+      model->setItemVisible(visible_undo_info.id, visible_undo_info.visible);
+    }
+  }
+
+  void undo() override {
+    for (const auto &visible_undo_info : info) {
+      model->setItemVisible(visible_undo_info.id, !visible_undo_info.visible);
+    }
+  }
+};
+
 void LayerModel::handleSelectionChanged(const QItemSelection &selected,
                                         const QItemSelection &deselected) {
   auto which = static_cast<QItemSelectionModel *>(sender());
@@ -31,6 +66,9 @@ LayerModel::LayerModel(TreeItemModel *psdTreeManager,
   connect(controllerTreeSelectionModel, &QItemSelectionModel::selectionChanged,
           this, &LayerModel::handleSelectionChanged, Qt::DirectConnection);
 }
+
+void LayerModel::setUndoStack(QUndoStack *stack) { this->undoStack = stack; }
+
 TreeItemModel *LayerModel::getPsdTreeManager() const { return psdTreeManager; }
 TreeItemModel *LayerModel::getControllerTreeManger() const {
   return controllerTreeManger;
@@ -42,6 +80,19 @@ QItemSelectionModel *LayerModel::getPsdTreeSelectionModel() const {
 
 QItemSelectionModel *LayerModel::getControllerTreeSelectionModel() const {
   return controllerTreeSelectionModel;
+}
+
+void LayerModel::setItemVisible(int id, bool visible) {
+  auto n = controllerTreeManger->findNode(id);
+  if (n != nullptr) {
+    n->setData(visible, VisibleRole);
+  }
+  auto c = psdTreeManager->findNode(id);
+  if (c != nullptr) {
+    c->setData(visible, VisibleRole);
+  }
+
+  emit visibleChanged(id, visible);
 }
 
 void LayerModel::selectItems(const std::vector<int> &selectionId) {
@@ -69,23 +120,22 @@ void LayerModel::selectItems(const std::vector<int> &selectionId) {
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void LayerModel::setItemVisible(const QModelIndex &index, bool visible) {
-  if (index.model() == this->psdTreeManager) {
-    psdTreeManager->setData(index, visible, VisibleRole);
-    auto n = controllerTreeManger->findNode(index.data(UserIdRole).toInt());
-    if (n == nullptr) {
-      return;
-    }
-    n->setData(visible, VisibleRole);
-  }
+void LayerModel::handleItemSetVisible(const QModelIndex &index, bool visible) {
+  this->setItemVisible(index.data(UserIdRole).toInt(), visible);
+}
 
-  if (index.model() == this->controllerTreeManger) {
-    controllerTreeManger->setData(index, visible, VisibleRole);
-    auto n = psdTreeManager->findNode(index.data(UserIdRole).toInt());
-    if (n == nullptr) {
-      return;
-    }
-    n->setData(visible, VisibleRole);
+void LayerModel::handleVisibleSelectEnd(const QModelIndexList &changeLists) {
+
+  // should push undo to stack
+  QList<VisibleUndoInfo> infoList;
+  for (const auto &changeItem : changeLists) {
+    auto id = changeItem.data(UserIdRole).toInt();
+    auto visible = changeItem.data(VisibleRole).toBool();
+    auto info = VisibleUndoInfo{id, visible};
+    infoList.push_back(info);
+  }
+  if(undoStack != nullptr) {
+    undoStack->push(new LayerVisibleCommand(this, infoList));
   }
 }
 }  // namespace ProjectModel

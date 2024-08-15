@@ -86,6 +86,9 @@ views::LayerTreeView::LayerTreeView(QWidget* parent) : QTreeView(parent) {
 void views::LayerTreeView::mouseReleaseEvent(QMouseEvent* event) {
   QTreeView::mouseReleaseEvent(event);
   inVisibleDrag = false;
+  if (!cacheVisibleChangedIndex.empty()) {
+    emit itemVisibleEnd(cacheVisibleChangedIndex);
+  }
   cacheVisibleChangedIndex.clear();
 }
 

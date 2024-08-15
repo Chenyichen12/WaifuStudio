@@ -1,5 +1,17 @@
 #include "scenecontroller.h"
 namespace Scene {
+void AbstractController::setControllerSelectAble(bool isSelected) {
+  this->selectAble = isSelected;
+  if (!isSelected) {
+    this->setVisible(false);
+  }
+}
+
+void AbstractController::selectTheController() {
+  if (this->selectAble) {
+    this->setVisible(true);
+  }
+}
 void AbstractController::setControllerParent(AbstractController* controller) {
   if (controllerParent != nullptr) {
     auto& child = controllerParent->controllerChildren;
@@ -45,7 +57,7 @@ void RootController::forEachController(
 std::vector<AbstractController*> RootController::getSelectedChildren() const {
   auto res = std::vector<AbstractController*>();
   this->forEachController([&res](auto* controller) {
-    if (controller->isVisible()) {
+    if (controller->isControllerSelected()) {
       res.emplace_back(controller);
     }
     return true;

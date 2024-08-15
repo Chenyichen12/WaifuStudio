@@ -27,12 +27,38 @@ class AbstractController : public QGraphicsItem {
    */
   AbstractController* controllerParent = nullptr;
   std::vector<AbstractController*> controllerChildren;
+  bool selectAble = true;
 
  public:
   virtual int controllerId() = 0;
   int type() const override = 0;
   virtual QPointF localPointToScene(const QPointF& point) = 0;
   virtual QPointF scenePointToLocal(const QPointF& point) = 0;
+
+
+  /**
+   * selectable && visible in controller is the selected state
+   */
+  bool isControllerSelected() const { return this->isVisible() && selectAble; }
+  bool isControllerSelectAble() const { return selectAble; }
+
+  /**
+   * control this controller can select
+   * if the controller is not selectable, it will also hide the layer
+   * @param isSelected 
+   */
+  void setControllerSelectAble(bool isSelected);
+  /**
+   * if the layer is selectable, it should be visible
+   * if the layer is unselectable, it should ignore
+   */
+  virtual void selectTheController();
+  /**
+   * same as setVisibility(false)
+   */
+  virtual void unSelectTheController(){this->setVisible(false);}
+
+
   AbstractController(QGraphicsItem* parent = nullptr) : QGraphicsItem(parent) {
     // controller default is invisible
     this->setVisible(false);
@@ -164,8 +190,8 @@ class MeshController : public AbstractController {
  protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
-  QVariant itemChange(GraphicsItemChange change,
-                      const QVariant& value) override;
+  // QVariant itemChange(GraphicsItemChange change,
+  //                     const QVariant& value) override;
 
   std::vector<QPointF> getSelectedPointScenePosition() const;
 
@@ -199,6 +225,8 @@ class MeshController : public AbstractController {
   void selectPoint(int index);
   void upDateMeshBuffer() const;
   void selectAtScene(QRectF sceneRect) override;
+
+  void unSelectTheController() override;
 };
 
 }  // namespace Scene

@@ -1,8 +1,10 @@
 #pragma once
 #include <QObject>
-
+#include <QModelIndexList>
+class QUndoStack;
 class QItemSelectionModel;
 class QItemSelection;
+
 namespace ProjectModel {
 class TreeItemModel;
 
@@ -17,15 +19,24 @@ class LayerModel : public QObject {
   void handleSelectionChanged(const QItemSelection& selected,
                               const QItemSelection& deselected);
 
+  QUndoStack* undoStack = nullptr;
  public:
   LayerModel(TreeItemModel* psdTreeManager, TreeItemModel* controllerTreeManger,
              QObject* parent = nullptr);
+
+  void setUndoStack(QUndoStack* stack);
 
   TreeItemModel* getPsdTreeManager() const;
   TreeItemModel* getControllerTreeManger() const;
 
   QItemSelectionModel* getPsdTreeSelectionModel() const;
   QItemSelectionModel* getControllerTreeSelectionModel() const;
+  /**
+   * set the visible of the layer
+   * @param id 
+   * @param visible 
+   */
+  void setItemVisible(int id, bool visible);
 
  public slots:
   /**
@@ -36,9 +47,17 @@ class LayerModel : public QObject {
    * @param selectionId layerId
    */
   void selectItems(const std::vector<int>& selectionId);
+
+  /**
+   * handle toggle the visible from view
+   * @param index 
+   * @param visible 
+   */
+  void handleItemSetVisible(const QModelIndex& index, bool visible);
+  void handleVisibleSelectEnd(const QModelIndexList& changeLists);
  signals:
   void selectionChanged(const std::vector<int>& selectionId);
- public slots:
-  void setItemVisible(const QModelIndex& index, bool visible);
+  void visibleChanged(int id, bool visible);
+  
 };
 }  // namespace ProjectModel

@@ -67,6 +67,17 @@ MainStageScene::MainStageScene(MeshRenderGroup* group,
 
 MainStageScene::~MainStageScene() { delete handler; }
 
+void MainStageScene::setVisibleOfLayer(int controllerOrMeshId, bool visible) {
+  this->controllerRoot->forEachController([&](auto a) {
+    if (a->controllerId() == controllerOrMeshId) {
+      a->setControllerSelectAble(visible);
+      return false;
+    }
+    return true;
+  });
+  this->renderGroup->setMeshVisible(controllerOrMeshId, visible);
+}
+
 void MainStageScene::initGL() {
   initializeOpenGLFunctions();
   renderGroup->initializeGL();
@@ -98,11 +109,13 @@ void MainStageScene::handleSelectClick(QPointF scenePoint, bool isMultiple) {
   this->controllerRoot->forEachController([&](auto* controller) {
     auto localPos = controller->mapFromScene(scenePoint);
     if (controller->contains(localPos)) {
-      if (controller->isVisible()) {
+      if (controller->isControllerSelected()) {
         shouldSelect = false;
         return false;
       }
-      hitController.push_back(controller);
+      if (controller->isControllerSelectAble()) {
+        hitController.push_back(controller); 
+      }
     }
     return true;
   });
@@ -116,14 +129,14 @@ void MainStageScene::handleSelectClick(QPointF scenePoint, bool isMultiple) {
   auto nowSelectItemId = std::vector<int>();
   for (const auto& visItem : visibleItems) {
     if (!isMultiple) {
-      visItem->setVisible(false);
+      visItem->unSelectTheController();
     } else {
       nowSelectItemId.push_back(visItem->controllerId());
     }
   }
 
   if (!hitController.empty()) {
-    hitController[0]->setVisible(true);
+    hitController[0]->selectTheController();
     nowSelectItemId.push_back(hitController[0]->controllerId());
   }
   emit selectionChanged(nowSelectItemId);
@@ -133,9 +146,9 @@ void MainStageScene::selectLayers(const std::vector<int>& selectionId) {
   this->controllerRoot->forEachController([&](auto* controller) {
     if (std::find(selectionId.begin(), selectionId.end(),
                   controller->controllerId()) != selectionId.end()) {
-      controller->setVisible(true);
+      controller->selectTheController();
     } else {
-      controller->setVisible(false);
+      controller->unSelectTheController();
     }
     return true;
   });
