@@ -35,6 +35,9 @@ RootController::RootController(int width, int height) {
 void RootController::paint(QPainter* painter,
                            const QStyleOptionGraphicsItem* option,
                            QWidget* widget) {}
+QRectF RootController::boundingRect() const {
+  return QRectF(0, 0, width, height);
+}
 
 int RootController::controllerId() { return -1; }
 

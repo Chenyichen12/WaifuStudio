@@ -1,6 +1,6 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsView>
-
+#include "rectselectcontroller.h"
 #include "../command/controllercommand.h"
 #include "mesh.h"
 #include "scenecontroller.h"
@@ -203,7 +203,7 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
   auto r = findRootController(this);
   if (r != nullptr) {
     selectRectItem->setPadding(r->boundingRect().width() / 100);
-    selectRectItem->setLineWidth(r->boundingRect().width() / 500);
+    selectRectItem->setLineWidth(r->boundingRect().width() / 300);
   }
 }
 

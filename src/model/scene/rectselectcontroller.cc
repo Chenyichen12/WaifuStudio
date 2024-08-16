@@ -2,7 +2,7 @@
 #include <QGraphicsSceneEvent>
 #include <QPainter>
 
-#include "scenecontroller.h"
+#include "rectselectcontroller.h"
 
 namespace Scene {
 
@@ -56,9 +56,7 @@ void RectSelectController::setBoundRect(const QRectF& rect) {
   update();
 }
 
-QRectF RootController::boundingRect() const {
-  return QRectF(0, 0, width, height);
-}
+
 
 void RectSelectController::setPadding(double padding) {
   this->padding = padding;
