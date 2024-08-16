@@ -5,6 +5,8 @@
 #pragma once
 #include <QGraphicsScene>
 #include <QOpenGLFunctions>
+class QUndoStack;
+
 namespace Scene {
 
 class Sprite;
@@ -66,6 +68,11 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
    */
   void selectLayers(const std::vector<int>& selectionId);
 
+  /**
+   * set scene undo stack
+   * it will push undo command some scene command
+   */
+  void setSceneUndoStack(QUndoStack* undoStack);
  protected:
   void drawBackground(QPainter* painter, const QRectF& rect) override;
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

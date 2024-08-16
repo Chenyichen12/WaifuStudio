@@ -1,10 +1,10 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsView>
 
+#include "../command/controllercommand.h"
 #include "mesh.h"
 #include "scenecontroller.h"
 namespace Scene {
-
 RootController* findRootController(const QGraphicsItem* controller) {
   auto parent = controller->parentItem();
   while (parent != nullptr) {
@@ -15,7 +15,6 @@ RootController* findRootController(const QGraphicsItem* controller) {
   }
   return nullptr;
 }
-
 double getScaleFromTheView(const QGraphicsScene* whichScene,
                            const QWidget* whichWidget) {
   for (const auto& view : whichScene->views()) {
@@ -29,6 +28,7 @@ class MeshController::MeshControllerEventHandler {
  private:
   MeshController* controller;
   int currentPressedIndex = -1;
+  QPointF startPos;  // record the start drag pos
 
   /**
    * check if the testPoint circle is close enough to another point
@@ -82,6 +82,7 @@ class MeshController::MeshControllerEventHandler {
 
       controller->selectPoint(index.value());
       currentPressedIndex = index.value();
+      startPos = pos;  // start drag
       event->accept();
     } else {
       controller->unSelectPoint();
@@ -95,8 +96,28 @@ class MeshController::MeshControllerEventHandler {
     if (currentPressedIndex == -1) {
       return;
     }
-    controller->setMeshPointScene(currentPressedIndex, pos);
+    controller->setPointFromScene(currentPressedIndex, pos);
     controller->upDateMeshBuffer();
+  }
+
+  void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
+    if (currentPressedIndex == -1) {
+      return;
+    }
+
+    // push to undostack
+    auto undoCommand =
+        std::make_unique<Command::MeshControllerCommand>(controller);
+    auto oldPoint = startPos;
+    undoCommand->addOldInfo({oldPoint, currentPressedIndex});
+
+    undoCommand->addNewInfo({event->scenePos(), currentPressedIndex});
+    auto root = findRootController(controller);
+    if (root != nullptr) {
+      root->pushUndoCommand(undoCommand.release());
+    }
+
+    currentPressedIndex = -1;
   }
 };
 
@@ -110,12 +131,16 @@ void MeshController::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
   AbstractController::mouseMoveEvent(event);
 }
 
+// handle release
+void MeshController::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
+  handler->mouseReleaseEvent(event);
+  AbstractController::mouseReleaseEvent(event);
+}
 
 void MeshController::unSelectTheController() {
   AbstractController::unSelectTheController();
   this->unSelectPoint();
 }
-
 
 std::vector<QPointF> MeshController::getSelectedPointScenePosition() const {
   std::vector<QPointF> result;
@@ -138,6 +163,7 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
 
   // setup select rect item
   this->selectRectItem = new RectSelectController(this);
+  selectRectItem->ifAutoMoveUpdate = false;
 
   selectRectItem->moveCallBack = [this](const auto& p1, const auto& p2) {
     auto delta = p2 - p1;
@@ -146,10 +172,32 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
         auto point = this->controlMesh->getVertices()[i].pos;
         point.x += delta.x();
         point.y += delta.y();
-        this->setMeshPointScene(i,QPointF(point.x,point.y));
+        this->setPointFromScene(i, QPointF(point.x, point.y));
       }
     }
     this->upDateMeshBuffer();
+  };
+
+  selectRectItem->moveEndCallBack = [this](const auto& start, const auto& end) {
+    auto undoCommand = std::make_unique<Command::MeshControllerCommand>(this);
+    for (int i = 0; i < selectedPoint.size(); ++i) {
+      if (selectedPoint[i]) {
+        auto point = this->controlMesh->getVertices()[i].pos;
+        undoCommand->addNewInfo({QPointF(point.x, point.y), i});
+      }
+    }
+    for (int i = 0; i < selectedPoint.size(); ++i) {
+      if (selectedPoint[i]) {
+        auto point = this->controlMesh->getVertices()[i].pos;
+        auto newInfoPoint = QPointF(point.x, point.y);
+        newInfoPoint += start - end;
+        undoCommand->addOldInfo({newInfoPoint, i});
+      }
+    }
+    auto root = findRootController(this);
+    if (root != nullptr) {
+      root->pushUndoCommand(undoCommand.release());
+    }
   };
 
   auto r = findRootController(this);
@@ -241,19 +289,25 @@ void MeshController::upDateMeshBuffer() const {
   this->controlMesh->upDateBuffer();
 }
 
-void MeshController::setMeshPointScene(int index,
+void MeshController::setPointFromScene(int index,
                                        const QPointF& scenePosition) {
   auto vec = controlMesh->getVertices()[index];
   vec.pos.x = scenePosition.x();
   vec.pos.y = scenePosition.y();
   controlMesh->setVerticesAt(index, vec);
+
+  // update the select rect if needed
+  const auto& selectVec = getSelectedPointScenePosition();
+  const auto& rect = RectSelectController::boundRectFromPoints(selectVec);
+  selectRectItem->setBoundRect(rect);
+
   this->update();
 }
 
-void MeshController::setMeshPointFromLocal(int index,
-                                           const QPointF& localPosition) {
+void MeshController::setPointFromLocal(int index,
+                                       const QPointF& localPosition) {
   auto scenePos = localPointToScene(localPosition);
-  setMeshPointScene(index, scenePos);
+  setPointFromScene(index, scenePos);
 }
 void MeshController::selectAtScene(QRectF sceneRect) {
   AbstractController::selectAtScene(sceneRect);

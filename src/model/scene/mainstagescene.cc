@@ -154,6 +154,10 @@ void MainStageScene::selectLayers(const std::vector<int>& selectionId) {
   });
 }
 
+void MainStageScene::setSceneUndoStack(QUndoStack* undoStack) {
+  this->controllerRoot->setUndoStack(undoStack);
+}
+
 void MainStageScene::drawBackground(QPainter* painter, const QRectF& rect) {
   Q_UNUSED(rect)
 

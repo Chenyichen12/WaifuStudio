@@ -1,5 +1,7 @@
 #include "scenecontroller.h"
+#include <QUndoStack>
 namespace Scene {
+
 void AbstractController::setControllerSelectAble(bool isSelected) {
   this->selectAble = isSelected;
   if (!isSelected) {
@@ -75,5 +77,15 @@ QPointF RootController::scenePointToLocal(const QPointF& point) {
   auto x = point.x() / this->width;
   auto y = point.y() / this->height;
   return {x, y};
+}
+
+void RootController::setUndoStack(QUndoStack* stack) {
+  this->controllerUndoStack = stack;
+}
+
+void RootController::pushUndoCommand(QUndoCommand* command) {
+  if (controllerUndoStack != nullptr) {
+    this->controllerUndoStack->push(command);
+  }
 }
 }  // namespace Scene

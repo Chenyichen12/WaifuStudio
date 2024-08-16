@@ -88,6 +88,7 @@ void RectSelectController::mousePressEvent(QGraphicsSceneMouseEvent* event) {
   if (this->ifHitRectBorder(event->scenePos())) {
     event->accept();
     this->lastMovePoint = event->scenePos();
+    this->startPoint = event->scenePos();
   } else {
     event->ignore();
   }
@@ -95,18 +96,20 @@ void RectSelectController::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 
 void RectSelectController::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
   this->moveCallBack(lastMovePoint, event->scenePos());
-  auto delta = event->scenePos() - lastMovePoint;
-  auto newBound = this->boundRect;
-  newBound.translate(delta);
-  this->setBoundRect(newBound);
-
+  if (ifAutoMoveUpdate) {
+    auto delta = event->scenePos() - lastMovePoint;
+    auto newBound = this->boundRect;
+    newBound.translate(delta);
+    this->setBoundRect(newBound); 
+  }
   lastMovePoint = event->scenePos();
 }
 
 void RectSelectController::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
   lastMovePoint.setX(0);
   lastMovePoint.setY(0);
-  this->moveEndCallBack();
+  this->endPoint = event->scenePos();
+  this->moveEndCallBack(startPoint,endPoint);
 }
 
 bool RectSelectController::ifHitRectBorder(const QPointF& p) const {

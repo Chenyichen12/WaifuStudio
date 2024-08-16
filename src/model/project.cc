@@ -32,6 +32,7 @@ Project* ProjectBuilder::build() {
 
   manager->setParent(project);
   sceneModel->setParent(project);
+  sceneModel->setSceneUndoStack(project->undoStack); // setup undo stack
 
   // connect model communication
   // two-way select connect signal

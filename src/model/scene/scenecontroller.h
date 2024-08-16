@@ -8,6 +8,9 @@
 
 #pragma once
 #include <QGraphicsItem>
+class QUndoCommand;
+class QUndoStack;
+
 namespace Scene {
 
 class Mesh;
@@ -34,7 +37,15 @@ class AbstractController : public QGraphicsItem {
   int type() const override = 0;
   virtual QPointF localPointToScene(const QPointF& point) = 0;
   virtual QPointF scenePointToLocal(const QPointF& point) = 0;
-
+  /**
+   * controller always make up by point
+   * the basic change controller way is set point position
+   * you won't need to implement when the controller is not editable
+   * @param index the index of the point, it is specified of the controller data struct
+   * @param scenePosition the position of the scene position, the next is the position of local
+   */
+  virtual void setPointFromScene(int index, const QPointF& scenePosition) {}
+  virtual void setPointFromLocal(int index, const QPointF& localPosition) {}
 
   /**
    * selectable && visible in controller is the selected state
@@ -45,7 +56,7 @@ class AbstractController : public QGraphicsItem {
   /**
    * control this controller can select
    * if the controller is not selectable, it will also hide the layer
-   * @param isSelected 
+   * @param isSelected
    */
   void setControllerSelectAble(bool isSelected);
   /**
@@ -56,8 +67,7 @@ class AbstractController : public QGraphicsItem {
   /**
    * same as setVisibility(false)
    */
-  virtual void unSelectTheController(){this->setVisible(false);}
-
+  virtual void unSelectTheController() { this->setVisible(false); }
 
   AbstractController(QGraphicsItem* parent = nullptr) : QGraphicsItem(parent) {
     // controller default is invisible
@@ -89,6 +99,10 @@ class RectSelectController : public QGraphicsItem {
 
   double padding = 10;
   double lineWidth = 5;
+
+  // the start point and end point of once movement
+  QPointF startPoint;
+  QPointF endPoint;
 
   QPointF lastMovePoint;
   /**
@@ -130,9 +144,15 @@ class RectSelectController : public QGraphicsItem {
       [](const auto& a, const auto& b) {};
   /**
    * call the function when the rect move end
+   * the first point pargma is the start position
+   * the second point pargma is the end position
    */
-  std::function<void()> moveEndCallBack = []() {};
-
+  std::function<void(const QPointF&, const QPointF&)> moveEndCallBack = [](const QPointF&,const QPointF&) {};
+  /**
+   * normally the rect will auto update position in move event
+   * set it false to update manually update the rect select position
+   */
+  bool ifAutoMoveUpdate = true;
  protected:
   /**
    * when the mouse hit the item rect select controller will grab the event
@@ -153,6 +173,7 @@ class RootController : public AbstractController {
  private:
   int width;
   int height;
+  QUndoStack* controllerUndoStack = nullptr;
 
  public:
   RootController(int width, int height);
@@ -169,6 +190,13 @@ class RootController : public AbstractController {
 
   QPointF localPointToScene(const QPointF& point) override;
   QPointF scenePointToLocal(const QPointF& point) override;
+  /**
+   * the root controller manager the controller's undo command
+   * the controller command should push to root
+   * @param stack 
+   */
+  void setUndoStack(QUndoStack* stack);
+  void pushUndoCommand(QUndoCommand* command);
 };
 
 /**
@@ -190,6 +218,7 @@ class MeshController : public AbstractController {
  protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+  void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
   // QVariant itemChange(GraphicsItemChange change,
   //                     const QVariant& value) override;
 
@@ -211,8 +240,8 @@ class MeshController : public AbstractController {
    * @param index mesh point index
    * @param scenePosition scene position
    */
-  void setMeshPointScene(int index, const QPointF& scenePosition);
-  void setMeshPointFromLocal(int index, const QPointF& localPosition);
+  void setPointFromScene(int index, const QPointF& scenePosition) override;
+  void setPointFromLocal(int index, const QPointF& localPosition) override;
 
   QPointF localPointToScene(const QPointF& point) override;
   QPointF scenePointToLocal(const QPointF& point) override;
