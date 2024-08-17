@@ -7,23 +7,51 @@
 
 namespace Scene {
 class RectSelectController : public QGraphicsItem {
- private:
-  QRectF boundRect;
-
-  double padding = 10;
-  double lineWidth = 5;
-
-  // the start point and end point of once movement
-  QPointF startPoint;
-  QPointF endPoint;
-
-  QPointF lastMovePoint;
+ protected:
   /**
-   * test the rect hit, default the rect will be hit at border
+   * the state when in drag
+   * normally one controller has 10 control point
+   * which is 9 point in border and one point in center
+   */
+  enum HandledState {
+
+    LEFT_TOP = 0,
+    TOP,
+    RIGHT_TOP,
+    LEFT,
+    CENTER,
+    RIGHT,
+    LEFT_BUTTON,
+    BUTTON,
+    RIGHT_BUTTON,
+    NONE
+
+  };
+  /**
+   * test the rect hit
    * @param p scene hit point
    * @return
    */
-  virtual bool ifHitRectBorder(const QPointF& p) const;
+  HandledState ifHitControllerPoint(const QPointF& p) const;
+  /**
+   * @param state which control point
+   * @return the actual visible rect of the control point
+   */
+  QRectF getHandlerVisibleRect(HandledState state) const;
+  /**
+   * 
+   * @param state 
+   * @return the actual scene point of the control point
+   */
+  QPointF getHandlerHitPoint(HandledState state) const;
+
+ private:
+  double padding = 10;
+  double lineWidth = 5;
+
+
+
+  QPointF lastMovePoint;
 
  public:
   QRectF boundingRect() const override;
@@ -49,20 +77,6 @@ class RectSelectController : public QGraphicsItem {
   RectSelectController(QGraphicsItem* parent = nullptr);
 
   /**
-   * call the function when the rect is moving
-   * get the delta by  p2 - p1
-   * point position is in scene position
-   */
-  std::function<void(const QPointF&, const QPointF&)> moveCallBack =
-      [](const auto& a, const auto& b) {};
-  /**
-   * call the function when the rect move end
-   * the first point pargma is the start position
-   * the second point pargma is the end position
-   */
-  std::function<void(const QPointF&, const QPointF&)> moveEndCallBack =
-      [](const QPointF&, const QPointF&) {};
-  /**
    * normally the rect will auto update position in move event
    * set it false to update manually update the rect select position
    */
@@ -70,16 +84,38 @@ class RectSelectController : public QGraphicsItem {
 
  protected:
   /**
+   * the bound is different from boundingRect()
+   * the bound is the minutest bound of the select point which is defined by controller
+   */
+  QRectF boundRect;
+  /**
+   * in one drag, normally the user will drag one of the drag point
+   * change it in press event
+   */
+  HandledState dragState;
+  // the start point and end point of once movement
+  QPointF startPoint;
+  QPointF endPoint;
+  /**
    * when the mouse hit the item rect select controller will grab the event
    */
   void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
-
+  /**
+   * call the function when the rect is moving
+   * get the delta by  p2 - p1
+   * point position is in scene position
+   */
   virtual void rectMoving(const QPointF& pre, const QPointF& aft) {}
   virtual void rectStartMove(const QPointF& pos) {}
-  virtual void rectEndMove(const QPointF& startPoint, const QPointF& endPoint) {}
-
+  /**
+   * call the function when the rect move end
+   * the first point pargma is the start position
+   * the second point pargma is the end position
+   */
+  virtual void rectEndMove(const QPointF& startPoint, const QPointF& endPoint) {
+  }
 };
 }  // namespace Scene

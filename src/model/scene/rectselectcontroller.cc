@@ -1,8 +1,8 @@
+#include "rectselectcontroller.h"
+
 #include <QCursor>
 #include <QGraphicsSceneEvent>
 #include <QPainter>
-
-#include "rectselectcontroller.h"
 
 namespace Scene {
 
@@ -22,7 +22,17 @@ void RectSelectController::paint(QPainter* painter,
   pen.setWidth(lineWidth);
   painter->setPen(pen);
   painter->drawRect(boundingRect().marginsRemoved(
-      {lineWidth / 2.0, lineWidth / 2.0, lineWidth / 2.0, lineWidth / 2.0}));
+      {lineWidth, lineWidth, lineWidth, lineWidth}));
+
+  auto controllerPen = QPen(Qt::transparent);
+  controllerPen.setWidth(0);
+  painter->setPen(controllerPen);
+  painter->setBrush(QBrush(Qt::red));
+  for (int i = 0; i < 9; i++) {
+    auto controllerBound =
+        this->getHandlerVisibleRect(static_cast<HandledState>(i));
+    painter->drawRect(controllerBound);
+  }
 }
 
 QRectF RectSelectController::boundRectFromPoints(
@@ -56,8 +66,6 @@ void RectSelectController::setBoundRect(const QRectF& rect) {
   update();
 }
 
-
-
 void RectSelectController::setPadding(double padding) {
   this->padding = padding;
   update();
@@ -74,31 +82,38 @@ RectSelectController::RectSelectController(QGraphicsItem* parent)
 }
 
 void RectSelectController::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
-  if (ifHitRectBorder(event->scenePos())) {
-    setCursor(QCursor(Qt::SizeAllCursor));
-    this->lastMovePoint = event->scenePos();
-  } else {
-    setCursor(QCursor(Qt::ArrowCursor));
-  }
+  // table of the cursor
+  static std::array<QCursor, 10> cursorMap = {
+      QCursor(Qt::SizeFDiagCursor), QCursor(Qt::SizeVerCursor),
+      QCursor(Qt::SizeBDiagCursor), QCursor(Qt::SizeHorCursor),
+      QCursor(Qt::SizeAllCursor),   QCursor(Qt::SizeHorCursor),
+      QCursor(Qt::SizeBDiagCursor), QCursor(Qt::SizeVerCursor),
+      QCursor(Qt::SizeFDiagCursor), QCursor(Qt::ArrowCursor)};
+
+  auto which = ifHitControllerPoint(event->scenePos());
+  setCursor(cursorMap[which]);
 }
 
 void RectSelectController::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-  if (this->ifHitRectBorder(event->scenePos())) {
+  auto handle = ifHitControllerPoint(event->scenePos());
+  if (handle != NONE) {
     event->accept();
     this->lastMovePoint = event->scenePos();
     this->startPoint = event->scenePos();
+    this->dragState = handle;
+    this->rectStartMove(startPoint);
   } else {
     event->ignore();
   }
 }
 
 void RectSelectController::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
-  this->moveCallBack(lastMovePoint, event->scenePos());
+  this->rectMoving(lastMovePoint, event->scenePos());
   if (ifAutoMoveUpdate) {
     auto delta = event->scenePos() - lastMovePoint;
     auto newBound = this->boundRect;
     newBound.translate(delta);
-    this->setBoundRect(newBound); 
+    this->setBoundRect(newBound);
   }
   lastMovePoint = event->scenePos();
 }
@@ -107,13 +122,44 @@ void RectSelectController::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
   lastMovePoint.setX(0);
   lastMovePoint.setY(0);
   this->endPoint = event->scenePos();
-  this->moveEndCallBack(startPoint,endPoint);
+  this->dragState = NONE;
+  this->rectEndMove(startPoint, endPoint);
 }
 
-bool RectSelectController::ifHitRectBorder(const QPointF& p) const {
-  const auto& rect = boundingRect();
-  const auto& insideRect = rect.marginsRemoved(
-      QMarginsF(lineWidth, lineWidth, lineWidth, lineWidth));
-  return rect.contains(p) && !insideRect.contains(p);
+
+RectSelectController::HandledState RectSelectController::ifHitControllerPoint(
+    const QPointF& p) const {
+  for (int i = 0; i < 9; i++) {
+    auto controllerRect = getHandlerVisibleRect(static_cast<HandledState>(i));
+    if (controllerRect.contains(p)) {
+      return static_cast<HandledState>(i);
+    }
+  }
+  return NONE;
+}
+
+QRectF RectSelectController::getHandlerVisibleRect(HandledState state) const {
+  if (state == NONE) {
+    return {};
+  }
+  auto dePoint = QPointF(lineWidth, lineWidth);
+  auto centerPoint = getHandlerHitPoint(state);
+  centerPoint -= dePoint;
+  return {centerPoint.x(), centerPoint.y(), lineWidth * 2, lineWidth * 2};
+}
+
+QPointF RectSelectController::getHandlerHitPoint(HandledState state) const {
+  auto bound = boundingRect().marginsRemoved(QMarginsF(lineWidth,lineWidth,lineWidth,lineWidth));
+
+  float xMid = bound.left() / 2 + bound.right() / 2;
+  float yMid = bound.top() / 2 + bound.bottom() / 2;
+  std::array<QPointF, 10> map = {
+      bound.topLeft(),     QPointF(xMid, bound.top()),
+      bound.topRight(),    QPointF(bound.left(), yMid),
+      QPointF(xMid, yMid), QPointF(bound.right(), yMid),
+      bound.bottomLeft(),  QPointF(xMid, bound.bottom()),
+      bound.bottomRight(), QPointF()};
+
+  return map[state];
 }
 }  // namespace Scene

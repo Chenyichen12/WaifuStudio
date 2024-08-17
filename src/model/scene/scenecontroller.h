@@ -136,7 +136,6 @@ class RectSelectController;
 class MeshController : public AbstractController {
   class MeshControllerEventHandler;
   friend MeshControllerEventHandler;
-
  private:
   Mesh* controlMesh;
   std::vector<bool> selectedPoint;
@@ -184,6 +183,24 @@ class MeshController : public AbstractController {
   void selectAtScene(QRectF sceneRect) override;
 
   void unSelectTheController() override;
+
+  /**
+   * select table
+   * if the index of point is selected vector[index] == true
+   * @return 
+   */
+  const std::vector<bool>& getSelectedTable() const;
+  /**
+   * @return selectPointIndex list
+   */
+  std::vector<int> getSelectedPointIndex() const;
+
+  /**
+   * get the scene position of one point
+   * @param index point index
+   * @return position
+   */
+  QPointF getPointScenePosition(int index) const;
 };
 
 }  // namespace Scene

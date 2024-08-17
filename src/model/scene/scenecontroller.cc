@@ -91,4 +91,6 @@ void RootController::pushUndoCommand(QUndoCommand* command) {
     this->controllerUndoStack->push(command);
   }
 }
+
+
 }  // namespace Scene
