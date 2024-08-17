@@ -5,7 +5,8 @@
 #include <QPainter>
 
 namespace Scene {
-
+AbstractSelectController::AbstractSelectController(QGraphicsItem* parent)
+    : QGraphicsItem(parent) {}
 QRectF RectSelectController::boundingRect() const {
   return boundRect.marginsAdded(QMarginsF(padding, padding, padding, padding));
 }
@@ -35,7 +36,7 @@ void RectSelectController::paint(QPainter* painter,
   }
 }
 
-QRectF RectSelectController::boundRectFromPoints(
+QRectF AbstractSelectController::boundRectFromPoints(
     const std::vector<QPointF>& list) {
   if (list.empty() || list.size() == 1) {
     return {};
@@ -61,6 +62,12 @@ QRectF RectSelectController::boundRectFromPoints(
   return {QPointF(leftMost, topMost), QPointF(rightMost, bottomMost)};
 }
 
+void AbstractSelectController::setBoundRect(
+    const std::vector<QPointF>& pointList) {
+  auto boundRect = AbstractSelectController::boundRectFromPoints(pointList);
+  this->setBoundRect(boundRect);
+}
+
 void RectSelectController::setBoundRect(const QRectF& rect) {
   this->boundRect = rect;
   update();
@@ -77,7 +84,7 @@ void RectSelectController::setLineWidth(double lineWidth) {
 }
 
 RectSelectController::RectSelectController(QGraphicsItem* parent)
-    : QGraphicsItem(parent) {
+    : AbstractSelectController(parent) {
   setAcceptHoverEvents(true);
 }
 
@@ -126,7 +133,6 @@ void RectSelectController::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
   this->rectEndMove(startPoint, endPoint);
 }
 
-
 RectSelectController::HandledState RectSelectController::ifHitControllerPoint(
     const QPointF& p) const {
   for (int i = 0; i < 9; i++) {
@@ -149,7 +155,8 @@ QRectF RectSelectController::getHandlerVisibleRect(HandledState state) const {
 }
 
 QPointF RectSelectController::getHandlerHitPoint(HandledState state) const {
-  auto bound = boundingRect().marginsRemoved(QMarginsF(lineWidth,lineWidth,lineWidth,lineWidth));
+  auto bound = boundingRect().marginsRemoved(
+      QMarginsF(lineWidth, lineWidth, lineWidth, lineWidth));
 
   float xMid = bound.left() / 2 + bound.right() / 2;
   float yMid = bound.top() / 2 + bound.bottom() / 2;

@@ -132,7 +132,7 @@ class RootController : public AbstractController {
  * point only make scene in keyframe module when the keyframe module going to
  * set position of the vertex it will call the function in local point
  */
-class RectSelectController;
+class AbstractSelectController;
 class MeshController : public AbstractController {
   class MeshControllerEventHandler;
   friend MeshControllerEventHandler;
@@ -140,7 +140,7 @@ class MeshController : public AbstractController {
   Mesh* controlMesh;
   std::vector<bool> selectedPoint;
   MeshControllerEventHandler* handler;
-  RectSelectController* selectRectItem;
+  AbstractSelectController* selectRectItem;
 
  protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

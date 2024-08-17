@@ -6,7 +6,37 @@
  */
 
 namespace Scene {
-class RectSelectController : public QGraphicsItem {
+
+class AbstractSelectController: public QGraphicsItem {
+public:
+  AbstractSelectController(QGraphicsItem* parent = nullptr);
+
+  /**
+   * normally the select controller will have a bound of selected point
+   * it will be set from actual controller
+   * @param pointList 
+   */
+  virtual void setBoundRect(const std::vector<QPointF>& pointList);
+  virtual void setBoundRect(const QRectF& rect) { this->boundRect = rect;}
+  /**
+   * get the bound from the list of point from scene
+   * @param list scene point list
+   * @return bound rect, not contain padding
+   */
+  static QRectF boundRectFromPoints(const std::vector<QPointF>& list);
+
+
+ protected:
+  /**
+   * the bound is different from boundingRect()
+   * the bound is the minutest bound of the select point which is defined by
+   * controller
+   */
+  QRectF boundRect;
+};
+
+
+class RectSelectController : public AbstractSelectController {
  protected:
   /**
    * the state when in drag
@@ -58,19 +88,14 @@ class RectSelectController : public QGraphicsItem {
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget) override;
 
-  /**
-   * get the bound from the list of point from scene
-   * @param list scene point list
-   * @return bound rect, not contain padding
-   */
-  static QRectF boundRectFromPoints(const std::vector<QPointF>& list);
+  
 
   /**
    * the appearance information of rect
    * also affect the event hit test
    * position from scene
    */
-  void setBoundRect(const QRectF& rect);
+  void setBoundRect(const QRectF& rect) override;
   void setPadding(double padding);
   void setLineWidth(double lineWidth);
 
@@ -83,11 +108,7 @@ class RectSelectController : public QGraphicsItem {
   bool ifAutoMoveUpdate = true;
 
  protected:
-  /**
-   * the bound is different from boundingRect()
-   * the bound is the minutest bound of the select point which is defined by controller
-   */
-  QRectF boundRect;
+ 
   /**
    * in one drag, normally the user will drag one of the drag point
    * change it in press event
@@ -115,7 +136,6 @@ class RectSelectController : public QGraphicsItem {
    * the first point pargma is the start position
    * the second point pargma is the end position
    */
-  virtual void rectEndMove(const QPointF& startPoint, const QPointF& endPoint) {
-  }
+  virtual void rectEndMove(const QPointF& startPoint, const QPointF& endPoint) {}
 };
 }  // namespace Scene
