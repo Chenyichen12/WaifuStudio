@@ -140,14 +140,13 @@ class MeshController : public AbstractController {
   Mesh* controlMesh;
   std::vector<bool> selectedPoint;
   MeshControllerEventHandler* handler;
-  AbstractSelectController* selectRectItem;
 
+  int activeSelectController = 0;
+  std::array<AbstractSelectController*, 2> selectControllerList; 
  protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
-  // QVariant itemChange(GraphicsItemChange change,
-  //                     const QVariant& value) override;
 
   std::vector<QPointF> getSelectedPointScenePosition() const;
 

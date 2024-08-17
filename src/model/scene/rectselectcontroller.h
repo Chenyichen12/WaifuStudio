@@ -138,4 +138,24 @@ class RectSelectController : public AbstractSelectController {
    */
   virtual void rectEndMove(const QPointF& startPoint, const QPointF& endPoint) {}
 };
+
+class RotationSelectController: public AbstractSelectController {
+
+private:
+  QPointF centerPoint;
+
+  float circleRadius= 5;
+  float lineLength = 10;
+
+public:
+  QPointF getCenterPoint() const;
+  void setRadius(float radius);
+  void setLineLength(float length);
+
+  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+  QRectF boundingRect() const override;
+  void setBoundRect(const QRectF& rect) override;
+
+
+};
 }  // namespace Scene

@@ -5,35 +5,15 @@
 #include <QPainter>
 
 namespace Scene {
+
+// ---------------------AbstractSelectController---------------------
 AbstractSelectController::AbstractSelectController(QGraphicsItem* parent)
     : QGraphicsItem(parent) {}
-QRectF RectSelectController::boundingRect() const {
-  return boundRect.marginsAdded(QMarginsF(padding, padding, padding, padding));
-}
 
-void RectSelectController::paint(QPainter* painter,
-                                 const QStyleOptionGraphicsItem* option,
-                                 QWidget* widget) {
-  if (this->boundRect == QRectF()) {
-    return;
-  }
-
-  painter->setBrush(QBrush(Qt::transparent));
-  auto pen = QPen(Qt::red);
-  pen.setWidth(lineWidth);
-  painter->setPen(pen);
-  painter->drawRect(boundingRect().marginsRemoved(
-      {lineWidth, lineWidth, lineWidth, lineWidth}));
-
-  auto controllerPen = QPen(Qt::transparent);
-  controllerPen.setWidth(0);
-  painter->setPen(controllerPen);
-  painter->setBrush(QBrush(Qt::red));
-  for (int i = 0; i < 9; i++) {
-    auto controllerBound =
-        this->getHandlerVisibleRect(static_cast<HandledState>(i));
-    painter->drawRect(controllerBound);
-  }
+void AbstractSelectController::setBoundRect(
+    const std::vector<QPointF>& pointList) {
+  auto boundRect = AbstractSelectController::boundRectFromPoints(pointList);
+  this->setBoundRect(boundRect);
 }
 
 QRectF AbstractSelectController::boundRectFromPoints(
@@ -62,10 +42,34 @@ QRectF AbstractSelectController::boundRectFromPoints(
   return {QPointF(leftMost, topMost), QPointF(rightMost, bottomMost)};
 }
 
-void AbstractSelectController::setBoundRect(
-    const std::vector<QPointF>& pointList) {
-  auto boundRect = AbstractSelectController::boundRectFromPoints(pointList);
-  this->setBoundRect(boundRect);
+// ---------------------RectSelectController---------------------
+QRectF RectSelectController::boundingRect() const {
+  return boundRect.marginsAdded(QMarginsF(padding, padding, padding, padding));
+}
+
+void RectSelectController::paint(QPainter* painter,
+                                 const QStyleOptionGraphicsItem* option,
+                                 QWidget* widget) {
+  if (this->boundRect == QRectF()) {
+    return;
+  }
+
+  painter->setBrush(QBrush(Qt::transparent));
+  auto pen = QPen(Qt::red);
+  pen.setWidth(lineWidth);
+  painter->setPen(pen);
+  painter->drawRect(boundingRect().marginsRemoved(
+      {lineWidth, lineWidth, lineWidth, lineWidth}));
+
+  auto controllerPen = QPen(Qt::transparent);
+  controllerPen.setWidth(0);
+  painter->setPen(controllerPen);
+  painter->setBrush(QBrush(Qt::red));
+  for (int i = 0; i < 9; i++) {
+    auto controllerBound =
+        this->getHandlerVisibleRect(static_cast<HandledState>(i));
+    painter->drawRect(controllerBound);
+  }
 }
 
 void RectSelectController::setBoundRect(const QRectF& rect) {
@@ -168,5 +172,37 @@ QPointF RectSelectController::getHandlerHitPoint(HandledState state) const {
       bound.bottomRight(), QPointF()};
 
   return map[state];
+}
+
+// ---------------------RotationSelectController---------------------
+
+QPointF RotationSelectController::getCenterPoint() const {
+  return this->centerPoint;
+}
+
+void RotationSelectController::setRadius(float radius) {
+  this->circleRadius = radius;
+}
+
+void RotationSelectController::setLineLength(float length) {
+  this->lineLength = length;
+}
+
+void RotationSelectController::paint(QPainter* painter,
+                                     const QStyleOptionGraphicsItem* option,
+                                     QWidget* widget) {
+  auto brush = QBrush(Qt::red);
+  painter->setBrush(brush);
+  painter->drawRect(this->boundingRect());
+}
+
+QRectF RotationSelectController::boundingRect() const {
+  auto topLeft = centerPoint - QPointF(lineLength, lineLength);
+  auto bottomRight = centerPoint + QPointF(lineLength, lineLength);
+  return {topLeft, bottomRight};
+}
+
+void RotationSelectController::setBoundRect(const QRectF& rect) {
+  AbstractSelectController::setBoundRect(rect);
 }
 }  // namespace Scene

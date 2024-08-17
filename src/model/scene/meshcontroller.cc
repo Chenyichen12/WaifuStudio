@@ -405,7 +405,7 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
 
   // setup select rect item
   auto rectSelectController = new MeshRectSelectController(this);
-  this->selectRectItem = rectSelectController;
+  this->selectControllerList[0] = rectSelectController;
   rectSelectController->ifAutoMoveUpdate = false;
   auto r = findRootController(this);
   if (r != nullptr) {
@@ -477,7 +477,7 @@ void MeshController::unSelectPoint() {
   for (auto&& selected_point : this->selectedPoint) {
     selected_point = false;
   }
-  selectRectItem->setBoundRect(QRectF());
+  this->selectControllerList[activeSelectController]->setBoundRect(QRectF());
   this->update();
 }
 
@@ -487,7 +487,7 @@ void MeshController::selectPoint(int index) {
   }
   this->selectedPoint[index] = true;
   const auto& vec = getSelectedPointScenePosition();
-  selectRectItem->setBoundRect(vec);
+  this->selectControllerList[activeSelectController]->setBoundRect(vec);
   this->update();
 }
 
@@ -505,7 +505,7 @@ void MeshController::setPointFromScene(int index,
   // update the select rect if needed
   const auto& selectVec = getSelectedPointScenePosition();
   const auto& rect = RectSelectController::boundRectFromPoints(selectVec);
-  selectRectItem->setBoundRect(rect);
+  this->selectControllerList[activeSelectController]->setBoundRect(rect);
 
   this->update();
 }
