@@ -37,6 +37,7 @@ class AbstractController : public QGraphicsItem {
   virtual QPointF localPointToScene(const QPointF& point) = 0;
   virtual QPointF scenePointToLocal(const QPointF& point) = 0;
   /**
+   * the get and set function for controller point
    * controller always make up by point
    * the basic change controller way is set point position
    * you won't need to implement when the controller is not editable
@@ -47,6 +48,8 @@ class AbstractController : public QGraphicsItem {
    */
   virtual void setPointFromScene(int index, const QPointF& scenePosition) {}
   virtual void setPointFromLocal(int index, const QPointF& localPosition) {}
+  virtual std::vector<QPointF> getPointFromScene() { return {}; }
+  virtual std::vector<QPointF> getPointFromLocal();
 
   /**
    * selectable && visible in controller is the selected state
@@ -205,10 +208,13 @@ class MeshController : public AbstractController {
 
   /**
    * get the scene position of one point
+   * has a better performance
    * @param index point index
    * @return position
    */
   QPointF getPointScenePosition(int index) const;
+
+  std::vector<QPointF> getPointFromScene() override;
 };
 
 }  // namespace Scene

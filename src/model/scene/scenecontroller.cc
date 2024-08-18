@@ -1,6 +1,14 @@
 #include "scenecontroller.h"
 #include <QUndoStack>
 namespace Scene {
+std::vector<QPointF> AbstractController::getPointFromLocal() {
+  const auto& p = this->getPointFromScene();
+  auto res = std::vector<QPointF>();
+  for (const auto & point : p) {
+    res.emplace_back(this->scenePointToLocal(point));
+  }
+  return res;
+}
 
 void AbstractController::setControllerSelectAble(bool isSelected) {
   this->selectAble = isSelected;

@@ -259,14 +259,14 @@ class MeshRectSelectController : public RectSelectController {
  */
 class MeshRotationSelectController : public RotationSelectController {
  private:
- /**
-  * private class for the undo command for rotation controller
-  */
+  /**
+   * private class for the undo command for rotation controller
+   */
   class MeshRotationUndoEvent : public Command::MeshControllerCommand {
     MeshRotationSelectController* selectController;
 
    public:
-   // two rotation record for controller
+    // two rotation record for controller
     double beforeRotation = 0;
     double afterRotation = 0;
     MeshRotationUndoEvent(MeshRotationSelectController* selectController,
@@ -283,7 +283,8 @@ class MeshRotationSelectController : public RotationSelectController {
 
     void undo() override {
       MeshControllerCommand::undo();
-      // the rotation will only affect the rotation controller, will not affect the actual mesh point
+      // the rotation will only affect the rotation controller, will not affect
+      // the actual mesh point
       selectController->rotation = beforeRotation;
       selectController->update();
     }
@@ -301,7 +302,8 @@ class MeshRotationSelectController : public RotationSelectController {
   }
 
  protected:
- // when user drag the center of the controller, it will move all the points of the select point
+  // when user drag the center of the controller, it will move all the points of
+  // the select point
   void controllerCenterDrag(const QPointF& mouseScenePoint) override {
     auto delta = mouseScenePoint - startDragPoint;
     for (const auto& startCommand : startCommandInfo) {
@@ -344,7 +346,7 @@ class MeshRotationSelectController : public RotationSelectController {
     }
     controller->upDateMeshBuffer();
   }
-  
+
   void controllerStartDrag(const QPointF& mouseScenePos) override {
     for (int index : controller->getSelectedPointIndex()) {
       auto pos = controller->getPointScenePosition(index);
@@ -490,6 +492,14 @@ QPointF MeshController::getPointScenePosition(int index) const {
   return {pos.x, pos.y};
 }
 
+std::vector<QPointF> MeshController::getPointFromScene() {
+  auto res = std::vector<QPointF>();
+  for (const auto& vertex : this->controlMesh->getVertices()) {
+    res.emplace_back(vertex.pos.x, vertex.pos.y);
+  }
+  return res;
+}
+
 std::vector<QPointF> MeshController::getSelectedPointScenePosition() const {
   std::vector<QPointF> result;
   for (int i = 0; i < selectedPoint.size(); ++i) {
@@ -626,7 +636,7 @@ void MeshController::setPointFromScene(int index,
 
   // update the select rect if needed
   const auto& selectVec = getSelectedPointScenePosition();
-  const auto& rect = RectSelectController::boundRectFromPoints(selectVec);
+  const auto& rect = AbstractSelectController::boundRectFromPoints(selectVec);
   this->selectControllerList[activeSelectController]->setBoundRect(rect);
 
   this->update();
