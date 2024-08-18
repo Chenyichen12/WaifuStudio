@@ -40,8 +40,10 @@ class AbstractController : public QGraphicsItem {
    * controller always make up by point
    * the basic change controller way is set point position
    * you won't need to implement when the controller is not editable
-   * @param index the index of the point, it is specified of the controller data struct
-   * @param scenePosition the position of the scene position, the next is the position of local
+   * @param index the index of the point, it is specified of the controller data
+   * struct
+   * @param scenePosition the position of the scene position, the next is the
+   * position of local
    */
   virtual void setPointFromScene(int index, const QPointF& scenePosition) {}
   virtual void setPointFromLocal(int index, const QPointF& localPosition) {}
@@ -88,8 +90,6 @@ class AbstractController : public QGraphicsItem {
   AbstractController* getControllerParent() const { return controllerParent; }
 };
 
-
-
 /**
  * the root controller witch is a rectangle with project width and height
  * should be added into the scene
@@ -120,7 +120,7 @@ class RootController : public AbstractController {
   /**
    * the root controller manager the controller's undo command
    * the controller command should push to root
-   * @param stack 
+   * @param stack
    */
   void setUndoStack(QUndoStack* stack);
   void pushUndoCommand(QUndoCommand* command);
@@ -136,13 +136,15 @@ class AbstractSelectController;
 class MeshController : public AbstractController {
   class MeshControllerEventHandler;
   friend MeshControllerEventHandler;
+
  private:
   Mesh* controlMesh;
   std::vector<bool> selectedPoint;
   MeshControllerEventHandler* handler;
 
   int activeSelectController = 0;
-  std::array<AbstractSelectController*, 2> selectControllerList; 
+  std::array<AbstractSelectController*, 2> selectControllerList;
+
  protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
@@ -158,6 +160,13 @@ class MeshController : public AbstractController {
              QWidget* widget) override;
   int controllerId() override;
   int type() const override;
+
+  enum ActiveSelectController {
+    RectController = 0,
+    RotationController = 1,
+  };
+
+  void setActiveSelectController(ActiveSelectController controller);
 
   /**
    * use to control the mesh point, the basic control function
@@ -186,7 +195,7 @@ class MeshController : public AbstractController {
   /**
    * select table
    * if the index of point is selected vector[index] == true
-   * @return 
+   * @return
    */
   const std::vector<bool>& getSelectedTable() const;
   /**

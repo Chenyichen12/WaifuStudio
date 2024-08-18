@@ -4,6 +4,7 @@
 #include <QGraphicsSceneEvent>
 #include <QPainter>
 
+
 namespace Scene {
 
 // ---------------------AbstractSelectController---------------------
@@ -14,6 +15,17 @@ void AbstractSelectController::setBoundRect(
     const std::vector<QPointF>& pointList) {
   auto boundRect = AbstractSelectController::boundRectFromPoints(pointList);
   this->setBoundRect(boundRect);
+}
+
+void AbstractSelectController::setBoundRect(const QRectF& rect) {
+  // when there is no rect of the bound should set it to invisible
+  // set visible when the bound is not null
+  if (rect == QRectF()) {
+    this->setVisible(false);
+  } else {
+    this->setVisible(true);
+  }
+  this->boundRect = rect;
 }
 
 QRectF AbstractSelectController::boundRectFromPoints(
@@ -73,8 +85,7 @@ void RectSelectController::paint(QPainter* painter,
 }
 
 void RectSelectController::setBoundRect(const QRectF& rect) {
-  this->boundRect = rect;
-  update();
+  AbstractSelectController::setBoundRect(rect);
 }
 
 void RectSelectController::setPadding(double padding) {
@@ -176,6 +187,126 @@ QPointF RectSelectController::getHandlerHitPoint(HandledState state) const {
 
 // ---------------------RotationSelectController---------------------
 
+
+QPainterPath RotationSelectController::getTrianglePath() const {
+  auto triBound = QRectF(centerPoint - QPointF(circleRadius / 2, lineLength),
+                         centerPoint + QPointF(circleRadius / 2, 0));
+  auto painterPath = QPainterPath();
+
+  auto bf = rotatePoint(centerPoint, triBound.bottomLeft(), rotation);
+  auto t = rotatePoint(
+      centerPoint, QPointF(triBound.center().x(), triBound.top()), rotation);
+  auto br = rotatePoint(centerPoint, triBound.bottomRight(), rotation);
+
+  painterPath.moveTo(bf);
+  painterPath.lineTo(t);
+  painterPath.lineTo(br);
+  painterPath.closeSubpath();
+  return painterPath;
+}
+
+bool RotationSelectController::ifHitTrianglePath(const QPointF& p) const {
+  return getTrianglePath().contains(p);
+}
+
+bool RotationSelectController::ifHitCenterPoint(const QPointF& p) const {
+  auto line = QLineF(centerPoint, p);
+  return line.length() < this->circleRadius;
+}
+
+void RotationSelectController::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
+  // set cursor
+  static auto rotationImage = QPixmap(":/icon/rotation.png")
+                                  .scaledToHeight(20, Qt::SmoothTransformation);
+
+  if (ifHitTrianglePath(event->scenePos())) {
+    QCursor cursor(rotationImage);
+    setCursor(cursor);
+    return;
+  }
+  if (ifHitCenterPoint(event->scenePos())) {
+    setCursor(Qt::SizeAllCursor);
+    return;
+  }
+
+  setCursor(Qt::ArrowCursor);
+}
+//  2  |  1 -> p.y < 0
+// ----------
+//   3 |  4 -> p.y > 0
+double getAngleFromPoint(const QPointF& p) {
+  double x = p.x();
+  double y = -p.y();
+
+  if (y == 0) {
+    return x >= 0 ? 90 : 270;
+  }
+
+  auto tan = qAtan(x / y);
+
+  if (tan >= 0) {
+    return x >= 0 ? tan : M_PI + tan;
+  }
+  return x >= 0 ? M_PI + tan : 2 * M_PI + tan;
+}
+
+
+
+void RotationSelectController::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+  AbstractSelectController::mouseMoveEvent(event);
+  if (dragState == ROTATION) {
+    auto rotationP = event->scenePos() - boundRect.center();
+    double oldAngle = rotation;
+    auto nowAngle = getAngleFromPoint(rotationP);
+    this->rotation = nowAngle;
+    // call the func with delta
+    controllerRotating(nowAngle - oldAngle);
+    update();
+  }
+  if (dragState == CENTER) {
+    if (ifAutoMoveUpdate) {
+      centerPoint = event->scenePos();
+    }
+    controllerCenterDrag(event->scenePos());
+    update();
+  }
+}
+
+void RotationSelectController::mousePressEvent(
+    QGraphicsSceneMouseEvent* event) {
+
+    // accept when hit the controller point
+  if (ifHitTrianglePath(event->scenePos())) {
+    event->accept();
+    startDragRotation = this->rotation;
+    dragState = ROTATION;
+    startDragPoint = this->centerPoint;
+    controllerStartDrag(event->scenePos());
+    return;
+  }
+
+  if (ifHitCenterPoint(event->scenePos())) {
+    event->accept();
+    dragState = CENTER;
+    startDragPoint = this->centerPoint;
+    controllerStartDrag(event->scenePos());
+    return;
+  }
+  dragState = NONE;
+  event->ignore();
+}
+
+void RotationSelectController::mouseReleaseEvent(
+    QGraphicsSceneMouseEvent* event) {
+  controllerEndDrag(event->scenePos());
+  dragState = NONE;
+}
+
+RotationSelectController::RotationSelectController(QGraphicsItem* parent)
+    : AbstractSelectController(parent) {
+  setAcceptHoverEvents(true);
+}
+
 QPointF RotationSelectController::getCenterPoint() const {
   return this->centerPoint;
 }
@@ -191,9 +322,18 @@ void RotationSelectController::setLineLength(float length) {
 void RotationSelectController::paint(QPainter* painter,
                                      const QStyleOptionGraphicsItem* option,
                                      QWidget* widget) {
+  if (boundRect == QRect()) {
+    return;
+  }
   auto brush = QBrush(Qt::red);
+  auto pen = QPen(Qt::transparent);
+
   painter->setBrush(brush);
-  painter->drawRect(this->boundingRect());
+  painter->setPen(pen);
+  painter->drawEllipse(centerPoint, circleRadius, circleRadius);
+
+  const auto& painterPath = getTrianglePath();
+  painter->drawPath(painterPath);
 }
 
 QRectF RotationSelectController::boundingRect() const {
@@ -204,5 +344,25 @@ QRectF RotationSelectController::boundingRect() const {
 
 void RotationSelectController::setBoundRect(const QRectF& rect) {
   AbstractSelectController::setBoundRect(rect);
+  this->centerPoint = rect.center();
+}
+
+// rotate point base on base
+// delta is radian
+QPointF RotationSelectController::rotatePoint(const QPointF& base,
+    const QPointF& target, double delta) {
+  double cosAngle = qCos(delta);
+  double sinAngle = qSin(delta);
+
+  double translatedX = target.x() - base.x();
+  double translatedY = target.y() - base.y();
+
+  double rotatedX = translatedX * cosAngle - translatedY * sinAngle;
+  double rotatedY = translatedX * sinAngle + translatedY * cosAngle;
+
+  double finalX = rotatedX + base.x();
+  double finalY = rotatedY + base.y();
+
+  return {finalX, finalY};
 }
 }  // namespace Scene

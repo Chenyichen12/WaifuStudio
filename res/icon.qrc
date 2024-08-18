@@ -4,6 +4,7 @@
         <file>eye-enabled.png</file>
         <file>folder.png</file>
         <file>question.png</file>
+        <file>rotation.png</file>
     </qresource>
 
 </RCC>

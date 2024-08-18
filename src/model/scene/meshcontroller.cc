@@ -66,48 +66,53 @@ class MeshRectSelectController : public RectSelectController {
       controller->upDateMeshBuffer();
       return;
     }
-    switch (dragState) {
-      case TOP: {
-        QPointF p = aft;
-        p.setX(startDragRect.left());
-        this->leftTopDrag(p);
-        break;
-      }
-      case LEFT: {
-        QPointF p = aft;
-        p.setY(startDragRect.top());
-        this->leftTopDrag(p);
-        break;
-      }
-      case RIGHT: {
-        QPointF p = aft;
-        p.setY(startDragRect.top());
-        this->rightTopDrag(p);
-        break;
-      }
-      case BUTTON: {
-        QPointF p = aft;
-        p.setX(startDragRect.left());
-        this->leftBottomDrag(p);
-        break;
-      }
-      case LEFT_TOP:
-        leftTopDrag(aft);
-        break;
+    // when some point in one line startDragRect will cause error
+    // so banned the controller point handler when the height or width == 0
+    if (startDragRect.width() != 0 && startDragRect.height() != 0) {
+      switch (dragState) {
+        case TOP: {
+          QPointF p = aft;
+          p.setX(startDragRect.left());
+          this->leftTopDrag(p);
+          break;
+        }
+        case LEFT: {
+          QPointF p = aft;
+          p.setY(startDragRect.top());
+          this->leftTopDrag(p);
+          break;
+        }
+        case RIGHT: {
+          QPointF p = aft;
+          p.setY(startDragRect.top());
+          this->rightTopDrag(p);
+          break;
+        }
+        case BUTTON: {
+          QPointF p = aft;
+          p.setX(startDragRect.left());
+          this->leftBottomDrag(p);
+          break;
+        }
+        case LEFT_TOP:
+          leftTopDrag(aft);
+          break;
 
-      case LEFT_BUTTON:
-        leftBottomDrag(aft);
-        break;
-      case RIGHT_TOP:
-        rightTopDrag(aft);
-        break;
-      case RIGHT_BUTTON:
-        rightBottomDrag(aft);
-        break;
-      default:
-        break;
+        case LEFT_BUTTON:
+          leftBottomDrag(aft);
+          break;
+        case RIGHT_TOP:
+          rightTopDrag(aft);
+          break;
+        case RIGHT_BUTTON:
+          rightBottomDrag(aft);
+          break;
+        default:
+          break;
+      }
+      controller->upDateMeshBuffer();
+      return;
     }
-    controller->upDateMeshBuffer();
   }
 
   /**
@@ -244,7 +249,108 @@ class MeshRectSelectController : public RectSelectController {
 
  public:
   MeshRectSelectController(MeshController* controller)
-      : RectSelectController(controller), controller(controller) {}
+      : RectSelectController(controller), controller(controller) {
+    this->ifAutoMoveUpdate = false;
+  }
+};
+
+/**
+ * the actual rotationController for the mesh
+ */
+class MeshRotationSelectController : public RotationSelectController {
+ private:
+ /**
+  * private class for the undo command for rotation controller
+  */
+  class MeshRotationUndoEvent : public Command::MeshControllerCommand {
+    MeshRotationSelectController* selectController;
+
+   public:
+   // two rotation record for controller
+    double beforeRotation = 0;
+    double afterRotation = 0;
+    MeshRotationUndoEvent(MeshRotationSelectController* selectController,
+                          Scene::MeshController* controller,
+                          QUndoCommand* parent = nullptr)
+        : MeshControllerCommand(controller, parent) {
+      this->selectController = selectController;
+    }
+    void redoNotFirst() override {
+      MeshControllerCommand::redoNotFirst();
+      selectController->rotation = afterRotation;
+      selectController->update();
+    }
+
+    void undo() override {
+      MeshControllerCommand::undo();
+      // the rotation will only affect the rotation controller, will not affect the actual mesh point
+      selectController->rotation = beforeRotation;
+      selectController->update();
+    }
+  };
+  friend MeshRotationUndoEvent;
+
+  MeshController* controller;
+  // the commandinfo for drag start
+  std::vector<Command::ControllerCommandInfo> startCommandInfo;
+
+ public:
+  MeshRotationSelectController(MeshController* controller)
+      : RotationSelectController(controller), controller(controller) {
+    ifAutoMoveUpdate = false;
+  }
+
+ protected:
+ // when user drag the center of the controller, it will move all the points of the select point
+  void controllerCenterDrag(const QPointF& mouseScenePoint) override {
+    auto delta = mouseScenePoint - startDragPoint;
+    for (const auto& startCommand : startCommandInfo) {
+      auto p = startCommand.p + delta;
+      controller->setPointFromScene(startCommand.index, p);
+    }
+    controller->upDateMeshBuffer();
+  }
+
+  // record the undo command
+  void controllerEndDrag(const QPointF& mouseScenePos) override {
+    auto undoEvent = std::make_unique<MeshRotationUndoEvent>(this, controller);
+    if (this->dragState == ROTATION) {
+      undoEvent->beforeRotation = startDragRotation;
+      undoEvent->afterRotation = this->rotation;
+    } else {
+      undoEvent->beforeRotation = this->rotation;
+      undoEvent->afterRotation = this->rotation;
+    }
+    for (const auto& info : startCommandInfo) {
+      undoEvent->addOldInfo(info);
+    }
+    for (const auto& index : controller->getSelectedPointIndex()) {
+      auto pos = controller->getPointScenePosition(index);
+      undoEvent->addNewInfo({pos, index});
+    }
+    auto root = findRootController(controller);
+    if (root != nullptr) {
+      root->pushUndoCommand(undoEvent.release());
+    }
+    startCommandInfo.clear();
+  }
+
+  // rotate the selected points
+  void controllerRotating(double rotateDelta) override {
+    for (int index : controller->getSelectedPointIndex()) {
+      auto pos = controller->getPointScenePosition(index);
+      auto p = rotatePoint(startDragPoint, pos, rotateDelta);
+      controller->setPointFromScene(index, p);
+    }
+    controller->upDateMeshBuffer();
+  }
+  
+  void controllerStartDrag(const QPointF& mouseScenePos) override {
+    for (int index : controller->getSelectedPointIndex()) {
+      auto pos = controller->getPointScenePosition(index);
+      startCommandInfo.push_back({pos, index});
+    }
+  }
 };
 
 class MeshController::MeshControllerEventHandler {
@@ -406,12 +512,28 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
   // setup select rect item
   auto rectSelectController = new MeshRectSelectController(this);
   this->selectControllerList[0] = rectSelectController;
-  rectSelectController->ifAutoMoveUpdate = false;
+
+  auto rotationController = new MeshRotationSelectController(this);
+  this->selectControllerList[1] = rotationController;
+
   auto r = findRootController(this);
   if (r != nullptr) {
     rectSelectController->setPadding(r->boundingRect().width() / 100);
     rectSelectController->setLineWidth(r->boundingRect().width() / 300);
+    rotationController->setRadius(r->boundingRect().width() / 150);
+    rotationController->setLineLength(r->boundingRect().width() / 15);
   }
+  this->setActiveSelectController(RotationController);
+}
+
+void MeshController::setActiveSelectController(
+    ActiveSelectController controller) {
+  this->selectControllerList[activeSelectController]->setVisible(false);
+  this->activeSelectController = controller;
+
+  this->selectControllerList[activeSelectController]->setVisible(true);
+  const auto& vec = getSelectedPointScenePosition();
+  this->selectControllerList[activeSelectController]->setBoundRect(vec);
 }
 
 QRectF MeshController::boundingRect() const {
@@ -527,5 +649,4 @@ void MeshController::selectAtScene(QRectF sceneRect) {
   }
 }
 MeshController::~MeshController() { delete handler; }
-
 }  // namespace Scene

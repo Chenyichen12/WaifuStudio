@@ -38,14 +38,18 @@ void MeshControllerCommand::undo() {
   con->upDateMeshBuffer();
 }
 
-void MeshControllerCommand::redo() {
-  if (first) {
-    first = false;
-    return;
-  }
+void MeshControllerCommand::redoNotFirst() {
   ControllerCommand::redo();
   auto* con = static_cast<Scene::MeshController*>(controller);
   con->upDateMeshBuffer();
+}
+
+void MeshControllerCommand::redo() {
+  if (!first) {
+    redoNotFirst();
+    return;
+  }
+  first = false;
 }
 
 }  // namespace Command

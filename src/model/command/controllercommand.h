@@ -35,6 +35,12 @@ private:
   MeshControllerCommand(Scene::MeshController* controller,
                         QUndoCommand* parent = nullptr);
   void undo() override;
+
+  /**
+   * normally the the QUndoCommand will call redo after push to the stack
+   * redoNotFirst will be called when the command is not the first one in the stack
+   */
+  virtual void redoNotFirst();
   void redo() override;
   Scene::MeshController* controller_;
 };
