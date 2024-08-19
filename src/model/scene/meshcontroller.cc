@@ -3,6 +3,7 @@
 
 #include "../command/controllercommand.h"
 #include "mesh.h"
+#include "pointeventhandler.h"
 #include "rectselectcontroller.h"
 #include "scenecontroller.h"
 namespace Scene {
@@ -15,15 +16,6 @@ RootController* findRootController(const QGraphicsItem* controller) {
     parent = parent->parentItem();
   }
   return nullptr;
-}
-double getScaleFromTheView(const QGraphicsScene* whichScene,
-                           const QWidget* whichWidget) {
-  for (const auto& view : whichScene->views()) {
-    if (view->viewport() == whichWidget) {
-      return view->transform().m11();
-    }
-  }
-  return 1;
 }
 
 /**
@@ -354,101 +346,54 @@ class MeshRotationSelectController : public RotationSelectController {
     }
   }
 };
-
-class MeshController::MeshControllerEventHandler {
+class MeshController::MeshControllerEventHandler : public PointEventHandler {
  private:
-  MeshController* controller;
-  int currentPressedIndex = -1;
-  QPointF startPos;  // record the start drag pos
-
-  /**
-   * check if the testPoint circle is close enough to another point
-   * @param x1 firstPoint
-   * @param y1
-   * @param x2 secondPoint
-   * @param y2
-   * @param scale which is the scale of the event view
-   * used to define the testPoint is close enough
-   * @return
-   */
-  bool contain(float x1, float y1, float x2, float y2, double scale) {
-    // normally one view in a project
-    float length = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
-    auto testRadius = AbsolutePointRadius / scale;
-    return length < testRadius * testRadius;
-  }
-
-  /**
-   * find the controller mesh point index contain the testPoint
-   * @param x testPoint
-   * @param y
-   * @param scale testLength
-   * @return if not found return nullopt
-   */
-  std::optional<int> gabPointAt(float x, float y, double scale) {
-    const auto& vec = controller->controlMesh->getVertices();
-    for (int i = 0; i < vec.size(); ++i) {
-      const auto& testPoint = vec[i].pos;
-      if (contain(x, y, testPoint.x, testPoint.y, scale)) {
-        return i;
-      }
-    }
-    return std::nullopt;
-  }
+  MeshController* mesh;
+  QPointF startPoint;
 
  public:
-  static constexpr float AbsolutePointRadius = 3;
-
-  MeshControllerEventHandler(MeshController* controller) {
-    this->controller = controller;
+  explicit MeshControllerEventHandler(MeshController* controller)
+      : PointEventHandler(controller) {
+    mesh = controller;
   }
-  void mousePressEvent(QGraphicsSceneMouseEvent* event) {
-    const auto& pos = event->scenePos();
-    double scale = getScaleFromTheView(controller->scene(), event->widget());
-    auto index = gabPointAt(pos.x(), pos.y(), scale);
-    if (index.has_value()) {
-      if (event->modifiers() != Qt::ShiftModifier) {
-        controller->unSelectPoint();
-      }
 
-      controller->selectPoint(index.value());
-      currentPressedIndex = index.value();
-      startPos = pos;  // start drag
-      event->accept();
+ protected:
+  void pointMoveEvent(int index, QGraphicsSceneMouseEvent* event) override {
+    const auto& pos = event->scenePos();
+    if (index == -1) {
+      return;
+    }
+    mesh->setPointFromScene(index, pos);
+    mesh->upDateMeshBuffer(); 
+  }
+  void pointPressedEvent(int index,QGraphicsSceneMouseEvent* event) override {
+    if (index == -1) {
+      mesh->unSelectPoint();
     } else {
-      controller->unSelectPoint();
-      currentPressedIndex = -1;
-      event->ignore();
+      if (event->modifiers() != Qt::ShiftModifier) {
+        mesh->unSelectPoint();
+      }
+      mesh->selectPoint(index);
+      startPoint = event->scenePos();
     }
+
   }
-
-  void mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
-    const auto& pos = event->scenePos();
-    if (currentPressedIndex == -1) {
-      return;
-    }
-    controller->setPointFromScene(currentPressedIndex, pos);
-    controller->upDateMeshBuffer();
-  }
-
-  void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
-    if (currentPressedIndex == -1) {
-      return;
-    }
-
-    // push to undostack
-    auto undoCommand =
-        std::make_unique<Command::MeshControllerCommand>(controller);
-    auto oldPoint = startPos;
-    undoCommand->addOldInfo({oldPoint, currentPressedIndex});
-
-    undoCommand->addNewInfo({event->scenePos(), currentPressedIndex});
-    auto root = findRootController(controller);
-    if (root != nullptr) {
-      root->pushUndoCommand(undoCommand.release());
-    }
-
-    currentPressedIndex = -1;
+  void pointReleaseEvent(QGraphicsSceneMouseEvent* event) override {
+    if (this->currentIndex == -1) {
+        return;
+      }
+      
+      // push to undostack
+      auto undoCommand =
+          std::make_unique<Command::MeshControllerCommand>(mesh);
+      auto oldPoint = startPoint;
+      undoCommand->addOldInfo({oldPoint, this->currentIndex});
+      
+      undoCommand->addNewInfo({event->scenePos(), this->currentIndex});
+      auto root = findRootController(mesh);
+      if (root != nullptr) {
+        root->pushUndoCommand(undoCommand.release());
+      }
   }
 };
 
