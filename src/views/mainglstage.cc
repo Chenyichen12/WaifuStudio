@@ -1,7 +1,7 @@
 #include "mainglstage.h"
 
+#include "mainstagesidetoolbar.h"
 #include <QOpenGLFunctions>
-
 #include "QDragMoveEvent"
 views::MainGlViewPort::MainGlViewPort(QWidget* parent) : QOpenGLWidget(parent) {
   auto format = QSurfaceFormat();
@@ -27,7 +27,15 @@ views::MainGlGraphicsView::MainGlGraphicsView(QWidget* parent)
           &MainGlGraphicsView::handleRubberChanged);
   this->glViewport = new MainGlViewPort(this);
   this->setViewport(glViewport);
+
+  this->toolBar = new MainStageSideToolBar(this);
 }
+
+void views::MainGlGraphicsView::resizeEvent(QResizeEvent* event) {
+  QGraphicsView::resizeEvent(event);
+  toolBar->setPositionFromRect(this->viewport()->rect());
+}
+
 void views::MainGlGraphicsView::keyPressEvent(QKeyEvent* event) {
   if (!event->isAutoRepeat()) {
     if (event->key() == Qt::Key_Space) {
@@ -89,3 +97,7 @@ void views::MainGlGraphicsView::handleRubberChanged(QRect rubberBandRect,
 void views::MainGlGraphicsView::makeCurrent() { glViewport->makeCurrent(); }
 
 void views::MainGlGraphicsView::doneCurrent() { glViewport->doneCurrent(); }
+
+views::MainStageSideToolBar* views::MainGlGraphicsView::getToolBar() const {
+  return this->toolBar;
+}

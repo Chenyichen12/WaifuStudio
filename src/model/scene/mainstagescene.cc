@@ -114,7 +114,7 @@ void MainStageScene::handleSelectClick(QPointF scenePoint, bool isMultiple) {
         return false;
       }
       if (controller->isControllerSelectAble()) {
-        hitController.push_back(controller); 
+        hitController.push_back(controller);
       }
     }
     return true;
@@ -156,6 +156,21 @@ void MainStageScene::selectLayers(const std::vector<int>& selectionId) {
 
 void MainStageScene::setSceneUndoStack(QUndoStack* undoStack) {
   this->controllerRoot->setUndoStack(undoStack);
+}
+
+void MainStageScene::handleToolChanged(int index) {
+  switch (index) {
+
+    // 0 or 1 is the select controller change
+    case 0:
+      controllerRoot->setSelectController(RectController);
+      break;
+    case 1:
+      controllerRoot->setSelectController(RotationController);
+      break;
+    default:
+      break;
+  }
 }
 
 void MainStageScene::drawBackground(QPainter* painter, const QRectF& rect) {

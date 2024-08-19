@@ -9,6 +9,7 @@
 #include "model/scene/mainstagescene.h"
 #include "psdparser.h"
 #include "ui/ui_mainwindow.h"
+#include "views/mainstagesidetoolbar.h"
 void MainWindow::setUpTreeModel(const ProjectModel::LayerModel* m) {
   ui->psTree->setModel(m->getPsdTreeManager());
   ui->controllerTree->setModel(m->getControllerTreeManger());
@@ -75,22 +76,28 @@ void MainWindow::handleUndoAction() {
 }
 // ReSharper disable once CppMemberFunctionMayBeConst
 void MainWindow::handleRedoAction() {
-    if (this->currentProject != nullptr) {
-      	this->currentProject->redo();
+  if (this->currentProject != nullptr) {
+    this->currentProject->redo();
   }
 }
 
 void MainWindow::setUpMainStage() {
   ui->MainStageGraphicsView->setScene(currentProject->getScene());
+  auto toolBar = ui->MainStageGraphicsView->getToolBar();
+  connect(toolBar, &views::MainStageSideToolBar::switchTool,
+          currentProject->getScene(),
+          &Scene::MainStageScene::handleToolChanged);
   connect(ui->MainStageGraphicsView, &views::MainGlGraphicsView::rubberSelected,
           currentProject->getScene(),
           &Scene::MainStageScene::handleRubberSelect);
   connect(
       ui->MainStageGraphicsView, &views::MainGlGraphicsView::mouseSelectClick,
       currentProject->getScene(), &Scene::MainStageScene::handleSelectClick);
+
   ui->MainStageGraphicsView->makeCurrent();
   currentProject->getScene()->initGL();
   ui->MainStageGraphicsView->doneCurrent();
+  currentProject->getScene()->handleToolChanged(0);
 }
 
 void MainWindow::setUpMenu() {

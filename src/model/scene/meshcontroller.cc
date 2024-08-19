@@ -533,7 +533,7 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
     rotationController->setRadius(r->boundingRect().width() / 150);
     rotationController->setLineLength(r->boundingRect().width() / 15);
   }
-  this->setActiveSelectController(RotationController);
+  this->setActiveSelectController(RectController);
 }
 
 void MeshController::setActiveSelectController(

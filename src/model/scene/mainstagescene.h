@@ -73,6 +73,12 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
    * it will push undo command some scene command
    */
   void setSceneUndoStack(QUndoStack* undoStack);
+
+  /**
+   * handle the tool change from main stage side toolbar. the index is toolbar index
+   * @param index 
+   */
+  void handleToolChanged(int index);
  protected:
   void drawBackground(QPainter* painter, const QRectF& rect) override;
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

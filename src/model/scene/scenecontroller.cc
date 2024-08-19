@@ -100,5 +100,13 @@ void RootController::pushUndoCommand(QUndoCommand* command) {
   }
 }
 
-
+void RootController::setSelectController(ActiveSelectController controller) {
+  this->forEachController([&](auto c) {
+    if (qgraphicsitem_cast<MeshController*>(c)) {
+      auto con = qgraphicsitem_cast<MeshController*>(c);
+      con->setActiveSelectController(controller);
+    }
+    return true;
+  });
+}
 }  // namespace Scene

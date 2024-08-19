@@ -18,7 +18,10 @@ enum ControllerType {
   RootControllerType = QGraphicsItem::UserType + 1,
   MeshControllerType = QGraphicsItem::UserType + 2,
 };
-
+enum ActiveSelectController {
+  RectController = 0,
+  RotationController = 1,
+};
 class AbstractController : public QGraphicsItem {
  protected:
   /**
@@ -127,6 +130,13 @@ class RootController : public AbstractController {
    */
   void setUndoStack(QUndoStack* stack);
   void pushUndoCommand(QUndoCommand* command);
+
+  /**
+   * change the select controller of all the controller.
+   * affect the controller who has select controller
+   * @param controller 
+   */
+  void setSelectController(ActiveSelectController controller);
 };
 
 /**
@@ -164,10 +174,7 @@ class MeshController : public AbstractController {
   int controllerId() override;
   int type() const override;
 
-  enum ActiveSelectController {
-    RectController = 0,
-    RotationController = 1,
-  };
+
 
   void setActiveSelectController(ActiveSelectController controller);
 
