@@ -1,10 +1,35 @@
 #include "editmeshcontroller.h"
+
 #include <QPainter>
+
+#include "pointeventhandler.h"
+#include "scenecontroller.h"
 namespace Scene {
+
+class EditMeshPointHandler : public PointEventHandler {
+ private:
+  EditMeshController* controller;
+
+ protected:
+  void pointMoveEvent(int current, QGraphicsSceneMouseEvent* event) override;
+  void pointPressedEvent(int index, QGraphicsSceneMouseEvent* event) override;
+  void pointReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+
+ public:
+  explicit EditMeshPointHandler(EditMeshController* controller)
+      : PointEventHandler(controller) {
+    this->controller = controller;
+  }
+};
+
 EditMeshController::EditMeshController(const std::vector<MeshVertex>& vertices,
                                        const std::vector<int>& incident,
                                        QGraphicsItem* parent)
-    : AbstractController(parent), vertices(vertices), incident(incident) {}
+    : AbstractController(parent), vertices(vertices), incident(incident) {
+  this->pointHandler = new EditMeshPointHandler(this);
+}
+
+EditMeshController::~EditMeshController() { delete this->pointHandler; }
 
 void EditMeshController::paint(QPainter* painter,
                                const QStyleOptionGraphicsItem* option,
@@ -32,8 +57,19 @@ void EditMeshController::paint(QPainter* painter,
     // painter->drawEllipse(QPointF(point.pos.x, point.pos.y), 3 / scale,
     // handler->AbsolutePointRadius / scale);
   }
-  
 }
 
-QRectF EditMeshController::boundingRect() const { return {};}
+QRectF EditMeshController::boundingRect() const { return {}; }
+
+int EditMeshController::type() const {
+  return ControllerType::EditMeshControllerType;
+}
+
+QPointF EditMeshController::localPointToScene(const QPointF& point) {
+  return controllerParent->localPointToScene(point);
+}
+
+QPointF EditMeshController::scenePointToLocal(const QPointF& point) {
+  return controllerParent->scenePointToLocal(point);
+}
 }  // namespace Scene

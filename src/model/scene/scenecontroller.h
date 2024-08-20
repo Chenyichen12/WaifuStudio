@@ -17,6 +17,7 @@ class Mesh;
 enum ControllerType {
   RootControllerType = QGraphicsItem::UserType + 1,
   MeshControllerType = QGraphicsItem::UserType + 2,
+  EditMeshControllerType = QGraphicsItem::UserType + 3, // editmeshcontroller.h
 };
 enum ActiveSelectController {
   RectController = 0,
