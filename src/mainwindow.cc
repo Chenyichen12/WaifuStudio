@@ -94,6 +94,23 @@ void MainWindow::setUpMainStage() {
       ui->MainStageGraphicsView, &views::MainGlGraphicsView::mouseSelectClick,
       currentProject->getScene(), &Scene::MainStageScene::handleSelectClick);
 
+  // connect the topbar edit mode handler
+  connect(ui->MainStageTopBar, &views::MainStageTopBar::enterEditMode,
+          currentProject->getScene(), [this]() {
+            currentProject->getScene()->setSceneMode(
+                Scene::MainStageScene::SceneMode::EDIT);
+            // if it get into the edit mode the pen tool can be enabled
+            ui->MainStageGraphicsView->getToolBar()->setEnableTool(2, true);
+          });
+  connect(ui->MainStageTopBar, &views::MainStageTopBar::leaveEditMode,
+          currentProject->getScene(), [this]() {
+            currentProject->getScene()->setSceneMode(
+                Scene::MainStageScene::SceneMode::NORMAL);
+
+            // disable the pen tool when enter into normal mode
+            ui->MainStageGraphicsView->getToolBar()->setEnableTool(2, false);
+          });
+
   ui->MainStageGraphicsView->makeCurrent();
   currentProject->getScene()->initGL();
   ui->MainStageGraphicsView->doneCurrent();

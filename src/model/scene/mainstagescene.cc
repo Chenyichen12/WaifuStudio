@@ -46,6 +46,18 @@ class MainStageEventHandler {
   }
 };
 
+void MainStageScene::setSceneMode(SceneMode mode) {
+  this->sceneMode = mode;
+  if (mode == SceneMode::EDIT) {
+    qDebug() << "edit enter";
+  }
+}
+
+MainStageScene::SceneMode MainStageScene::getSceneMode() const {
+  return this->sceneMode;
+}
+
+
 MainStageScene::MainStageScene(MeshRenderGroup* group,
                                RootController* controllerGroup, QObject* parent)
     : QGraphicsScene(parent) {
@@ -172,6 +184,7 @@ void MainStageScene::handleToolChanged(int index) {
       break;
   }
 }
+
 
 void MainStageScene::drawBackground(QPainter* painter, const QRectF& rect) {
   Q_UNUSED(rect)

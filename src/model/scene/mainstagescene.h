@@ -28,6 +28,14 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
   MainStageEventHandler* handler;  // event handler
 
  public:
+
+  enum class SceneMode {
+    NORMAL, // the normal mode to control mesh controller
+    EDIT, // to edit vertex of the mesh
+  } sceneMode = SceneMode::NORMAL;
+
+  SceneMode getSceneMode() const;
+  void setSceneMode(SceneMode mode);
   /**
    * @param renderGroup which is the actual gl group witch render mesh of the
    * character
@@ -79,6 +87,7 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
    * @param index 
    */
   void handleToolChanged(int index);
+
  protected:
   void drawBackground(QPainter* painter, const QRectF& rect) override;
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

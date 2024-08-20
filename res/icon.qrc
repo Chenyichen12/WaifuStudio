@@ -6,5 +6,6 @@
         <file>question.png</file>
         <file>rotation.png</file>
         <file>move-arrow.png</file>
+        <file>pen.png</file>
     </qresource>
 </RCC>
