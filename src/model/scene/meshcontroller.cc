@@ -364,9 +364,9 @@ class MeshController::MeshControllerEventHandler : public PointEventHandler {
       return;
     }
     mesh->setPointFromScene(index, pos);
-    mesh->upDateMeshBuffer(); 
+    mesh->upDateMeshBuffer();
   }
-  void pointPressedEvent(int index,QGraphicsSceneMouseEvent* event) override {
+  void pointPressedEvent(int index, QGraphicsSceneMouseEvent* event) override {
     if (index == -1) {
       mesh->unSelectPoint();
     } else {
@@ -376,24 +376,22 @@ class MeshController::MeshControllerEventHandler : public PointEventHandler {
       mesh->selectPoint(index);
       startPoint = event->scenePos();
     }
-
   }
   void pointReleaseEvent(QGraphicsSceneMouseEvent* event) override {
     if (this->currentIndex == -1) {
-        return;
-      }
-      
-      // push to undostack
-      auto undoCommand =
-          std::make_unique<Command::MeshControllerCommand>(mesh);
-      auto oldPoint = startPoint;
-      undoCommand->addOldInfo({oldPoint, this->currentIndex});
-      
-      undoCommand->addNewInfo({event->scenePos(), this->currentIndex});
-      auto root = findRootController(mesh);
-      if (root != nullptr) {
-        root->pushUndoCommand(undoCommand.release());
-      }
+      return;
+    }
+
+    // push to undostack
+    auto undoCommand = std::make_unique<Command::MeshControllerCommand>(mesh);
+    auto oldPoint = startPoint;
+    undoCommand->addOldInfo({oldPoint, this->currentIndex});
+
+    undoCommand->addNewInfo({event->scenePos(), this->currentIndex});
+    auto root = findRootController(mesh);
+    if (root != nullptr) {
+      root->pushUndoCommand(undoCommand.release());
+    }
   }
 };
 
@@ -507,6 +505,8 @@ QRectF MeshController::boundingRect() const {
 void MeshController::paint(QPainter* painter,
                            const QStyleOptionGraphicsItem* option,
                            QWidget* widget) {
+  Q_UNUSED(option)
+  Q_UNUSED(widget)
   const auto& meshPoint = controlMesh->getVertices();
   auto scale = painter->transform().m11();
 
@@ -533,7 +533,8 @@ void MeshController::paint(QPainter* painter,
     } else {
       painter->setBrush(QBrush(Qt::white));
     }
-    painter->drawEllipse(QPointF(point.pos.x, point.pos.y), 3 / scale,
+    painter->drawEllipse(QPointF(point.pos.x, point.pos.y),
+                         handler->AbsolutePointRadius / scale,
                          handler->AbsolutePointRadius / scale);
   }
 }

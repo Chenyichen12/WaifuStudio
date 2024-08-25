@@ -34,6 +34,8 @@ EditMeshController::~EditMeshController() { delete this->pointHandler; }
 void EditMeshController::paint(QPainter* painter,
                                const QStyleOptionGraphicsItem* option,
                                QWidget* widget) {
+  Q_UNUSED(widget)
+  Q_UNUSED(option)
   const auto& meshPoint = this->vertices;
   auto scale = painter->transform().m11();
 
@@ -54,8 +56,16 @@ void EditMeshController::paint(QPainter* painter,
   }
 
   for (const auto& point : meshPoint) {
-    // painter->drawEllipse(QPointF(point.pos.x, point.pos.y), 3 / scale,
-    // handler->AbsolutePointRadius / scale);
+    painter->drawEllipse(QPointF(point.pos.x, point.pos.y),
+                         pointHandler->AbsolutePointRadius / scale,
+                         pointHandler->AbsolutePointRadius / scale);
+  }
+
+  for (const auto& i : selectIndex) {
+    auto point = vertices[i];
+    painter->drawEllipse(QPointF(point.pos.x, point.pos.y),
+                         pointHandler->AbsolutePointRadius / scale,
+                         pointHandler->AbsolutePointRadius / scale);
   }
 }
 
