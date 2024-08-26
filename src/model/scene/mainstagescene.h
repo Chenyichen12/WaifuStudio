@@ -71,7 +71,7 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
   void handleSelectClick(QPointF scenePoint, bool isMultiple);
 
   /**
-   * emit when the scene select layer by itself
+   * select the layer
    * @param selectionId the id of the layer. normally from controllerLayerModel
    */
   void selectLayers(const std::vector<int>& selectionId);

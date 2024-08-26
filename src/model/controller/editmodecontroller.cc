@@ -9,21 +9,8 @@
 #include "views/mainglstage.h"
 #include "views/mainstagesidetoolbar.h"
 
-Controller::EditModeController::EditModeController(
-    Scene::MainStageScene* scene, ProjectModel::LayerModel* layerModel,
-    views::MainGlGraphicsView* view, QObject* parent)
-    : QObject(parent) {
-  this->scene = scene;
-  this->layerModel = layerModel;
-  this->view = view;
-}
-
-void Controller::EditModeController::setDisabledWidget(
-    const QList<QWidget*>& widgets) {
-  this->disabledWidgets = widgets;
-}
-
-void Controller::EditModeController::handleEnterEditMode() const {
+ProjectModel::BitmapLayer* Controller::EditModeController::getFirstSelectLayer()
+    const {
   const auto& layerSelection =
       this->layerModel->getControllerTreeSelectionModel()->selection();
   ProjectModel::BitmapLayer* firstSelectLayer = nullptr;
@@ -49,9 +36,28 @@ void Controller::EditModeController::handleEnterEditMode() const {
       return true;
     });
   }
+  return firstSelectLayer;
+}
 
-  // TODO: complete get first select layer
-  qDebug() << firstSelectLayer->text();
+Controller::EditModeController::EditModeController(
+    Scene::MainStageScene* scene, ProjectModel::LayerModel* layerModel,
+    views::MainGlGraphicsView* view, QObject* parent)
+    : QObject(parent) {
+  this->scene = scene;
+  this->layerModel = layerModel;
+  this->view = view;
+}
+
+void Controller::EditModeController::setDisabledWidget(
+    const QList<QWidget*>& widgets) {
+  this->disabledWidgets = widgets;
+}
+
+void Controller::EditModeController::handleEnterEditMode() const {
+  auto editLayer = this->getFirstSelectLayer();
+  // change selection
+  this->layerModel->selectItems({editLayer->getId()});
+  this->scene->selectLayers({editLayer->getId()});
 
   this->scene->setSceneMode(Scene::MainStageScene::SceneMode::EDIT);
   this->view->getToolBar()->setEnableTool(2, true);
