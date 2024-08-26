@@ -1,5 +1,6 @@
 #include "editmeshcontroller.h"
 
+#include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 
 #include "pointeventhandler.h"
@@ -11,8 +12,22 @@ class EditMeshPointHandler : public PointEventHandler {
   EditMeshController* controller;
 
  protected:
-  void pointMoveEvent(int current, QGraphicsSceneMouseEvent* event) override {}
-  void pointPressedEvent(int index, QGraphicsSceneMouseEvent* event) override {}
+  void pointMoveEvent(int current, QGraphicsSceneMouseEvent* event) override {
+    if (current == -1) {
+      return;
+    }
+    controller->setPointFromScene(current, event->scenePos());
+  }
+  void pointPressedEvent(int index, QGraphicsSceneMouseEvent* event) override {
+    if (index == -1) {
+      controller->unSelectPoint();
+    }else {
+      if (event->modifiers() != Qt::ShiftModifier) {
+        controller->unSelectPoint();
+      }
+      controller->selectPoint(index);
+    }
+  }
   void pointReleaseEvent(QGraphicsSceneMouseEvent* event) override {}
 
  public:
@@ -21,6 +36,18 @@ class EditMeshPointHandler : public PointEventHandler {
     this->controller = controller;
   }
 };
+
+void EditMeshController::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+  this->pointHandler->mouseMoveEvent(event);
+}
+
+void EditMeshController::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+  pointHandler->mousePressEvent(event);
+}
+
+void EditMeshController::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
+  pointHandler->mouseReleaseEvent(event);
+}
 
 EditMeshController::EditMeshController(
     const std::vector<MeshVertex>& vertices,
@@ -61,7 +88,7 @@ void EditMeshController::paint(QPainter* painter,
                          pointHandler->AbsolutePointRadius / scale,
                          pointHandler->AbsolutePointRadius / scale);
   }
-
+  painter->setBrush(QBrush(Qt::red));
   for (const auto& i : selectIndex) {
     auto point = vertices[i];
     painter->drawEllipse(QPointF(point.pos.x, point.pos.y),
@@ -89,4 +116,45 @@ QPointF EditMeshController::scenePointToLocal(const QPointF& point) {
   return controllerParent->scenePointToLocal(point);
 }
 
+std::vector<QPointF> EditMeshController::getPointFromScene() {
+  auto res = std::vector<QPointF>();
+  for (const auto& vertex : this->vertices) {
+    res.emplace_back(vertex.pos.x, vertex.pos.y);
+  }
+  return res;
+}
+
+void EditMeshController::selectAtScene(QRectF sceneRect) {
+  AbstractController::selectAtScene(sceneRect);
+  this->selectIndex.clear();
+  for (int i = 0; i < vertices.size(); i++) {
+    const auto& vertex = vertices[i];
+    auto p = QPointF(vertex.pos.x, vertex.pos.y);
+    if (sceneRect.contains(p)) {
+      this->selectIndex.push_back(i);
+    }
+  }
+  this->update();
+}
+
+void EditMeshController::setPointFromScene(int index,
+                                           const QPointF& scenePosition) {
+  // AbstractController::setPointFromScene(index, scenePosition);
+  auto& data = this->vertices[index];
+
+  //TODO: it should also update the incident and uv
+  data.pos.x = scenePosition.x();
+  data.pos.y = scenePosition.y();
+  this->update();
+}
+
+void EditMeshController::selectPoint(int index) {
+  this->selectIndex.push_back(index);
+  this->update();
+}
+
+void EditMeshController::unSelectPoint() {
+  this->selectIndex.clear();
+  this->update();
+}
 }  // namespace Scene

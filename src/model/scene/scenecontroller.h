@@ -52,7 +52,7 @@ class AbstractController : public QGraphicsItem {
    */
   virtual void setPointFromScene(int index, const QPointF& scenePosition) {}
   virtual void setPointFromLocal(int index, const QPointF& localPosition) {}
-  virtual std::vector<QPointF> getPointFromScene() { return {}; }
+  virtual std::vector<QPointF> getPointFromScene() { return {}; };
   virtual std::vector<QPointF> getPointFromLocal();
 
   /**

@@ -10,7 +10,12 @@ class EditMeshController : public AbstractController {
   std::vector<unsigned int> incident;
   PointEventHandler* pointHandler;
   std::vector<int> selectIndex;
- public:
+protected:
+  void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+  void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+
+public:
   EditMeshController(const std::vector<MeshVertex>& vertices,
                      const std::vector<unsigned int>& incident,
                      QGraphicsItem* parent = nullptr);
@@ -23,5 +28,11 @@ class EditMeshController : public AbstractController {
   int controllerId() override { return -1; }
   QPointF localPointToScene(const QPointF& point) override;
   QPointF scenePointToLocal(const QPointF& point) override;
+  std::vector<QPointF> getPointFromScene() override;
+  void selectAtScene(QRectF sceneRect) override;
+  void setPointFromScene(int index, const QPointF& scenePosition) override;
+
+  void selectPoint(int index);
+  void unSelectPoint();
 };
 }  // namespace Scene
