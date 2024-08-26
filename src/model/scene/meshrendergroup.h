@@ -34,5 +34,8 @@ class MeshRenderGroup : public QGraphicsItemGroup {
   void pushBackMesh(Mesh* mesh);
   void pushFrontMesh(Mesh* mesh);
 
+  // the mesh list of the group
+  const QList<Mesh *>& getMeshList() const;
+  Mesh *findMesh(int meshId) const;
 };
 }  // namespace ProjectModel

@@ -3,6 +3,7 @@
 
 namespace Scene {
 class MainStageScene;
+class EditMeshController;
 }
 
 namespace ProjectModel {
@@ -22,12 +23,12 @@ class EditModeController : public QObject {
   Scene::MainStageScene* scene;
   ProjectModel::LayerModel* layerModel;
   views::MainGlGraphicsView* view;
+  Scene::EditMeshController* currentEditController;
   /**
    * in some time we should disable some widget when enter the edit model
    * such as the tree view to defence to modify  of the layer
    */
   QList<QWidget*> disabledWidgets;
-
   /**
    * to get the first select layer
    * the layer is bitmap layer which can be edited
@@ -36,7 +37,6 @@ class EditModeController : public QObject {
    * @return
    */
   ProjectModel::BitmapLayer* getFirstSelectLayer() const;
-
  public:
   EditModeController(Scene::MainStageScene* scene,
                      ProjectModel::LayerModel* layerModel,
@@ -49,7 +49,7 @@ class EditModeController : public QObject {
    */
   void setDisabledWidget(const QList<QWidget*>& widgets);
  public slots:
-  void handleEnterEditMode() const;
-  void handleLeaveEditMode() const;
+  void handleEnterEditMode();
+  void handleLeaveEditMode();
 };
 }  // namespace Controller

@@ -3,8 +3,10 @@
 #include <QItemSelectionModel>
 
 #include "../model/layer_model.h"
+#include "../scene/editmeshcontroller.h"
 #include "model/layer.h"
 #include "model/scene/mainstagescene.h"
+#include "model/scene/meshrendergroup.h"
 #include "model/tree_manager.h"
 #include "views/mainglstage.h"
 #include "views/mainstagesidetoolbar.h"
@@ -53,23 +55,44 @@ void Controller::EditModeController::setDisabledWidget(
   this->disabledWidgets = widgets;
 }
 
-void Controller::EditModeController::handleEnterEditMode() const {
+void Controller::EditModeController::handleEnterEditMode() {
   auto editLayer = this->getFirstSelectLayer();
-  // change selection
-  this->layerModel->selectItems({editLayer->getId()});
-  this->scene->selectLayers({editLayer->getId()});
+  // get the actual mesh to edit
+  auto mesh = scene->getRenderGroup()->findMesh(editLayer->getId());
+  if (mesh == nullptr) {
+    return;
+  }
 
+  // create edit controller
+  this->currentEditController = new Scene::EditMeshController(
+      mesh->getVertices(), mesh->getIncident(), scene->getControllerRoot());
+  // add to scene
+  scene->getControllerRoot()->addEditMeshController(currentEditController);
+
+  // change selection
+  if (!editLayer->data(ProjectModel::VisibleRole).toBool()) {
+    layerModel->setItemVisible(editLayer->getId(), true);
+  }
+  this->layerModel->selectItems({editLayer->getId()});
   this->scene->setSceneMode(Scene::MainStageScene::SceneMode::EDIT);
+
   this->view->getToolBar()->setEnableTool(2, true);
   for (const auto& disabled_widget : this->disabledWidgets) {
     disabled_widget->setDisabled(true);
   }
 }
 
-void Controller::EditModeController::handleLeaveEditMode() const {
+void Controller::EditModeController::handleLeaveEditMode() {
   this->scene->setSceneMode(Scene::MainStageScene::SceneMode::NORMAL);
   this->view->getToolBar()->setEnableTool(2, false);
   for (const auto& disabled_widget : this->disabledWidgets) {
     disabled_widget->setDisabled(false);
+  }
+
+  if (currentEditController != nullptr) {
+    this->scene->getControllerRoot()->removeEditMeshController(
+        currentEditController);
+    delete this->currentEditController;
+    this->currentEditController = nullptr;
   }
 }

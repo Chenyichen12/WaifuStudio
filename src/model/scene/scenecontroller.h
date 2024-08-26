@@ -97,6 +97,7 @@ class AbstractController : public QGraphicsItem {
   AbstractController* getControllerParent() const { return controllerParent; }
 };
 
+class EditMeshController;
 /**
  * the root controller witch is a rectangle with project width and height
  * should be added into the scene
@@ -138,6 +139,20 @@ class RootController : public AbstractController {
    * @param controller 
    */
   void setSelectController(ActiveSelectController controller);
+
+  /**
+   * call this to add editmeshcontroller
+   * it will hide all controller expect the editmeshcontroller
+   * @param controller 
+   */
+  void addEditMeshController(EditMeshController* controller);
+
+  /**
+   * to remove edit controller
+   * will release the owner to the caller, will not release memory
+   * @param controller 
+   */
+  void removeEditMeshController(EditMeshController* controller);
 };
 
 /**

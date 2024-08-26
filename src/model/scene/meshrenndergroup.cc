@@ -63,4 +63,17 @@ void MeshRenderGroup::pushFrontMesh(Mesh *mesh) {
   }
 }
 
+const QList<Mesh *> &MeshRenderGroup::getMeshList() const {
+  return this->meshList;
+}
+
+Mesh *MeshRenderGroup::findMesh(int meshId) const {
+  for (const auto &mesh : this->meshList) {
+    if (mesh->getLayerId() == meshId) {
+      return mesh;
+    }
+  }
+  return nullptr;
+}
+
 }  // namespace Scene

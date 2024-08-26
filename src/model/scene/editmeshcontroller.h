@@ -7,12 +7,12 @@ class PointEventHandler;
 class EditMeshController : public AbstractController {
  private:
   std::vector<MeshVertex> vertices;
-  std::vector<int> incident;
+  std::vector<unsigned int> incident;
   PointEventHandler* pointHandler;
   std::vector<int> selectIndex;
  public:
   EditMeshController(const std::vector<MeshVertex>& vertices,
-                     const std::vector<int>& incident,
+                     const std::vector<unsigned int>& incident,
                      QGraphicsItem* parent = nullptr);
   ~EditMeshController() override;
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,

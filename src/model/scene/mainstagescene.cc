@@ -46,17 +46,11 @@ class MainStageEventHandler {
   }
 };
 
-void MainStageScene::setSceneMode(SceneMode mode) {
-  this->sceneMode = mode;
-  if (mode == SceneMode::EDIT) {
-    qDebug() << "edit enter";
-  }
-}
+void MainStageScene::setSceneMode(SceneMode mode) { this->sceneMode = mode; }
 
 MainStageScene::SceneMode MainStageScene::getSceneMode() const {
   return this->sceneMode;
 }
-
 
 MainStageScene::MainStageScene(MeshRenderGroup* group,
                                RootController* controllerGroup, QObject* parent)
@@ -90,6 +84,12 @@ void MainStageScene::setVisibleOfLayer(int controllerOrMeshId, bool visible) {
   this->renderGroup->setMeshVisible(controllerOrMeshId, visible);
 }
 
+MeshRenderGroup* MainStageScene::getRenderGroup() const { return renderGroup; }
+
+RootController* MainStageScene::getControllerRoot() const {
+  return controllerRoot;
+}
+
 void MainStageScene::initGL() {
   initializeOpenGLFunctions();
   renderGroup->initializeGL();
@@ -116,6 +116,9 @@ void MainStageScene::handleRubberSelect(QRectF sceneRect) {
  * @param isMultiple
  */
 void MainStageScene::handleSelectClick(QPointF scenePoint, bool isMultiple) {
+  if (this->sceneMode == SceneMode::EDIT) {
+    return;
+  }
   bool shouldSelect = true;
   std::vector<AbstractController*> hitController;
   this->controllerRoot->forEachController([&](auto* controller) {
@@ -172,7 +175,6 @@ void MainStageScene::setSceneUndoStack(QUndoStack* undoStack) {
 
 void MainStageScene::handleToolChanged(int index) {
   switch (index) {
-
     // 0 or 1 is the select controller change
     case 0:
       controllerRoot->setSelectController(RectController);
@@ -184,7 +186,6 @@ void MainStageScene::handleToolChanged(int index) {
       break;
   }
 }
-
 
 void MainStageScene::drawBackground(QPainter* painter, const QRectF& rect) {
   Q_UNUSED(rect)

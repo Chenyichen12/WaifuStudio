@@ -9,7 +9,7 @@ class QUndoStack;
 
 namespace Scene {
 
-class Sprite;
+class Mesh;
 class MeshRenderGroup;
 class RootController;
 
@@ -49,6 +49,15 @@ class MainStageScene : public QGraphicsScene, protected QOpenGLFunctions {
   ~MainStageScene() override;
 
   void setVisibleOfLayer(int controllerOrMeshId, bool visible);
+
+  /**
+   * get the two main comp of the scene
+   * call to get detail information of the scene
+   * @return 
+   */
+  MeshRenderGroup* getRenderGroup() const;
+  RootController* getControllerRoot() const;
+
  signals:
   void selectionChanged(const std::vector<int>& indexId);
  public slots:

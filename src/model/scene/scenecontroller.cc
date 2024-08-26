@@ -1,10 +1,14 @@
 #include "scenecontroller.h"
+
 #include <QUndoStack>
+
+#include "editmeshcontroller.h"
+
 namespace Scene {
 std::vector<QPointF> AbstractController::getPointFromLocal() {
   const auto& p = this->getPointFromScene();
   auto res = std::vector<QPointF>();
-  for (const auto & point : p) {
+  for (const auto& point : p) {
     res.emplace_back(this->scenePointToLocal(point));
   }
   return res;
@@ -31,7 +35,9 @@ void AbstractController::setControllerParent(AbstractController* controller) {
     }
   }
   this->controllerParent = controller;
-  controller->controllerChildren.push_back(this);
+  if (controllerParent != nullptr) {
+    controller->controllerChildren.push_back(this);
+  }
 }
 
 RootController::RootController(int width, int height) {
@@ -102,11 +108,32 @@ void RootController::pushUndoCommand(QUndoCommand* command) {
 
 void RootController::setSelectController(ActiveSelectController controller) {
   this->forEachController([&](auto c) {
-    if (qgraphicsitem_cast<MeshController*>(c)) {
-      auto con = qgraphicsitem_cast<MeshController*>(c);
+    if (c->type() == MeshControllerType) {
+      auto con = static_cast<MeshController*>(c);
       con->setActiveSelectController(controller);
     }
     return true;
   });
+}
+
+void RootController::addEditMeshController(EditMeshController* controller) {
+  controller->setControllerParent(this);
+  forEachController([&](auto c) {
+    if (c->type() != EditMeshControllerType) {
+      c->unSelectTheController();
+    }
+    return true;
+  });
+}
+
+void RootController::removeEditMeshController(EditMeshController* controller) {
+  controller->setControllerParent(nullptr);
+  for (auto item = this->controllerChildren.begin();
+       item != this->controllerChildren.end(); ++item) {
+    if (*item == controller) {
+      controllerChildren.erase(item);
+      break;
+    }
+  }
 }
 }  // namespace Scene
