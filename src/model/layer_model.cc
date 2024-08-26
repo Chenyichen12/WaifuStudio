@@ -2,6 +2,7 @@
 
 #include <QItemSelectionModel>
 #include <QUndoStack>
+
 #include "layer.h"
 #include "tree_manager.h"
 namespace ProjectModel {
@@ -47,6 +48,31 @@ void LayerModel::handleSelectionChanged(const QItemSelection &selected,
   for (const auto &selected_index : which->selectedIndexes()) {
     idList.emplace_back(selected_index.data(UserIdRole).toInt());
   }
+
+  // TODO: not safe
+  TreeItemModel *another;
+  QItemSelectionModel *anotherModel;
+  if (sender() == psdTreeSelectionModel) {
+    another = controllerTreeManger;
+    anotherModel = controllerTreeSelectionModel;
+  } else {
+    another = psdTreeManager;
+    anotherModel = psdTreeSelectionModel;
+  }
+
+  // to sync the selection model of two model
+  disconnect(anotherModel, &QItemSelectionModel::selectionChanged, this,
+             &LayerModel::handleSelectionChanged);
+  anotherModel->clear();
+  for (int id : idList) {
+    auto res = another->findNode(id);
+    if (res != nullptr) {
+      anotherModel->select(res->index(), QItemSelectionModel::Select);
+    }
+  }
+  connect(anotherModel, &QItemSelectionModel::selectionChanged, this,
+          &LayerModel::handleSelectionChanged, Qt::DirectConnection);
+
   emit selectionChanged(idList);
 }
 
@@ -125,7 +151,6 @@ void LayerModel::handleItemSetVisible(const QModelIndex &index, bool visible) {
 }
 
 void LayerModel::handleVisibleSelectEnd(const QModelIndexList &changeLists) {
-
   // should push undo to stack
   QList<VisibleUndoInfo> infoList;
   for (const auto &changeItem : changeLists) {
@@ -134,7 +159,7 @@ void LayerModel::handleVisibleSelectEnd(const QModelIndexList &changeLists) {
     auto info = VisibleUndoInfo{id, visible};
     infoList.push_back(info);
   }
-  if(undoStack != nullptr) {
+  if (undoStack != nullptr) {
     undoStack->push(new LayerVisibleCommand(this, infoList));
   }
 }

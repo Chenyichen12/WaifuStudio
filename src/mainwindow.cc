@@ -4,6 +4,7 @@
 #include "mainwindow.h"
 
 #include "QFileDialog"
+#include "model/controller/editmodecontroller.h"
 #include "model/layer_model.h"
 #include "model/project.h"
 #include "model/scene/mainstagescene.h"
@@ -95,21 +96,16 @@ void MainWindow::setUpMainStage() {
       currentProject->getScene(), &Scene::MainStageScene::handleSelectClick);
 
   // connect the topbar edit mode handler
-  connect(ui->MainStageTopBar, &views::MainStageTopBar::enterEditMode,
-          currentProject->getScene(), [this]() {
-            currentProject->getScene()->setSceneMode(
-                Scene::MainStageScene::SceneMode::EDIT);
-            // if it get into the edit mode the pen tool can be enabled
-            ui->MainStageGraphicsView->getToolBar()->setEnableTool(2, true);
-          });
-  connect(ui->MainStageTopBar, &views::MainStageTopBar::leaveEditMode,
-          currentProject->getScene(), [this]() {
-            currentProject->getScene()->setSceneMode(
-                Scene::MainStageScene::SceneMode::NORMAL);
+  auto editController = new Controller::EditModeController(
+      currentProject->getScene(), currentProject->getLayerModel(),
+      ui->MainStageGraphicsView, currentProject);
 
-            // disable the pen tool when enter into normal mode
-            ui->MainStageGraphicsView->getToolBar()->setEnableTool(2, false);
-          });
+  editController->setDisabledWidget({ui->controllerTree, ui->psTree});
+
+  connect(ui->MainStageTopBar, &views::MainStageTopBar::enterEditMode,
+          editController, &Controller::EditModeController::handleEnterEditMode);
+  connect(ui->MainStageTopBar, &views::MainStageTopBar::leaveEditMode,
+          editController, &Controller::EditModeController::handleLeaveEditMode);
 
   ui->MainStageGraphicsView->makeCurrent();
   currentProject->getScene()->initGL();
