@@ -19,9 +19,14 @@ enum ControllerType {
   MeshControllerType = QGraphicsItem::UserType + 2,
   EditMeshControllerType = QGraphicsItem::UserType + 3, // editmeshcontroller.h
 };
+
+/**
+ * the controller enum from the toolbar
+ */
 enum ActiveSelectController {
   RectController = 0,
   RotationController = 1,
+  PenController = 2,
 };
 class AbstractController : public QGraphicsItem {
  protected:
@@ -95,6 +100,8 @@ class AbstractController : public QGraphicsItem {
     return controllerChildren;
   }
   AbstractController* getControllerParent() const { return controllerParent; }
+
+  virtual void setActiveSelectController(ActiveSelectController controller) {}
 };
 
 class EditMeshController;
@@ -138,7 +145,7 @@ class RootController : public AbstractController {
    * affect the controller who has select controller
    * @param controller 
    */
-  void setSelectController(ActiveSelectController controller);
+  void setActiveSelectController(ActiveSelectController controller) override;
 
   /**
    * call this to add editmeshcontroller
@@ -192,7 +199,7 @@ class MeshController : public AbstractController {
 
 
 
-  void setActiveSelectController(ActiveSelectController controller);
+  void setActiveSelectController(ActiveSelectController controller) override;
 
   /**
    * use to control the mesh point, the basic control function

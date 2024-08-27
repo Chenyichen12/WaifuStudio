@@ -106,12 +106,9 @@ void RootController::pushUndoCommand(QUndoCommand* command) {
   }
 }
 
-void RootController::setSelectController(ActiveSelectController controller) {
-  this->forEachController([&](auto c) {
-    if (c->type() == MeshControllerType) {
-      auto con = static_cast<MeshController*>(c);
-      con->setActiveSelectController(controller);
-    }
+void RootController::setActiveSelectController(ActiveSelectController controller) {
+  this->forEachController([&](AbstractController* c) {
+    c->setActiveSelectController(controller);
     return true;
   });
 }

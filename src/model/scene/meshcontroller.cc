@@ -288,7 +288,7 @@ class MeshRotationSelectController : public RotationSelectController {
   std::vector<Command::ControllerCommandInfo> startCommandInfo;
 
  public:
-  MeshRotationSelectController(MeshController* controller)
+  explicit MeshRotationSelectController(MeshController* controller)
       : RotationSelectController(controller), controller(controller) {
     ifAutoMoveUpdate = false;
   }
@@ -307,6 +307,7 @@ class MeshRotationSelectController : public RotationSelectController {
 
   // record the undo command
   void controllerEndDrag(const QPointF& mouseScenePos) override {
+    Q_UNUSED(mouseScenePos)
     auto undoEvent = std::make_unique<MeshRotationUndoEvent>(this, controller);
     if (this->dragState == ROTATION) {
       undoEvent->beforeRotation = startDragRotation;
@@ -340,6 +341,7 @@ class MeshRotationSelectController : public RotationSelectController {
   }
 
   void controllerStartDrag(const QPointF& mouseScenePos) override {
+    Q_UNUSED(mouseScenePos)
     for (int index : controller->getSelectedPointIndex()) {
       auto pos = controller->getPointScenePosition(index);
       startCommandInfo.push_back({pos, index});
@@ -481,8 +483,12 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
 
 void MeshController::setActiveSelectController(
     ActiveSelectController controller) {
+  int readyController = controller;
+  if(controller == PenController){
+    readyController = 0;
+  }
   this->selectControllerList[activeSelectController]->setVisible(false);
-  this->activeSelectController = controller;
+  this->activeSelectController = readyController;
 
   this->selectControllerList[activeSelectController]->setVisible(true);
   const auto& vec = getSelectedPointScenePosition();

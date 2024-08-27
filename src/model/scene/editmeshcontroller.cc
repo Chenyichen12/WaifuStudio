@@ -157,4 +157,8 @@ void EditMeshController::unSelectPoint() {
   this->selectIndex.clear();
   this->update();
 }
+void EditMeshController::setActiveSelectController(
+    ActiveSelectController controller) {
+      qDebug()<<"change"<<controller;
+}
 }  // namespace Scene

@@ -3,7 +3,6 @@
 #include "scenecontroller.h"
 namespace Scene {
 class PointEventHandler;
-
 class EditMeshController : public AbstractController {
  private:
   std::vector<MeshVertex> vertices;
@@ -34,5 +33,7 @@ public:
 
   void selectPoint(int index);
   void unSelectPoint();
+  
+  void setActiveSelectController(ActiveSelectController controller) override;
 };
 }  // namespace Scene

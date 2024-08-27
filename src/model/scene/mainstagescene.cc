@@ -177,10 +177,10 @@ void MainStageScene::handleToolChanged(int index) {
   switch (index) {
     // 0 or 1 is the select controller change
     case 0:
-      controllerRoot->setSelectController(RectController);
+      controllerRoot->setActiveSelectController(RectController);
       break;
     case 1:
-      controllerRoot->setSelectController(RotationController);
+      controllerRoot->setActiveSelectController(RotationController);
       break;
     default:
       break;
