@@ -1,9 +1,10 @@
 {
   "dependencies": [
+    "glm",
     {
       "name": "gtest",
       "version>=": "1.15.0"
     },
-    "glm"
+    "cdt"
   ]
 }

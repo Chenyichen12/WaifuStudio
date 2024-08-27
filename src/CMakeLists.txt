@@ -11,6 +11,7 @@ file(GLOB HEADER include/*.h)
 file(GLOB UI ui/*.ui)
 
 find_package(glm CONFIG REQUIRED)
+find_package(CDT CONFIG REQUIRED)
 
 add_library(WaifuStudio STATIC ${SOURCE} ${HEADER} ${UI})
 
@@ -25,6 +26,7 @@ target_link_libraries(WaifuStudio
         Qt6::OpenGLWidgets Qt6::OpenGL
         PhotoshopAPI
         glm::glm
+        CDT::CDT
 )
 
 
