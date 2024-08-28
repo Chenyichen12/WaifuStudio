@@ -10,6 +10,7 @@
 #include "QWidget"
 #include "meshrendergroup.h"
 namespace Scene {
+
 /**
  * map the scene position to the gl position
  * @param vertices scene position vertices
@@ -145,6 +146,8 @@ void Mesh::upDateBuffer() {
 }
 
 void Mesh::setTexture(const QImage& image) { this->image = image; }
+
+QImage Mesh::getTextureImage() const { return this->image; }
 
 Mesh::~Mesh() {
   delete vao;

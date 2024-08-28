@@ -3,16 +3,16 @@
 //
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include "../layer_bitmap.h"
 #include "QGraphicsItem"
 #include "QOpenGLFunctions"
 #include "QOpenGLTexture"
-#include "glm/glm.hpp"
 class QOpenGLBuffer;
 class QOpenGLVertexArrayObject;
 namespace Scene {
 class MeshRenderGroup;
-
 struct MeshVertex {
   glm::vec2 pos;
   glm::vec2 uv;
@@ -22,7 +22,7 @@ enum MeshVertexOffset {
   UV = offsetof(MeshVertex, uv)
 };
 class Mesh : public QGraphicsItem, protected QOpenGLFunctions {
-  friend MeshRenderGroup; // the group manager
+  friend MeshRenderGroup;  // the group manager
 
  private:
   /**
@@ -32,9 +32,9 @@ class Mesh : public QGraphicsItem, protected QOpenGLFunctions {
   std::vector<unsigned int> incident;
   QRectF boundRect;
   int layerId = 0;
-  QImage image; // the raw image in scene
+  QImage image;  // the raw image in scene
 
- private:
+ protected:
   /**
    * gl data struct it should not be changed by outside
    */
@@ -43,13 +43,13 @@ class Mesh : public QGraphicsItem, protected QOpenGLFunctions {
   QOpenGLBuffer* ibo;
   QOpenGLTexture* tex;
 
- protected:
-  void initializeGL(QRect relativeRect);
+  virtual void initializeGL(QRect relativeRect);
 
  public:
   /**
    * the actual render gl mesh
-   * @param vertices mesh only accept the scene position which is relative to project
+   * @param vertices mesh only accept the scene position which is relative to
+   * project
    * @param incident gl incident
    */
   Mesh(const std::vector<MeshVertex>& vertices,
@@ -69,17 +69,21 @@ class Mesh : public QGraphicsItem, protected QOpenGLFunctions {
   /**
    * when the vertex change, should call upDate to refresh the gl buffer
    */
-  void upDateBuffer();
+  virtual void upDateBuffer();
 
   void setTexture(const QImage& image);
+  /**
+   * get the texture image of this mesh
+   * it can also be found in layerbitmap manager
+   * @return 
+   */
+  QImage getTextureImage() const;
   /**
    * the id which is made by project. it should be called only once
    */
   void bindId(int id) { layerId = id; }
 
-  int getLayerId() const {
-    return layerId;
-  }
+  int getLayerId() const { return layerId; }
 };
 
 class MeshBuilder {
@@ -96,7 +100,8 @@ class MeshBuilder {
 
   /**
    * specify the vertices and index to build the mesh.
-   * when you call the setUpVertices, you should also call setUpTexture and not call setUpDefault
+   * when you call the setUpVertices, you should also call setUpTexture and not
+   * call setUpDefault
    * @param vertices vertices information
    * @param index incident
    */
@@ -106,8 +111,8 @@ class MeshBuilder {
 
   /**
    * build the actual mesh
-   * @return 
+   * @return
    */
-  std::unique_ptr<Mesh> buildMesh();
+  virtual std::unique_ptr<Mesh> buildMesh();
 };
 }  // namespace Scene

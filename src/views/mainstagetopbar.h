@@ -10,7 +10,10 @@ class MainStageTopBar : public QWidget {
 
  public:
   MainStageTopBar(QWidget* parent = nullptr);
-
+  /**
+   * reset the first state
+   */
+  void reset();
  signals:
   void enterEditMode();
   void leaveEditMode();

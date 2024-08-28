@@ -25,4 +25,8 @@ MainStageTopBar::MainStageTopBar(QWidget* parent) : QWidget(parent) {
     }
   });
 }
+
+void MainStageTopBar::reset() {
+  this->editModeBtn->setChecked(false);
+}
 }  // namespace views

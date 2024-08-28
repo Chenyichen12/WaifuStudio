@@ -101,7 +101,8 @@ void MainWindow::setUpMainStage() {
       ui->MainStageGraphicsView, currentProject);
 
   editController->setDisabledWidget({ui->controllerTree, ui->psTree});
-
+  // ui reset
+  ui->MainStageTopBar->reset();
   connect(ui->MainStageTopBar, &views::MainStageTopBar::enterEditMode,
           editController, &Controller::EditModeController::handleEnterEditMode);
   connect(ui->MainStageTopBar, &views::MainStageTopBar::leaveEditMode,

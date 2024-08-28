@@ -10,6 +10,7 @@
 #include "model/tree_manager.h"
 #include "views/mainglstage.h"
 #include "views/mainstagesidetoolbar.h"
+#include "gabrenderwidget.h"
 
 ProjectModel::BitmapLayer* Controller::EditModeController::getFirstSelectLayer()
     const {
@@ -62,6 +63,11 @@ void Controller::EditModeController::handleEnterEditMode() {
   if (mesh == nullptr) {
     return;
   }
+  auto widget = new GabRenderWidget(mesh->getVertices(), mesh->getIncident(),
+                                    mesh->getTextureImage());
+  widget->setFixedWidth(scene->getRenderGroup()->getRenderWidth());
+  widget->setFixedHeight(scene->getRenderGroup()->getRenderHeight());
+  widget->show();
 
   // create edit controller
   this->currentEditController = new Scene::EditMeshController(
