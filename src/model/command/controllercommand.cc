@@ -1,6 +1,6 @@
 #include "controllercommand.h"
 
-#include "../scene/scenecontroller.h"
+#include "../scene/meshcontroller.h"
 namespace Command {
 ControllerCommand::ControllerCommand(
     Scene::AbstractController* controller,QUndoCommand* parent)

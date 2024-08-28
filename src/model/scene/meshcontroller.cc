@@ -5,7 +5,7 @@
 #include "mesh.h"
 #include "pointeventhandler.h"
 #include "rectselectcontroller.h"
-#include "scenecontroller.h"
+#include "meshcontroller.h"
 namespace Scene {
 RootController* findRootController(const QGraphicsItem* controller) {
   auto parent = controller->parentItem();

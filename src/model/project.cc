@@ -11,7 +11,7 @@
 #include "scene/mainstagescene.h"
 #include "scene/mesh.h"
 #include "scene/meshrendergroup.h"
-#include "scene/scenecontroller.h"
+#include "scene/meshcontroller.h"
 #include "tree_manager.h"
 namespace ProjectModel {
 Project* ProjectBuilder::build() {

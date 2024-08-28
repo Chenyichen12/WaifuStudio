@@ -107,6 +107,7 @@ void RootController::pushUndoCommand(QUndoCommand* command) {
 }
 
 void RootController::setActiveSelectController(ActiveSelectController controller) {
+  this->activeSelectController = controller;
   this->forEachController([&](AbstractController* c) {
     c->setActiveSelectController(controller);
     return true;
@@ -115,6 +116,7 @@ void RootController::setActiveSelectController(ActiveSelectController controller
 
 void RootController::addEditMeshController(EditMeshController* controller) {
   controller->setControllerParent(this);
+  controller->setActiveSelectController(this->activeSelectController);
   forEachController([&](auto c) {
     if (c->type() != EditMeshControllerType) {
       c->unSelectTheController();
