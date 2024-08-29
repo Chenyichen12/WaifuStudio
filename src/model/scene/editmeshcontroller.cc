@@ -69,6 +69,39 @@ class EditMeshRotationController : public AbstractRotationSelectController {
  private:
   EditMeshController* editMesh;
 
+  class MeshRotationUndoEvent : public Command::ControllerCommand {
+    EditMeshRotationController* selectController;
+    bool first = true;
+
+   public:
+    // two rotation record for controller
+    double beforeRotation = 0;
+    double afterRotation = 0;
+    MeshRotationUndoEvent(EditMeshRotationController* selectController,
+                          Scene::AbstractController* controller,
+                          QUndoCommand* parent = nullptr)
+        : ControllerCommand(controller, parent) {
+      this->selectController = selectController;
+    }
+    void redo() override {
+      if (first) {
+        first = false;
+        return;
+      }
+      ControllerCommand::redo();
+      selectController->rotation = afterRotation;
+    }
+
+    void undo() override {
+      ControllerCommand::undo();
+      // the rotation will only affect the rotation controller, will not affect
+      // the actual mesh point
+      selectController->rotation = beforeRotation;
+      selectController->update();
+    }
+  };
+  friend MeshRotationUndoEvent;
+
  public:
   explicit EditMeshRotationController(EditMeshController* controller)
       : AbstractRotationSelectController(controller) {
@@ -81,6 +114,26 @@ class EditMeshRotationController : public AbstractRotationSelectController {
   };
 
   void controllerEndDrag(const QPointF& mouseScenePos) override {
+    auto undoEvent = std::make_unique<MeshRotationUndoEvent>(this, editMesh);
+    if (this->dragState == ROTATION) {
+      undoEvent->beforeRotation = startDragRotation;
+      undoEvent->afterRotation = this->rotation;
+    } else {
+      undoEvent->beforeRotation = this->rotation;
+      undoEvent->afterRotation = this->rotation;
+    }
+    for (const auto& info : startPointPos) {
+      undoEvent->addOldInfo(info);
+    }
+    const auto& pList = editMesh->getPointFromScene();
+    for (const auto& index : editMesh->getSelectIndex()) {
+      auto pos = pList[index];
+      undoEvent->addNewInfo({pos, index});
+    }
+    auto root = RootController::findRootController(editMesh);
+    if (root != nullptr) {
+      root->pushUndoCommand(undoEvent.release());
+    }
     AbstractRotationSelectController::controllerEndDrag(mouseScenePos);
   }
 };
@@ -185,7 +238,7 @@ void EditMeshController::paint(QPainter* painter,
   auto scale = painter->transform().m11();
 
   auto pen = QPen(Qt::black);
-  pen.setWidth(1 / scale);
+  pen.setWidth(static_cast<int>(1 / scale));
   painter->setBrush(QBrush(Qt::white));
   painter->setPen(pen);
 
@@ -261,8 +314,8 @@ void EditMeshController::setPointFromScene(int index,
   // AbstractController::setPointFromScene(index, scenePosition);
   auto& data = this->vertices[index];
 
-  data.pos.x = scenePosition.x();
-  data.pos.y = scenePosition.y();
+  data.pos.x = static_cast<float>(scenePosition.x());
+  data.pos.y = static_cast<float>(scenePosition.y());
 
   upDateActiveTool();
   this->update();
