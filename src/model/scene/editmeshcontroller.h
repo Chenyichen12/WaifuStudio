@@ -33,7 +33,9 @@ public:
 
   void selectPoint(int index);
   void unSelectPoint();
-  
+
+  void addUndoCommand(QUndoCommand* command);
+
   void setActiveSelectController(ActiveSelectController controller) override;
 };
 }  // namespace Scene

@@ -3,14 +3,31 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 
+#include "../command/controllercommand.h"
 #include "pointeventhandler.h"
 #include "scenecontroller.h"
 namespace Scene {
 
+class EditMeshPointUndoCommand : public Command::ControllerCommand {
+  bool first = true;
+ public:
+  EditMeshPointUndoCommand(EditMeshController* controller, QUndoCommand* parent = nullptr)
+      : ControllerCommand(controller, parent) {}
+
+  void redo() override {
+    if (first) {
+      first = false;
+      return;
+    }
+
+    ControllerCommand::redo();
+  }
+};
+
 class EditMeshPointHandler : public PointEventHandler {
  private:
   EditMeshController* controller;
-
+  QPointF startPoint;
  protected:
   void pointMoveEvent(int current, QGraphicsSceneMouseEvent* event) override {
     if (current == -1) {
@@ -21,14 +38,22 @@ class EditMeshPointHandler : public PointEventHandler {
   void pointPressedEvent(int index, QGraphicsSceneMouseEvent* event) override {
     if (index == -1) {
       controller->unSelectPoint();
-    }else {
+    } else {
       if (event->modifiers() != Qt::ShiftModifier) {
         controller->unSelectPoint();
       }
       controller->selectPoint(index);
+      startPoint = controller->getPointFromScene()[index];
+      event->accept();
     }
   }
-  void pointReleaseEvent(QGraphicsSceneMouseEvent* event) override {}
+  
+  void pointReleaseEvent(QGraphicsSceneMouseEvent* event) override {
+    auto command = new EditMeshPointUndoCommand(controller);
+    command->addOldInfo({startPoint, currentIndex});
+    command->addNewInfo({event->scenePos(), currentIndex});
+    controller->addUndoCommand(command);
+  }
 
  public:
   explicit EditMeshPointHandler(EditMeshController* controller)
@@ -36,6 +61,7 @@ class EditMeshPointHandler : public PointEventHandler {
     this->controller = controller;
   }
 };
+
 
 void EditMeshController::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
   this->pointHandler->mouseMoveEvent(event);
@@ -142,7 +168,7 @@ void EditMeshController::setPointFromScene(int index,
   // AbstractController::setPointFromScene(index, scenePosition);
   auto& data = this->vertices[index];
 
-  //TODO: it should also update the incident and uv
+  // TODO: it should also update the incident and uv
   data.pos.x = scenePosition.x();
   data.pos.y = scenePosition.y();
   this->update();
@@ -157,8 +183,19 @@ void EditMeshController::unSelectPoint() {
   this->selectIndex.clear();
   this->update();
 }
+
+void EditMeshController::addUndoCommand(QUndoCommand* command) {
+
+  if (this->controllerParent->type() != RootControllerType) {
+    delete command;
+    return;
+  }
+  auto root = static_cast<RootController*>(controllerParent);
+  root->pushUndoCommand(command);
+}
+
 void EditMeshController::setActiveSelectController(
     ActiveSelectController controller) {
-      qDebug()<<"change"<<controller;
+  qDebug() << "change" << controller;
 }
 }  // namespace Scene

@@ -161,6 +161,13 @@ class RootController : public AbstractController {
    * @param controller 
    */
   void removeEditMeshController();
+
+  /**
+   * the general function to find the root controller
+   * @param controller the controller to find root
+   * @return 
+   */
+  static RootController* findRootController(const AbstractController* controller);
 };
 
 

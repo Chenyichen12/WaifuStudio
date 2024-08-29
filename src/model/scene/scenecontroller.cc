@@ -115,6 +115,10 @@ void RootController::setActiveSelectController(ActiveSelectController controller
 }
 
 void RootController::setEditMeshController(AbstractController* controller) {
+  // delete the pre controller if so
+  if (this->editController != nullptr) {
+    removeEditMeshController();
+  }
   controller->setControllerParent(this);
   controller->setActiveSelectController(this->activeSelectController);
   forEachController([&](auto c) {
@@ -133,5 +137,17 @@ void RootController::removeEditMeshController() {
     delete editController;
     editController = nullptr; 
   }
+}
+
+RootController* RootController::findRootController(
+    const AbstractController* controller) {
+  auto parent = controller->getControllerParent();
+  while (parent != nullptr) {
+    if (parent->type() == ControllerType::RootControllerType) {
+      return static_cast<RootController*>(parent);
+    }
+    parent = parent->getControllerParent();
+  }
+  return nullptr;
 }
 }  // namespace Scene

@@ -1,4 +1,4 @@
-#include "rectselectcontroller.h"
+#include "selectcontrollers.h"
 
 #include <QCursor>
 #include <QGraphicsSceneEvent>
