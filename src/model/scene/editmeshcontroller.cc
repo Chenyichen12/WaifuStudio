@@ -4,14 +4,17 @@
 #include <QPainter>
 
 #include "../command/controllercommand.h"
+#include "meshselectcontrollers.h"
 #include "pointeventhandler.h"
 #include "scenecontroller.h"
 namespace Scene {
 
 class EditMeshPointUndoCommand : public Command::ControllerCommand {
   bool first = true;
+
  public:
-  EditMeshPointUndoCommand(EditMeshController* controller, QUndoCommand* parent = nullptr)
+  EditMeshPointUndoCommand(EditMeshController* controller,
+                           QUndoCommand* parent = nullptr)
       : ControllerCommand(controller, parent) {}
 
   void redo() override {
@@ -24,10 +27,53 @@ class EditMeshPointUndoCommand : public Command::ControllerCommand {
   }
 };
 
+/**
+ * edit mesh actual select controller
+ * when multiselect 2 or more point
+ * it will show a rect that can controller the multipoint
+ * also handle undo command
+ */
+class EditMeshActualRectController : public MeshRectSelectController {
+ private:
+  EditMeshController* editMesh;
+
+ public:
+  explicit EditMeshActualRectController(EditMeshController* controller)
+      : MeshRectSelectController(controller), editMesh(controller) {}
+
+ protected:
+  std::vector<int> getSelectIndex() override {
+    return editMesh->getSelectIndex();
+  }
+
+  // push to undo command
+  void rectEndMove(const QPointF& startPoint,
+                   const QPointF& endPoint) override {
+    auto undoCommand = std::make_unique<EditMeshPointUndoCommand>(editMesh);
+    for (const auto& startCommand : startPointPos) {
+      undoCommand->addOldInfo({startCommand.p, startCommand.index});
+    }
+
+    const auto& pList = editMesh->getPointFromScene();
+    for (int select_index : editMesh->getSelectIndex()) {
+      auto p = pList[select_index];
+      undoCommand->addNewInfo({p, select_index});
+    }
+
+    editMesh->addUndoCommand(undoCommand.release());
+    MeshRectSelectController::rectEndMove(startPoint, endPoint);
+  }
+};
+
+/**
+ * edit mesh point handler
+ * drag the point and handle the press event
+ */
 class EditMeshPointHandler : public PointEventHandler {
  private:
   EditMeshController* controller;
   QPointF startPoint;
+
  protected:
   void pointMoveEvent(int current, QGraphicsSceneMouseEvent* event) override {
     if (current == -1) {
@@ -47,7 +93,7 @@ class EditMeshPointHandler : public PointEventHandler {
       event->accept();
     }
   }
-  
+
   void pointReleaseEvent(QGraphicsSceneMouseEvent* event) override {
     auto command = new EditMeshPointUndoCommand(controller);
     command->addOldInfo({startPoint, currentIndex});
@@ -62,6 +108,20 @@ class EditMeshPointHandler : public PointEventHandler {
   }
 };
 
+void EditMeshController::upDateActiveTool() {
+  if (this->selectIndex.size() <= 1) {
+    selectControllerTool[activeSelectTool]->setVisible(false);
+    return;
+  }
+  auto pList = std::vector<QPointF>();
+  for (int select_index : this->selectIndex) {
+    pList.emplace_back(vertices[select_index].pos.x,
+                       vertices[select_index].pos.y);
+  }
+  selectControllerTool[activeSelectTool]->setBoundRect(
+      AbstractSelectController::boundRectFromPoints(pList));
+  selectControllerTool[activeSelectTool]->setVisible(true);
+}
 
 void EditMeshController::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
   this->pointHandler->mouseMoveEvent(event);
@@ -81,6 +141,7 @@ EditMeshController::EditMeshController(
     : AbstractController(parent), vertices(vertices), incident(incident) {
   this->pointHandler = new EditMeshPointHandler(this);
   this->setVisible(true);
+  this->selectControllerTool[0] = new EditMeshActualRectController(this);
 }
 
 EditMeshController::~EditMeshController() { delete this->pointHandler; }
@@ -111,15 +172,15 @@ void EditMeshController::paint(QPainter* painter,
 
   for (const auto& point : meshPoint) {
     painter->drawEllipse(QPointF(point.pos.x, point.pos.y),
-                         pointHandler->AbsolutePointRadius / scale,
-                         pointHandler->AbsolutePointRadius / scale);
+                         PointEventHandler::AbsolutePointRadius / scale,
+                         PointEventHandler::AbsolutePointRadius / scale);
   }
   painter->setBrush(QBrush(Qt::red));
   for (const auto& i : selectIndex) {
     auto point = vertices[i];
     painter->drawEllipse(QPointF(point.pos.x, point.pos.y),
-                         pointHandler->AbsolutePointRadius / scale,
-                         pointHandler->AbsolutePointRadius / scale);
+                         PointEventHandler::AbsolutePointRadius / scale,
+                         PointEventHandler::AbsolutePointRadius / scale);
   }
 }
 
@@ -160,6 +221,8 @@ void EditMeshController::selectAtScene(QRectF sceneRect) {
       this->selectIndex.push_back(i);
     }
   }
+
+  upDateActiveTool();
   this->update();
 }
 
@@ -168,24 +231,26 @@ void EditMeshController::setPointFromScene(int index,
   // AbstractController::setPointFromScene(index, scenePosition);
   auto& data = this->vertices[index];
 
-  // TODO: it should also update the incident and uv
   data.pos.x = scenePosition.x();
   data.pos.y = scenePosition.y();
+
+  upDateActiveTool();
   this->update();
 }
 
 void EditMeshController::selectPoint(int index) {
   this->selectIndex.push_back(index);
+  upDateActiveTool();
   this->update();
 }
 
 void EditMeshController::unSelectPoint() {
   this->selectIndex.clear();
+  upDateActiveTool();
   this->update();
 }
 
-void EditMeshController::addUndoCommand(QUndoCommand* command) {
-
+void EditMeshController::addUndoCommand(QUndoCommand* command) const {
   if (this->controllerParent->type() != RootControllerType) {
     delete command;
     return;
@@ -197,5 +262,9 @@ void EditMeshController::addUndoCommand(QUndoCommand* command) {
 void EditMeshController::setActiveSelectController(
     ActiveSelectController controller) {
   qDebug() << "change" << controller;
+}
+
+std::vector<int> EditMeshController::getSelectIndex() const {
+  return this->selectIndex;
 }
 }  // namespace Scene

@@ -5,48 +5,44 @@
 
 #include "../command/controllercommand.h"
 #include "mesh.h"
-#include "pointeventhandler.h"
 #include "meshselectcontrollers.h"
+#include "pointeventhandler.h"
 namespace Scene {
 /**
  * actual mesh rect controller
  * should push command to undo command list
  */
-class MeshActualRectController: public MeshRectSelectController {
-private:
+class MeshActualRectController : public MeshRectSelectController {
+ private:
   MeshController* mesh;
 
  public:
   explicit MeshActualRectController(MeshController* controller)
-    : MeshRectSelectController(controller), mesh(controller) {
-  }
+      : MeshRectSelectController(controller), mesh(controller) {}
 
-protected:
+ protected:
   std::vector<int> getSelectIndex() override {
-   return mesh->getSelectedPointIndex();
+    return mesh->getSelectedPointIndex();
   }
 
-  void pointsHaveMoved() override {
-    mesh->upDateMeshBuffer();
-  }
+  void pointsHaveMoved() override { mesh->upDateMeshBuffer(); }
 
-  void rectEndMove(const QPointF& startPoint, const QPointF& endPoint) override {
-   auto undoEvent =
-       std::make_unique<Command::MeshControllerCommand>(mesh);
-   for (const auto& info : startPointPos) {
-     undoEvent->addOldInfo(info);
-   }
-   for (const auto& index : mesh->getSelectedPointIndex()) {
-     auto pos = mesh->getPointScenePosition(index);
-     undoEvent->addNewInfo({pos, index});
-   }
-   auto root = RootController::findRootController(controller);
-   if (root != nullptr) {
-     root->pushUndoCommand(undoEvent.release());
-   }
-   MeshRectSelectController::rectEndMove(startPoint, endPoint);
+  void rectEndMove(const QPointF& startPoint,
+                   const QPointF& endPoint) override {
+    auto undoEvent = std::make_unique<Command::MeshControllerCommand>(mesh);
+    for (const auto& info : startPointPos) {
+      undoEvent->addOldInfo(info);
+    }
+    for (const auto& index : mesh->getSelectedPointIndex()) {
+      auto pos = mesh->getPointScenePosition(index);
+      undoEvent->addNewInfo({pos, index});
+    }
+    auto root = RootController::findRootController(controller);
+    if (root != nullptr) {
+      root->pushUndoCommand(undoEvent.release());
+    }
+    MeshRectSelectController::rectEndMove(startPoint, endPoint);
   }
-
 };
 
 /**
