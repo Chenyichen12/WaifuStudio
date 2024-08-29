@@ -13,8 +13,8 @@ class EditMeshPointUndoCommand : public Command::ControllerCommand {
   bool first = true;
 
  public:
-  EditMeshPointUndoCommand(EditMeshController* controller,
-                           QUndoCommand* parent = nullptr)
+  explicit EditMeshPointUndoCommand(EditMeshController* controller,
+                                    QUndoCommand* parent = nullptr)
       : ControllerCommand(controller, parent) {}
 
   void redo() override {
@@ -33,13 +33,13 @@ class EditMeshPointUndoCommand : public Command::ControllerCommand {
  * it will show a rect that can controller the multipoint
  * also handle undo command
  */
-class EditMeshActualRectController : public MeshRectSelectController {
+class EditMeshActualRectController : public AbstractRectSelectController {
  private:
   EditMeshController* editMesh;
 
  public:
   explicit EditMeshActualRectController(EditMeshController* controller)
-      : MeshRectSelectController(controller), editMesh(controller) {}
+      : AbstractRectSelectController(controller), editMesh(controller) {}
 
  protected:
   std::vector<int> getSelectIndex() override {
@@ -61,7 +61,27 @@ class EditMeshActualRectController : public MeshRectSelectController {
     }
 
     editMesh->addUndoCommand(undoCommand.release());
-    MeshRectSelectController::rectEndMove(startPoint, endPoint);
+    AbstractRectSelectController::rectEndMove(startPoint, endPoint);
+  }
+};
+
+class EditMeshRotationController : public AbstractRotationSelectController {
+ private:
+  EditMeshController* editMesh;
+
+ public:
+  explicit EditMeshRotationController(EditMeshController* controller)
+      : AbstractRotationSelectController(controller) {
+    this->editMesh = controller;
+  }
+
+ protected:
+  std::vector<int> getSelectIndex() override {
+    return editMesh->getSelectIndex();
+  };
+
+  void controllerEndDrag(const QPointF& mouseScenePos) override {
+    AbstractRotationSelectController::controllerEndDrag(mouseScenePos);
   }
 };
 
@@ -141,7 +161,17 @@ EditMeshController::EditMeshController(
     : AbstractController(parent), vertices(vertices), incident(incident) {
   this->pointHandler = new EditMeshPointHandler(this);
   this->setVisible(true);
-  this->selectControllerTool[0] = new EditMeshActualRectController(this);
+  auto rectSelectController = new EditMeshActualRectController(this);
+  auto rotationController = new EditMeshRotationController(this);
+  this->selectControllerTool[0] = rectSelectController;
+  this->selectControllerTool[1] = rotationController;
+  auto r = RootController::findRootController(this);
+  if (r != nullptr) {
+    rectSelectController->setPadding(r->boundingRect().width() / 100);
+    rectSelectController->setLineWidth(r->boundingRect().width() / 300);
+    rotationController->setRadius(r->boundingRect().width() / 150);
+    rotationController->setLineLength(r->boundingRect().width() / 15);
+  }
 }
 
 EditMeshController::~EditMeshController() { delete this->pointHandler; }
@@ -261,7 +291,14 @@ void EditMeshController::addUndoCommand(QUndoCommand* command) const {
 
 void EditMeshController::setActiveSelectController(
     ActiveSelectController controller) {
-  qDebug() << "change" << controller;
+  auto readyController = controller;
+  this->selectControllerTool[activeSelectTool]->hide();
+  if (controller == PenController) {
+    readyController = RectController;
+  }
+  this->activeSelectTool = readyController;
+  this->selectControllerTool[readyController]->show();
+  upDateActiveTool();
 }
 
 std::vector<int> EditMeshController::getSelectIndex() const {

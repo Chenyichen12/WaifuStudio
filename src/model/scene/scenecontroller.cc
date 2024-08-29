@@ -141,12 +141,13 @@ void RootController::removeEditMeshController() {
 
 RootController* RootController::findRootController(
     const AbstractController* controller) {
-  auto parent = controller->getControllerParent();
+  // should use parentItem because some controller parent is set after create
+  auto parent = controller->parentItem();
   while (parent != nullptr) {
     if (parent->type() == ControllerType::RootControllerType) {
       return static_cast<RootController*>(parent);
     }
-    parent = parent->getControllerParent();
+    parent = parent->parentItem();
   }
   return nullptr;
 }

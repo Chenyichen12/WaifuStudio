@@ -4,8 +4,8 @@
 
 namespace Scene {
 
-void MeshRectSelectController::rectMoving(const QPointF& pre,
-                                          const QPointF& aft) {
+void AbstractRectSelectController::rectMoving(const QPointF& pre,
+                                              const QPointF& aft) {
   if (dragState == CENTER) {
     auto delta = aft - pre;
     auto pointList = controller->getPointFromScene();
@@ -65,7 +65,7 @@ void MeshRectSelectController::rectMoving(const QPointF& pre,
   }
 }
 
-void MeshRectSelectController::leftTopDrag(const QPointF& aft) {
+void AbstractRectSelectController::leftTopDrag(const QPointF& aft) {
   bool isXFlip = aft.x() > startDragRect.right();
   bool isYFlip = aft.y() > startDragRect.bottom();
   QPointF topLeft;
@@ -89,7 +89,7 @@ void MeshRectSelectController::leftTopDrag(const QPointF& aft) {
   handleMouseAt(QRectF(topLeft, bottomRight), isXFlip, isYFlip);
 }
 
-void MeshRectSelectController::leftBottomDrag(const QPointF& aft) {
+void AbstractRectSelectController::leftBottomDrag(const QPointF& aft) {
   bool isXFlip = aft.x() > startDragRect.right();
   bool isYFlip = aft.y() < startDragRect.top();
   QPointF topLeft;
@@ -113,7 +113,7 @@ void MeshRectSelectController::leftBottomDrag(const QPointF& aft) {
   handleMouseAt(QRectF(topLeft, bottomRight), isXFlip, isYFlip);
 }
 
-void MeshRectSelectController::rightTopDrag(const QPointF& aft) {
+void AbstractRectSelectController::rightTopDrag(const QPointF& aft) {
   bool isXFlip = aft.x() < startDragRect.left();
   bool isYFlip = aft.y() > startDragRect.bottom();
   QPointF topLeft;
@@ -137,7 +137,7 @@ void MeshRectSelectController::rightTopDrag(const QPointF& aft) {
   handleMouseAt(QRectF(topLeft, bottomRight), isXFlip, isYFlip);
 }
 
-void MeshRectSelectController::rightBottomDrag(const QPointF& aft) {
+void AbstractRectSelectController::rightBottomDrag(const QPointF& aft) {
   bool isXFlip = aft.x() < startDragRect.left();
   bool isYFlip = aft.y() < startDragRect.top();
   QPointF topLeft;
@@ -161,8 +161,8 @@ void MeshRectSelectController::rightBottomDrag(const QPointF& aft) {
   handleMouseAt(QRectF(topLeft, bottomRight), isXFlip, isYFlip);
 }
 
-void MeshRectSelectController::handleMouseAt(const QRectF& aftRect,
-                                             bool isXFlip, bool isYFlip) {
+void AbstractRectSelectController::handleMouseAt(const QRectF& aftRect,
+                                                 bool isXFlip, bool isYFlip) {
   for (const auto& startPoint : this->startPointPos) {
     float u = (startPoint.p.x() - startDragRect.x()) / startDragRect.width();
     float v = (startPoint.p.y() - startDragRect.y()) / startDragRect.height();
@@ -184,7 +184,7 @@ void MeshRectSelectController::handleMouseAt(const QRectF& aftRect,
   }
 }
 
-void MeshRectSelectController::rectStartMove(const QPointF& pos) {
+void AbstractRectSelectController::rectStartMove(const QPointF& pos) {
   auto pointList = controller->getPointFromScene();
   for (int index : this->getSelectIndex()) {
     const auto& p = pointList[index];
@@ -193,15 +193,55 @@ void MeshRectSelectController::rectStartMove(const QPointF& pos) {
   startDragRect = this->boundRect;
 }
 
-void MeshRectSelectController::rectEndMove(const QPointF& startPoint,
-    const QPointF& endPoint) {
+void AbstractRectSelectController::rectEndMove(const QPointF& startPoint,
+                                               const QPointF& endPoint) {
   RectSelectController::rectEndMove(startPoint, endPoint);
   this->startPointPos.clear();
 }
 
-MeshRectSelectController::MeshRectSelectController(
+AbstractRectSelectController::AbstractRectSelectController(
     AbstractController* controller)
     : RectSelectController(controller), controller(controller) {
   this->ifAutoMoveUpdate = false;
+}
+void AbstractRotationSelectController::controllerCenterDrag(
+    const QPointF& mouseScenePoint) {
+  auto delta = mouseScenePoint - startDragPoint;
+  for (const auto& startCommand : startPointPos) {
+    auto p = startCommand.p + delta;
+    controller->setPointFromScene(startCommand.index, p);
+  }
+  this->pointsHaveMoved();
+}
+void AbstractRotationSelectController::controllerRotating(double rotateDelta) {
+  const auto& pList = controller->getPointFromScene();
+  for (int index : this->getSelectIndex()) {
+    auto pos = pList[index];
+    auto p = rotatePoint(startDragPoint, pos, rotateDelta);
+    controller->setPointFromScene(index, p);
+  }
+  this->pointsHaveMoved();
+}
+
+void AbstractRotationSelectController::controllerStartDrag(
+    const QPointF& mouseScenePos) {
+  Q_UNUSED(mouseScenePos)
+  const auto& pList = controller->getPointFromScene();
+  for (int index : this->getSelectIndex()) {
+    auto pos = pList[index];
+    startPointPos.push_back({pos, index});
+  }
+}
+
+void AbstractRotationSelectController::controllerEndDrag(
+    const QPointF& mouseScenePos) {
+  Q_UNUSED(mouseScenePos)
+  this->startPointPos.clear();
+}
+
+AbstractRotationSelectController::AbstractRotationSelectController(
+    AbstractController* controller)
+    : RotationSelectController(controller) {
+  this->controller = controller;
 }
 }  // namespace Scene

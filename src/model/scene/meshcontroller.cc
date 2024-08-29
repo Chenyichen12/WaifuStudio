@@ -12,13 +12,13 @@ namespace Scene {
  * actual mesh rect controller
  * should push command to undo command list
  */
-class MeshActualRectController : public MeshRectSelectController {
+class MeshActualRectController : public AbstractRectSelectController {
  private:
   MeshController* mesh;
 
  public:
   explicit MeshActualRectController(MeshController* controller)
-      : MeshRectSelectController(controller), mesh(controller) {}
+      : AbstractRectSelectController(controller), mesh(controller) {}
 
  protected:
   std::vector<int> getSelectIndex() override {
@@ -41,14 +41,14 @@ class MeshActualRectController : public MeshRectSelectController {
     if (root != nullptr) {
       root->pushUndoCommand(undoEvent.release());
     }
-    MeshRectSelectController::rectEndMove(startPoint, endPoint);
+    AbstractRectSelectController::rectEndMove(startPoint, endPoint);
   }
 };
 
 /**
  * the actual rotationController for the mesh
  */
-class MeshRotationSelectController : public RotationSelectController {
+class MeshRotationSelectController : public AbstractRotationSelectController {
  private:
   /**
    * private class for the undo command for rotation controller
@@ -83,27 +83,17 @@ class MeshRotationSelectController : public RotationSelectController {
   friend MeshRotationUndoEvent;
 
   MeshController* controller;
-  // the commandinfo for drag start
-  std::vector<Command::ControllerCommandInfo> startCommandInfo;
 
  public:
   explicit MeshRotationSelectController(MeshController* controller)
-      : RotationSelectController(controller), controller(controller) {
+      : AbstractRotationSelectController(controller), controller(controller) {
     ifAutoMoveUpdate = false;
   }
 
  protected:
-  // when user drag the center of the controller, it will move all the points of
-  // the select point
-  void controllerCenterDrag(const QPointF& mouseScenePoint) override {
-    auto delta = mouseScenePoint - startDragPoint;
-    for (const auto& startCommand : startCommandInfo) {
-      auto p = startCommand.p + delta;
-      controller->setPointFromScene(startCommand.index, p);
-    }
-    controller->upDateMeshBuffer();
+  std::vector<int> getSelectIndex() override {
+    return controller->getSelectedPointIndex();
   }
-
   // record the undo command
   void controllerEndDrag(const QPointF& mouseScenePos) override {
     Q_UNUSED(mouseScenePos)
@@ -115,7 +105,7 @@ class MeshRotationSelectController : public RotationSelectController {
       undoEvent->beforeRotation = this->rotation;
       undoEvent->afterRotation = this->rotation;
     }
-    for (const auto& info : startCommandInfo) {
+    for (const auto& info : startPointPos) {
       undoEvent->addOldInfo(info);
     }
     for (const auto& index : controller->getSelectedPointIndex()) {
@@ -126,26 +116,9 @@ class MeshRotationSelectController : public RotationSelectController {
     if (root != nullptr) {
       root->pushUndoCommand(undoEvent.release());
     }
-    startCommandInfo.clear();
+    AbstractRotationSelectController::controllerEndDrag(mouseScenePos);
   }
-
-  // rotate the selected points
-  void controllerRotating(double rotateDelta) override {
-    for (int index : controller->getSelectedPointIndex()) {
-      auto pos = controller->getPointScenePosition(index);
-      auto p = rotatePoint(startDragPoint, pos, rotateDelta);
-      controller->setPointFromScene(index, p);
-    }
-    controller->upDateMeshBuffer();
-  }
-
-  void controllerStartDrag(const QPointF& mouseScenePos) override {
-    Q_UNUSED(mouseScenePos)
-    for (int index : controller->getSelectedPointIndex()) {
-      auto pos = controller->getPointScenePosition(index);
-      startCommandInfo.push_back({pos, index});
-    }
-  }
+  void pointsHaveMoved() override { this->controller->upDateMeshBuffer(); }
 };
 class MeshController::MeshControllerEventHandler : public PointEventHandler {
  private:
