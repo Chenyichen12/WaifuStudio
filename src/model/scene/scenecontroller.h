@@ -117,6 +117,8 @@ class RootController : public AbstractController {
   int height;
   QUndoStack* controllerUndoStack = nullptr;
   ActiveSelectController activeSelectController = RectController;
+
+  AbstractController* editController = nullptr;
  public:
   RootController(int width, int height);
   QRectF boundingRect() const override;
@@ -148,18 +150,17 @@ class RootController : public AbstractController {
   void setActiveSelectController(ActiveSelectController controller) override;
 
   /**
-   * call this to add editmeshcontroller
-   * it will hide all controller expect the editmeshcontroller
+   * call this to add controller to edit
+   * take the ownership  of the controller
    * @param controller 
    */
-  void addEditMeshController(EditMeshController* controller);
+  void setEditMeshController(AbstractController* controller);
 
   /**
-   * to remove edit controller
-   * will release the owner to the caller, will not release memory
+   * to remove edit controller and release memory
    * @param controller 
    */
-  void removeEditMeshController(EditMeshController* controller);
+  void removeEditMeshController();
 };
 
 

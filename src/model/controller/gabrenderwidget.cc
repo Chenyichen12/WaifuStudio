@@ -8,6 +8,7 @@ class RenderMesh : public Scene::Mesh {
  private:
   QOpenGLShaderProgram* program = nullptr;
   QRect renderRect;
+
  public:
   RenderMesh(const std::vector<Scene::MeshVertex>& vertices,
              const std::vector<unsigned int>& incident)
@@ -15,26 +16,24 @@ class RenderMesh : public Scene::Mesh {
 
   void setProgram(QOpenGLShaderProgram* program) { this->program = program; }
 
-public:
- void initializeGL(QRect relativeRect) override {
-   Mesh::initializeGL(relativeRect);
-   this->renderRect = relativeRect;
- }
+  void initializeGL(QRect relativeRect) override {
+    Mesh::initializeGL(relativeRect);
+    this->renderRect = relativeRect;
+  }
   void paintGL() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     program->bind();
-    glViewport(0,0,renderRect.width(),renderRect.height());
+    glViewport(0, 0, renderRect.width(), renderRect.height());
     vao->bind();
     tex->bind(0);
     program->setUniformValue("ourTexture", 0);
 
-    glDrawElements(GL_TRIANGLES, this->getIncident().size(), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, this->getIncident().size(), GL_UNSIGNED_INT,
+                   nullptr);
     vao->release();
   }
-  void setRenderRect(const QRect& renderRect) {
-   this->renderRect = renderRect;
- }
+  void setRenderRect(const QRect& renderRect) { this->renderRect = renderRect; }
 };
 
 GabRenderWidget::GabRenderWidget(const std::vector<Scene::MeshVertex>& vertices,
@@ -74,4 +73,4 @@ void GabRenderWidget::resizeGL(int w, int h) {
   this->mesh->setRenderRect(this->rect());
   this->mesh->paintGL();
 }
-}  // namespace Conrtoller
+}  // namespace Controller

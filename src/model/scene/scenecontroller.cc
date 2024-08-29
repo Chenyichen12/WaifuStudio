@@ -114,7 +114,7 @@ void RootController::setActiveSelectController(ActiveSelectController controller
   });
 }
 
-void RootController::addEditMeshController(EditMeshController* controller) {
+void RootController::setEditMeshController(AbstractController* controller) {
   controller->setControllerParent(this);
   controller->setActiveSelectController(this->activeSelectController);
   forEachController([&](auto c) {
@@ -123,16 +123,15 @@ void RootController::addEditMeshController(EditMeshController* controller) {
     }
     return true;
   });
+  this->editController = controller;
 }
 
-void RootController::removeEditMeshController(EditMeshController* controller) {
-  controller->setControllerParent(nullptr);
-  for (auto item = this->controllerChildren.begin();
-       item != this->controllerChildren.end(); ++item) {
-    if (*item == controller) {
-      controllerChildren.erase(item);
-      break;
-    }
+
+void RootController::removeEditMeshController() {
+  if (editController != nullptr) {
+    editController->setControllerParent(nullptr);
+    delete editController;
+    editController = nullptr; 
   }
 }
 }  // namespace Scene

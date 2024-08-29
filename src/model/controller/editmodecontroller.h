@@ -23,7 +23,6 @@ class EditModeController : public QObject {
   Scene::MainStageScene* scene;
   ProjectModel::LayerModel* layerModel;
   views::MainGlGraphicsView* view;
-  Scene::EditMeshController* currentEditController;
   /**
    * in some time we should disable some widget when enter the edit model
    * such as the tree view to defence to modify  of the layer
@@ -42,6 +41,7 @@ class EditModeController : public QObject {
                      ProjectModel::LayerModel* layerModel,
                      views::MainGlGraphicsView* views,
                      QObject* parent = nullptr);
+  ~EditModeController() override;
 
   /**
    * set the disabled widget when enter edit

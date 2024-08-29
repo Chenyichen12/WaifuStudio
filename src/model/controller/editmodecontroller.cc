@@ -10,7 +10,6 @@
 #include "model/tree_manager.h"
 #include "views/mainglstage.h"
 #include "views/mainstagesidetoolbar.h"
-#include "gabrenderwidget.h"
 
 ProjectModel::BitmapLayer* Controller::EditModeController::getFirstSelectLayer()
     const {
@@ -51,6 +50,8 @@ Controller::EditModeController::EditModeController(
   this->view = view;
 }
 
+Controller::EditModeController::~EditModeController() = default;
+
 void Controller::EditModeController::setDisabledWidget(
     const QList<QWidget*>& widgets) {
   this->disabledWidgets = widgets;
@@ -63,17 +64,12 @@ void Controller::EditModeController::handleEnterEditMode() {
   if (mesh == nullptr) {
     return;
   }
-  auto widget = new GabRenderWidget(mesh->getVertices(), mesh->getIncident(),
-                                    mesh->getTextureImage());
-  widget->setFixedWidth(scene->getRenderGroup()->getRenderWidth());
-  widget->setFixedHeight(scene->getRenderGroup()->getRenderHeight());
-  widget->show();
 
   // create edit controller
-  this->currentEditController = new Scene::EditMeshController(
+  auto editController = new Scene::EditMeshController(
       mesh->getVertices(), mesh->getIncident(), scene->getControllerRoot());
   // add to scene
-  scene->getControllerRoot()->addEditMeshController(currentEditController);
+  scene->getControllerRoot()->setEditMeshController(editController);
 
   // change selection
   if (!editLayer->data(ProjectModel::VisibleRole).toBool()) {
@@ -94,11 +90,5 @@ void Controller::EditModeController::handleLeaveEditMode() {
   for (const auto& disabled_widget : this->disabledWidgets) {
     disabled_widget->setDisabled(false);
   }
-
-  if (currentEditController != nullptr) {
-    this->scene->getControllerRoot()->removeEditMeshController(
-        currentEditController);
-    delete this->currentEditController;
-    this->currentEditController = nullptr;
-  }
-}
+  this->scene->getControllerRoot()->removeEditMeshController();
+ }
