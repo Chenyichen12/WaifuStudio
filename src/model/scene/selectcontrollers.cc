@@ -262,6 +262,8 @@ void RotationSelectController::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     this->rotation = nowAngle;
     // call the func with delta
     controllerRotating(nowAngle - oldAngle);
+    // fix the center point because it may move when call set bound
+    centerPoint = startDragPoint;
     update();
   }
   if (dragState == CENTER) {

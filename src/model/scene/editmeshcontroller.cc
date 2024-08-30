@@ -1,6 +1,7 @@
 #include "editmeshcontroller.h"
 
 #include <QGraphicsSceneMouseEvent>
+#include <QKeyEvent>
 #include <QPainter>
 
 #include "../command/controllercommand.h"
@@ -181,19 +182,120 @@ class EditMeshPointHandler : public PointEventHandler {
   }
 };
 
-void EditMeshController::upDateActiveTool() {
-  if (this->selectIndex.size() <= 1) {
-    selectControllerTool[activeSelectTool]->setVisible(false);
-    return;
+
+/**
+ * the pen controller bound rect is the edit mesh bound to receive all event from edit mesh
+ */
+class EditMeshPenController : public AbstractSelectController {
+ private:
+  EditMeshController* editMesh;
+  class PenEventHandler: public PointEventHandler {
+  private:
+    EditMeshController* mesh;
+  public:
+    PenEventHandler(EditMeshController* controller): PointEventHandler(controller) {
+      this->mesh = controller;
+    }
+
+    void pointPressedEvent(int index, QGraphicsSceneMouseEvent* event) override {
+      if (index == -1) {
+        mesh->addEditPoint(event->scenePos());
+        mesh->upDateCDT();
+      }
+    }
+  };
+
+
+  friend PenEventHandler;
+  std::unique_ptr<PenEventHandler> handler;
+protected:
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
+    handler->mousePressEvent(event);
+    event->accept();
   }
+
+  void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override {
+    handler->mouseMoveEvent(event);
+  }
+  void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override {
+    handler->mouseReleaseEvent(event);
+  }
+ public:
+  explicit EditMeshPenController(EditMeshController* editMesh): AbstractSelectController(editMesh) {
+    this->editMesh = editMesh;
+    this->handler = std::make_unique<PenEventHandler>(editMesh);
+    this->setVisible(false);
+  }
+
+  QRectF boundingRect() const override {
+    return editMesh->boundingRect();
+  }
+  void setBoundRect(const QRectF& rect) override{}
+  void setBoundRect(const std::vector<QPointF>& pointList) override{}
+  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override{}
+};
+
+CDT::EdgeUSet EditMeshController::incidentToEdge(
+    const std::vector<unsigned int>& incident) {
+  auto pointPairMap = CDT::EdgeUSet();
+   
+   for (unsigned int i = 0; i < incident.size(); i += 3) {
+    std::array<std::pair<unsigned int, unsigned int>, 3> lineArray = {
+        std::make_pair(incident[i], incident[i + 1]),
+        std::make_pair(incident[i + 1], incident[i + 2]),
+        std::make_pair(incident[i + 2], incident[i]),
+    };
+    for (const auto& line : lineArray) {
+      auto edge = CDT::Edge(line.first, line.second);
+      if (!pointPairMap.contains(edge)) {
+        pointPairMap.insert(edge);
+      }
+    }
+  }
+  return pointPairMap;
+}
+
+void EditMeshController::addEditPoint(
+    const QPointF& scenePoint,bool select) {
+  this->editPoint.emplace_back(scenePoint.x(), scenePoint.y());
+  if (select) {
+    this->selectIndex.clear();
+    this->selectIndex.push_back(editPoint.size() - 1);
+  }
+  this->update();
+}
+
+void EditMeshController::addEditPoint(const QPointF& scenePoint,
+                                      int lastSelectIndex, bool select) {
+  addEditPoint(scenePoint, select);
+  this->fixedEdge.insert(CDT::Edge(lastSelectIndex, editPoint.size() - 1));
+  this->update();
+}
+
+
+void EditMeshController::upDateActiveTool() {
   auto pList = std::vector<QPointF>();
   for (int select_index : this->selectIndex) {
-    pList.emplace_back(vertices[select_index].pos.x,
-                       vertices[select_index].pos.y);
+    pList.emplace_back(editPoint[select_index].x, editPoint[select_index].y);
   }
-  selectControllerTool[activeSelectTool]->setBoundRect(
-      AbstractSelectController::boundRectFromPoints(pList));
-  selectControllerTool[activeSelectTool]->setVisible(true);
+  selectControllerTool[activeSelectTool]->setBoundRect(pList);
+}
+
+void EditMeshController::upDateCDT() {
+  CDT::Triangulation<float> cdt;
+  cdt.insertVertices(editPoint);
+  CDT::EdgeVec vec;
+  for (const auto & p : this->fixedEdge) {
+    vec.push_back(p);
+  }
+   
+  cdt.insertEdges(vec);
+  cdt.eraseSuperTriangle();
+
+  this->editPoint = cdt.vertices;
+  this->fixedEdge = cdt.fixedEdges;
+  this->allEdge = CDT::extractEdgesFromTriangles(cdt.triangles);
+  this->update();
 }
 
 void EditMeshController::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
@@ -208,16 +310,30 @@ void EditMeshController::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
   pointHandler->mouseReleaseEvent(event);
 }
 
+void EditMeshController::keyPressEvent(QKeyEvent* event) {
+  AbstractController::keyPressEvent(event);
+  if (event->key() == Qt::Key_Delete) {
+  }
+}
+
 EditMeshController::EditMeshController(
     const std::vector<MeshVertex>& vertices,
     const std::vector<unsigned int>& incident, QGraphicsItem* parent)
-    : AbstractController(parent), vertices(vertices), incident(incident) {
+    : AbstractController(parent) {
+  this->fixedEdge = this->incidentToEdge(incident);
+  this->allEdge = fixedEdge;
+  for (const auto& vertex : vertices) {
+    this->editPoint.emplace_back(vertex.pos.x, vertex.pos.y);
+  }
+
   this->pointHandler = new EditMeshPointHandler(this);
   this->setVisible(true);
   auto rectSelectController = new EditMeshActualRectController(this);
   auto rotationController = new EditMeshRotationController(this);
+  auto penController = new EditMeshPenController(this);
   this->selectControllerTool[0] = rectSelectController;
   this->selectControllerTool[1] = rotationController;
+  this->selectControllerTool[2] = penController;
   auto r = RootController::findRootController(this);
   if (r != nullptr) {
     rectSelectController->setPadding(r->boundingRect().width() / 100);
@@ -234,7 +350,7 @@ void EditMeshController::paint(QPainter* painter,
                                QWidget* widget) {
   Q_UNUSED(widget)
   Q_UNUSED(option)
-  const auto& meshPoint = this->vertices;
+  const auto& meshPoint = this->editPoint;
   auto scale = painter->transform().m11();
 
   auto pen = QPen(Qt::black);
@@ -242,26 +358,22 @@ void EditMeshController::paint(QPainter* painter,
   painter->setBrush(QBrush(Qt::white));
   painter->setPen(pen);
 
-  const auto& incident = this->incident;
-  for (int i = 0; i < incident.size(); i += 3) {
-    auto v1 = meshPoint[incident[i]];
-    auto v2 = meshPoint[incident[i + 1]];
-    auto v3 = meshPoint[incident[i + 2]];
+  for (const auto& edge : this->allEdge) {
+    auto v1 = editPoint[edge.v1()];
+    auto v2 = editPoint[edge.v2()];
 
-    painter->drawLine(QPointF(v1.pos.x, v1.pos.y), QPointF(v2.pos.x, v2.pos.y));
-    painter->drawLine(QPointF(v2.pos.x, v2.pos.y), QPointF(v3.pos.x, v3.pos.y));
-    painter->drawLine(QPointF(v3.pos.x, v3.pos.y), QPointF(v1.pos.x, v1.pos.y));
+    painter->drawLine(QPointF(v1.x, v1.y), QPointF(v2.x, v2.y));
   }
 
   for (const auto& point : meshPoint) {
-    painter->drawEllipse(QPointF(point.pos.x, point.pos.y),
+    painter->drawEllipse(QPointF(point.x, point.y),
                          PointEventHandler::AbsolutePointRadius / scale,
                          PointEventHandler::AbsolutePointRadius / scale);
   }
   painter->setBrush(QBrush(Qt::red));
   for (const auto& i : selectIndex) {
-    auto point = vertices[i];
-    painter->drawEllipse(QPointF(point.pos.x, point.pos.y),
+    auto point = meshPoint[i];
+    painter->drawEllipse(QPointF(point.x, point.y),
                          PointEventHandler::AbsolutePointRadius / scale,
                          PointEventHandler::AbsolutePointRadius / scale);
   }
@@ -288,8 +400,8 @@ QPointF EditMeshController::scenePointToLocal(const QPointF& point) {
 
 std::vector<QPointF> EditMeshController::getPointFromScene() {
   auto res = std::vector<QPointF>();
-  for (const auto& vertex : this->vertices) {
-    res.emplace_back(vertex.pos.x, vertex.pos.y);
+  for (const auto& vertex : this->editPoint) {
+    res.emplace_back(vertex.x, vertex.y);
   }
   return res;
 }
@@ -297,9 +409,9 @@ std::vector<QPointF> EditMeshController::getPointFromScene() {
 void EditMeshController::selectAtScene(QRectF sceneRect) {
   AbstractController::selectAtScene(sceneRect);
   this->selectIndex.clear();
-  for (int i = 0; i < vertices.size(); i++) {
-    const auto& vertex = vertices[i];
-    auto p = QPointF(vertex.pos.x, vertex.pos.y);
+  for (int i = 0; i < editPoint.size(); i++) {
+    const auto& vertex = editPoint[i];
+    auto p = QPointF(vertex.x, vertex.y);
     if (sceneRect.contains(p)) {
       this->selectIndex.push_back(i);
     }
@@ -312,10 +424,10 @@ void EditMeshController::selectAtScene(QRectF sceneRect) {
 void EditMeshController::setPointFromScene(int index,
                                            const QPointF& scenePosition) {
   // AbstractController::setPointFromScene(index, scenePosition);
-  auto& data = this->vertices[index];
+  auto& data = this->editPoint[index];
 
-  data.pos.x = static_cast<float>(scenePosition.x());
-  data.pos.y = static_cast<float>(scenePosition.y());
+  data.x = static_cast<float>(scenePosition.x());
+  data.y = static_cast<float>(scenePosition.y());
 
   upDateActiveTool();
   this->update();
@@ -346,9 +458,6 @@ void EditMeshController::setActiveSelectController(
     ActiveSelectController controller) {
   auto readyController = controller;
   this->selectControllerTool[activeSelectTool]->hide();
-  if (controller == PenController) {
-    readyController = RectController;
-  }
   this->activeSelectTool = readyController;
   this->selectControllerTool[readyController]->show();
   upDateActiveTool();

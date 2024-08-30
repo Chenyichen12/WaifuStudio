@@ -1,4 +1,5 @@
 #pragma once
+#include "CDT.h"
 #include "mesh.h"
 #include "scenecontroller.h"
 namespace Scene {
@@ -6,10 +7,12 @@ class PointEventHandler;
 class AbstractSelectController;
 class EditMeshController : public AbstractController {
  private:
-  std::vector<MeshVertex> vertices;
-  std::vector<unsigned int> incident;
   PointEventHandler* pointHandler;
+
   std::vector<int> selectIndex;
+  std::vector<CDT::V2d<float>> editPoint; // the point in editMesh
+  CDT::EdgeUSet fixedEdge; // the fixed Edge in CDT
+  CDT::EdgeUSet allEdge; // all edge
 
   int activeSelectTool = 0;
   std::array<AbstractSelectController*, 3> selectControllerTool;
@@ -19,7 +22,9 @@ class EditMeshController : public AbstractController {
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
-public:
+  void keyPressEvent(QKeyEvent* event) override;
+
+ public:
   EditMeshController(const std::vector<MeshVertex>& vertices,
                      const std::vector<unsigned int>& incident,
                      QGraphicsItem* parent = nullptr);
@@ -36,7 +41,7 @@ public:
 
   /**
    * handle selection from the scene
-   * @param sceneRect 
+   * @param sceneRect
    */
   void selectAtScene(QRectF sceneRect) override;
   void setPointFromScene(int index, const QPointF& scenePosition) override;
@@ -44,7 +49,7 @@ public:
   /**
    * select the point of the index
    * it will show the select controller if select point's size has 2 or more
-   * @param index 
+   * @param index
    */
   void selectPoint(int index);
 
@@ -56,7 +61,7 @@ public:
   /**
    * add undo command to the root
    * if no root will delete the command
-   * @param command 
+   * @param command
    */
   void addUndoCommand(QUndoCommand* command) const;
 
@@ -66,5 +71,35 @@ public:
    * @return index
    */
   std::vector<int> getSelectIndex() const;
+
+  /**
+   * transform incident to edge struct to do cdt
+   * @return cdt edge
+   */
+  static CDT::EdgeUSet incidentToEdge(
+      const std::vector<unsigned int>&);
+
+  /**
+   * add a point to edit mesh
+   * won't auto call updateCDT call it if you need
+   * @param scenePoint the point in scene
+   * @param select if auto select the point
+   */
+  void addEditPoint(const QPointF& scenePoint, bool select = true);
+  /**
+   * add point to edit mesh and also add a fixed edge
+   * between old point and new point
+   * @param scenePoint new point in scene
+   * @param lastSelectIndex the old point to be connected
+   * @param select if auto select the point
+   */
+  void addEditPoint(const QPointF& scenePoint, int lastSelectIndex, bool select = true);
+
+  /**
+   * auto connect the point with no fixed edge
+   * the actual CDT Algorithm will be called in this function
+   * with the fixed edge and editPoint in this instance
+   */
+  void upDateCDT();
 };
 }  // namespace Scene
