@@ -3,6 +3,7 @@
 #include <QCursor>
 #include <QGraphicsSceneEvent>
 #include <QPainter>
+#include <cfloat>
 
 
 namespace Scene {
