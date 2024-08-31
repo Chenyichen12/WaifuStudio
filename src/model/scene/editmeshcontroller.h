@@ -96,9 +96,18 @@ class EditMeshController : public AbstractController {
   void addEditPoint(const QPointF& scenePoint, int lastSelectIndex, bool select = true);
 
   /**
+   * connect the fix edge between two index
+   * @param index1 normally the current select index
+   * @param index2 normally the mouse pressed index
+   * @param selectIndex2 if select the index2
+   */
+  void connectFixedEdge(int index1, int index2, bool selectIndex2 = true);
+  /**
    * auto connect the point with no fixed edge
    * the actual CDT Algorithm will be called in this function
    * with the fixed edge and editPoint in this instance
+   * the fixed edge may change when the fixed edge was cross each other
+   * should upDateCDT to fit the allowable mesh
    */
   void upDateCDT();
 };

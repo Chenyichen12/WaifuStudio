@@ -182,33 +182,51 @@ class EditMeshPointHandler : public PointEventHandler {
   }
 };
 
-
 /**
- * the pen controller bound rect is the edit mesh bound to receive all event from edit mesh
+ * the pen controller bound rect is the edit mesh bound to receive all event
+ * from edit mesh
  */
 class EditMeshPenController : public AbstractSelectController {
  private:
   EditMeshController* editMesh;
-  class PenEventHandler: public PointEventHandler {
-  private:
+  class PenEventHandler : public PointEventHandler {
+   private:
     EditMeshController* mesh;
-  public:
-    PenEventHandler(EditMeshController* controller): PointEventHandler(controller) {
+
+   public:
+    PenEventHandler(EditMeshController* controller)
+        : PointEventHandler(controller) {
       this->mesh = controller;
     }
 
-    void pointPressedEvent(int index, QGraphicsSceneMouseEvent* event) override {
+    void pointPressedEvent(int index,
+                           QGraphicsSceneMouseEvent* event) override {
+      const auto& selectIndex = mesh->getSelectIndex();
+      // handle the no index situation
+      // aim to add point and fixed edge
       if (index == -1) {
-        mesh->addEditPoint(event->scenePos());
-        mesh->upDateCDT();
+        if (selectIndex.size() == 1) {
+          mesh->addEditPoint(event->scenePos(), selectIndex[0]);
+          mesh->upDateCDT();
+        } else {
+          mesh->addEditPoint(event->scenePos());
+          mesh->upDateCDT();
+        }
+      }
+      // aim to connect two point
+      else {
+        if (selectIndex.size() == 1 && selectIndex[0] != index) {
+          mesh->connectFixedEdge(selectIndex[0], index);
+          mesh->upDateCDT();
+        }
       }
     }
   };
 
-
   friend PenEventHandler;
   std::unique_ptr<PenEventHandler> handler;
-protected:
+
+ protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
     handler->mousePressEvent(event);
     event->accept();
@@ -220,26 +238,27 @@ protected:
   void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override {
     handler->mouseReleaseEvent(event);
   }
+
  public:
-  explicit EditMeshPenController(EditMeshController* editMesh): AbstractSelectController(editMesh) {
+  explicit EditMeshPenController(EditMeshController* editMesh)
+      : AbstractSelectController(editMesh) {
     this->editMesh = editMesh;
     this->handler = std::make_unique<PenEventHandler>(editMesh);
     this->setVisible(false);
   }
 
-  QRectF boundingRect() const override {
-    return editMesh->boundingRect();
-  }
-  void setBoundRect(const QRectF& rect) override{}
-  void setBoundRect(const std::vector<QPointF>& pointList) override{}
-  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override{}
+  QRectF boundingRect() const override { return editMesh->boundingRect(); }
+  void setBoundRect(const QRectF& rect) override {}
+  void setBoundRect(const std::vector<QPointF>& pointList) override {}
+  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
+             QWidget* widget) override {}
 };
 
 CDT::EdgeUSet EditMeshController::incidentToEdge(
     const std::vector<unsigned int>& incident) {
   auto pointPairMap = CDT::EdgeUSet();
-   
-   for (unsigned int i = 0; i < incident.size(); i += 3) {
+
+  for (unsigned int i = 0; i < incident.size(); i += 3) {
     std::array<std::pair<unsigned int, unsigned int>, 3> lineArray = {
         std::make_pair(incident[i], incident[i + 1]),
         std::make_pair(incident[i + 1], incident[i + 2]),
@@ -255,8 +274,7 @@ CDT::EdgeUSet EditMeshController::incidentToEdge(
   return pointPairMap;
 }
 
-void EditMeshController::addEditPoint(
-    const QPointF& scenePoint,bool select) {
+void EditMeshController::addEditPoint(const QPointF& scenePoint, bool select) {
   this->editPoint.emplace_back(scenePoint.x(), scenePoint.y());
   if (select) {
     this->selectIndex.clear();
@@ -272,6 +290,16 @@ void EditMeshController::addEditPoint(const QPointF& scenePoint,
   this->update();
 }
 
+void EditMeshController::connectFixedEdge(int index1, int index2,
+                                          bool selectIndex2) {
+  auto edge = CDT::Edge(index1, index2);
+  this->fixedEdge.insert(edge);
+  if (selectIndex2) {
+    this->selectIndex.clear();
+    this->selectIndex.push_back(index2);
+  }
+  this->update();
+}
 
 void EditMeshController::upDateActiveTool() {
   auto pList = std::vector<QPointF>();
@@ -285,12 +313,19 @@ void EditMeshController::upDateCDT() {
   CDT::Triangulation<float> cdt;
   cdt.insertVertices(editPoint);
   CDT::EdgeVec vec;
-  for (const auto & p : this->fixedEdge) {
+  for (const auto& p : this->fixedEdge) {
     vec.push_back(p);
   }
-   
-  cdt.insertEdges(vec);
-  cdt.eraseSuperTriangle();
+  // may throw the not allowable error
+  // the cdt will auto resolve the error
+  // and make the mesh allowable
+  try {
+    cdt.insertEdges(vec);
+  } catch (...) {
+    //TODO: remind error
+  }
+
+  cdt.eraseOuterTriangles();
 
   this->editPoint = cdt.vertices;
   this->fixedEdge = cdt.fixedEdges;
@@ -358,13 +393,26 @@ void EditMeshController::paint(QPainter* painter,
   painter->setBrush(QBrush(Qt::white));
   painter->setPen(pen);
 
-  for (const auto& edge : this->allEdge) {
+  painter->save();
+  for (const auto& edge : this->fixedEdge) {
     auto v1 = editPoint[edge.v1()];
     auto v2 = editPoint[edge.v2()];
-
     painter->drawLine(QPointF(v1.x, v1.y), QPointF(v2.x, v2.y));
   }
 
+  // the notFixed edge use transparent pen
+  auto noFixedPen = QPen(Qt::black);
+  noFixedPen.setColor(QColor(255, 255, 255, 128));
+  painter->setPen(noFixedPen);
+  for (const auto& edge : this->allEdge) {
+    auto v1 = editPoint[edge.v1()];
+    auto v2 = editPoint[edge.v2()];
+    if (!fixedEdge.contains(edge)) {
+      painter->drawLine(QPointF(v1.x, v1.y), QPointF(v2.x, v2.y));
+    }
+  }
+
+  painter->restore();
   for (const auto& point : meshPoint) {
     painter->drawEllipse(QPointF(point.x, point.y),
                          PointEventHandler::AbsolutePointRadius / scale,
