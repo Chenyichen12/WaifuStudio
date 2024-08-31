@@ -38,7 +38,15 @@ class EditMeshController : public AbstractController {
   QPointF localPointToScene(const QPointF& point) override;
   QPointF scenePointToLocal(const QPointF& point) override;
   std::vector<QPointF> getPointFromScene() override;
-
+  /**
+   * to get the edge information of the edit mesh
+   * @return fixed edge
+   */
+  const CDT::EdgeUSet& getFixedEdge() const;
+  /**
+   * @return all edge
+   */
+  const CDT::EdgeUSet& getAllEdge() const;
   /**
    * handle selection from the scene
    * @param sceneRect
@@ -110,5 +118,16 @@ class EditMeshController : public AbstractController {
    * should upDateCDT to fit the allowable mesh
    */
   void upDateCDT();
+
+
+
+  /**
+   * remove the current index
+   * @note it may change the index of some point, if you want to remove multiPoint, should call removePoints
+   * @param index the index of editPoint
+   * @param withEdge if remove the point and its edge
+   */
+  void removePoint(int index, bool withEdge = true);
+  void removePoints(std::vector<int> index, bool withEdge = true);
 };
 }  // namespace Scene

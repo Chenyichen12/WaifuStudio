@@ -215,9 +215,11 @@ class EditMeshPenController : public AbstractSelectController {
       }
       // aim to connect two point
       else {
-        if (selectIndex.size() == 1 && selectIndex[0] != index) {
+        if (!selectIndex.empty() && selectIndex[0] != index) {
           mesh->connectFixedEdge(selectIndex[0], index);
           mesh->upDateCDT();
+        } else {
+          mesh->selectPoint(index);
         }
       }
     }
@@ -277,8 +279,8 @@ CDT::EdgeUSet EditMeshController::incidentToEdge(
 void EditMeshController::addEditPoint(const QPointF& scenePoint, bool select) {
   this->editPoint.emplace_back(scenePoint.x(), scenePoint.y());
   if (select) {
-    this->selectIndex.clear();
-    this->selectIndex.push_back(editPoint.size() - 1);
+    this->unSelectPoint();
+    this->selectPoint(editPoint.size() - 1);
   }
   this->update();
 }
@@ -299,6 +301,56 @@ void EditMeshController::connectFixedEdge(int index1, int index2,
     this->selectIndex.push_back(index2);
   }
   this->update();
+}
+
+/**
+ * the actual remove point with edge method
+ * @param index the point to remove
+ * @param allEdge edge container
+ * @param newAllEdge new edge result
+ */
+void doRemovePoint(int index, const CDT::EdgeUSet& allEdge,
+                   CDT::EdgeUSet& newAllEdge) {
+  newAllEdge.clear();
+  for (auto& edge : allEdge) {
+    if (edge.v1() == index || edge.v2() == index) {
+      continue;
+    }
+    if (edge.v1() < index && edge.v2() < index) {
+      // addToEdgeSet(edge,edge);
+      newAllEdge.insert(edge);
+      continue;
+    }
+    auto i1 = edge.v1() > index ? edge.v1() - 1 : edge.v1();
+    auto i2 = edge.v2() > index ? edge.v2() - 1 : edge.v2();
+    newAllEdge.insert({i1, i2});
+  }
+}
+
+void EditMeshController::removePoint(int index, bool withEdge) {
+  if (!withEdge) {
+    this->editPoint.erase(editPoint.begin() + index);
+    this->update();
+    return;
+  }
+
+  CDT::EdgeUSet newAllEdge;
+  CDT::EdgeUSet newFixedEdge;
+
+  doRemovePoint(index, this->allEdge, newAllEdge);
+  doRemovePoint(index, this->fixedEdge, newFixedEdge);
+
+  this->editPoint.erase(editPoint.begin() + index);
+  this->fixedEdge = newFixedEdge;
+  this->allEdge = newAllEdge;
+  this->update();
+}
+
+void EditMeshController::removePoints(std::vector<int> index, bool withEdge) {
+  std::ranges::sort(index, std::greater<>());
+  for (int value : index) {
+    removePoint(value, withEdge);
+  }
 }
 
 void EditMeshController::upDateActiveTool() {
@@ -322,7 +374,8 @@ void EditMeshController::upDateCDT() {
   try {
     cdt.insertEdges(vec);
   } catch (...) {
-    //TODO: remind error
+    // TODO: remind error
+    qDebug() << "cdt error";
   }
 
   cdt.eraseOuterTriangles();
@@ -348,6 +401,9 @@ void EditMeshController::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 void EditMeshController::keyPressEvent(QKeyEvent* event) {
   AbstractController::keyPressEvent(event);
   if (event->key() == Qt::Key_Delete) {
+    removePoints(this->selectIndex);
+    this->upDateCDT();
+    this->unSelectPoint();
   }
 }
 
@@ -376,6 +432,9 @@ EditMeshController::EditMeshController(
     rotationController->setRadius(r->boundingRect().width() / 150);
     rotationController->setLineLength(r->boundingRect().width() / 15);
   }
+
+  this->setFlag(ItemIsFocusable, true);
+  this->grabKeyboard();
 }
 
 EditMeshController::~EditMeshController() { delete this->pointHandler; }
@@ -513,5 +572,13 @@ void EditMeshController::setActiveSelectController(
 
 std::vector<int> EditMeshController::getSelectIndex() const {
   return this->selectIndex;
+}
+
+const CDT::EdgeUSet& EditMeshController::getFixedEdge() const {
+  return this->fixedEdge;
+}
+
+const CDT::EdgeUSet& EditMeshController::getAllEdge() const {
+  return this->allEdge;
 }
 }  // namespace Scene
