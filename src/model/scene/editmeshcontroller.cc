@@ -5,6 +5,7 @@
 #include <QPainter>
 
 #include "../command/controllercommand.h"
+#include "../command/editcontrollercommand.h"
 #include "meshselectcontrollers.h"
 #include "pointeventhandler.h"
 #include "scenecontroller.h"
@@ -192,6 +193,7 @@ class EditMeshPenController : public AbstractSelectController {
   class PenEventHandler : public PointEventHandler {
    private:
     EditMeshController* mesh;
+    std::unique_ptr<Command::EditMeshControllerCommand> eventCommand;
 
    public:
     PenEventHandler(EditMeshController* controller)
@@ -204,6 +206,8 @@ class EditMeshPenController : public AbstractSelectController {
       const auto& selectIndex = mesh->getSelectIndex();
       // handle the no index situation
       // aim to add point and fixed edge
+      eventCommand = std::make_unique<Command::EditMeshControllerCommand>(mesh);
+      eventCommand->recordOldState();
       if (index == -1) {
         if (selectIndex.size() == 1) {
           mesh->addEditPoint(event->scenePos(), selectIndex[0]);
@@ -221,6 +225,17 @@ class EditMeshPenController : public AbstractSelectController {
         } else {
           mesh->selectPoint(index);
         }
+      }
+    }
+    void pointMoveEvent(int current, QGraphicsSceneMouseEvent* event) override {
+      if (current == -1) return;
+      mesh->setPointFromScene(current, event->scenePos());
+    }
+    void pointReleaseEvent(QGraphicsSceneMouseEvent* event) override {
+      if (this->eventCommand != nullptr) {
+        eventCommand->recordNewState();
+        mesh->addUndoCommand(eventCommand.release());
+        eventCommand.reset(nullptr);
       }
     }
   };
@@ -350,6 +365,18 @@ void EditMeshController::removePoints(std::vector<int> index, bool withEdge) {
   std::ranges::sort(index, std::greater<>());
   for (int value : index) {
     removePoint(value, withEdge);
+  }
+}
+
+void EditMeshController::removeFixedEdge(int index1, int index2) {
+  auto edge = CDT::Edge(index1, index2);
+  removeFixedEdge(edge);
+}
+
+void EditMeshController::removeFixedEdge(const CDT::Edge& edge) {
+  if (fixedEdge.contains(edge)) {
+    fixedEdge.erase(edge);
+    update();
   }
 }
 
@@ -580,5 +607,19 @@ const CDT::EdgeUSet& EditMeshController::getFixedEdge() const {
 
 const CDT::EdgeUSet& EditMeshController::getAllEdge() const {
   return this->allEdge;
+}
+
+
+void EditMeshController::setEditMesh(const std::vector<QPointF>& points,
+    const CDT::EdgeUSet& fixedEdge, const CDT::EdgeUSet& allEdge) {
+  this->unSelectPoint();
+  this->editPoint.clear();
+  for (const auto& point : points) {
+    editPoint.emplace_back(point.x(), point.y());
+  }
+
+  this->fixedEdge = fixedEdge;
+  this->allEdge = allEdge;
+  update();
 }
 }  // namespace Scene

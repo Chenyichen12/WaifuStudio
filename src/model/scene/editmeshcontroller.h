@@ -10,14 +10,15 @@ class EditMeshController : public AbstractController {
   PointEventHandler* pointHandler;
 
   std::vector<int> selectIndex;
-  std::vector<CDT::V2d<float>> editPoint; // the point in editMesh
-  CDT::EdgeUSet fixedEdge; // the fixed Edge in CDT
-  CDT::EdgeUSet allEdge; // all edge
+  std::vector<CDT::V2d<float>> editPoint;  // the point in editMesh
+  CDT::EdgeUSet fixedEdge;                 // the fixed Edge in CDT
+  CDT::EdgeUSet allEdge;                   // all edge
 
   int activeSelectTool = 0;
   std::array<AbstractSelectController*, 3> selectControllerTool;
 
   void upDateActiveTool();
+
  protected:
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
@@ -47,6 +48,19 @@ class EditMeshController : public AbstractController {
    * @return all edge
    */
   const CDT::EdgeUSet& getAllEdge() const;
+
+  /**
+   * set the all information of the edit point
+   * normally used by undo command
+   * it will unselect the select point because the index error
+   * @param points edit points scene position
+   * @param fixedEdge
+   * @param allEdge
+   */
+  void setEditMesh(const std::vector<QPointF>& points,
+                   const CDT::EdgeUSet& fixedEdge,
+                   const CDT::EdgeUSet& allEdge);
+
   /**
    * handle selection from the scene
    * @param sceneRect
@@ -84,8 +98,7 @@ class EditMeshController : public AbstractController {
    * transform incident to edge struct to do cdt
    * @return cdt edge
    */
-  static CDT::EdgeUSet incidentToEdge(
-      const std::vector<unsigned int>&);
+  static CDT::EdgeUSet incidentToEdge(const std::vector<unsigned int>&);
 
   /**
    * add a point to edit mesh
@@ -101,7 +114,8 @@ class EditMeshController : public AbstractController {
    * @param lastSelectIndex the old point to be connected
    * @param select if auto select the point
    */
-  void addEditPoint(const QPointF& scenePoint, int lastSelectIndex, bool select = true);
+  void addEditPoint(const QPointF& scenePoint, int lastSelectIndex,
+                    bool select = true);
 
   /**
    * connect the fix edge between two index
@@ -119,15 +133,22 @@ class EditMeshController : public AbstractController {
    */
   void upDateCDT();
 
-
-
   /**
    * remove the current index
-   * @note it may change the index of some point, if you want to remove multiPoint, should call removePoints
+   * @note it may change the index of some point, if you want to remove
+   * multiPoint, should call removePoints
    * @param index the index of editPoint
    * @param withEdge if remove the point and its edge
    */
   void removePoint(int index, bool withEdge = true);
   void removePoints(std::vector<int> index, bool withEdge = true);
+
+  /**
+   * remove the fixed edge of the edit mesh
+   * @param index1 point index
+   * @param index2 point index
+   */
+  void removeFixedEdge(int index1, int index2);
+  void removeFixedEdge(const CDT::Edge& edge);
 };
 }  // namespace Scene

@@ -22,8 +22,13 @@ class ControllerCommand : public QUndoCommand {
   ControllerCommand(Scene::AbstractController* controller,
                     QUndoCommand* parent = nullptr);
 
-  void addOldInfo(const ControllerCommandInfo& info);
-  void addNewInfo(const ControllerCommandInfo& info);
+  /**
+   * the function to record point
+   * should add record before add to undo stack
+   * @param info point info
+   */
+  virtual void addOldInfo(const ControllerCommandInfo& info);
+  virtual void addNewInfo(const ControllerCommandInfo& info);
   void undo() override;
   void redo() override;
 };
