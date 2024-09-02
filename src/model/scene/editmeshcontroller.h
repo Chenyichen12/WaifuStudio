@@ -9,10 +9,13 @@ class EditMeshController : public AbstractController {
  private:
   PointEventHandler* pointHandler;
 
-  std::vector<int> selectIndex;
+  std::unordered_set<int> selectIndex;
   std::vector<CDT::V2d<float>> editPoint;  // the point in editMesh
   CDT::EdgeUSet fixedEdge;                 // the fixed Edge in CDT
-  CDT::EdgeUSet allEdge;                   // all edge
+  CDT::EdgeUSet selectedFixEdge;           // the select Edge in CDT. it should
+                                           // be a sub set of fixedEdge
+
+  CDT::EdgeUSet allEdge;  // all edge
 
   int activeSelectTool = 0;
   std::array<AbstractSelectController*, 3> selectControllerTool;
@@ -81,6 +84,16 @@ class EditMeshController : public AbstractController {
   void unSelectPoint();
 
   /**
+   * to select edge
+   * @param fixedEdge
+   */
+  void selectFixedEdge(const CDT::Edge& fixedEdge);
+  /**
+   * to cancel the all the select
+   */
+  void unSelectFixedEdge();
+
+  /**
    * add undo command to the root
    * if no root will delete the command
    * @param command
@@ -93,6 +106,12 @@ class EditMeshController : public AbstractController {
    * @return index
    */
   std::vector<int> getSelectIndex() const;
+
+  /**
+   * get selected fix edge of the edit mesh
+   * @return selected edge
+   */
+  std::vector<CDT::Edge> getSelectedEdge() const;
 
   /**
    * transform incident to edge struct to do cdt

@@ -149,6 +149,49 @@ class EditMeshPointHandler : public PointEventHandler {
   EditMeshController* controller;
   QPointF startPoint;
 
+  /**
+   * to find the length of point to lien
+   * @param point test point
+   * @param line test line
+   * @return distance
+   */
+  static float lengthFromPointToLine(const QPointF& point, const QLineF& line) {
+    // vector va = point - line.p1()
+    QPointF va = point - line.p1();
+    // vector vb = line.p2() - line.p1()
+    QPointF vb = line.p2() - line.p1();
+
+    // calculate vb length
+    float vbLength = std::sqrt(vb.x() * vb.x() + vb.y() * vb.y());
+    float projectionLength = (va.x() * vb.x() + va.y() * vb.y()) / vbLength;
+    QPointF projectionPoint = line.p1() + (projectionLength / vbLength) * vb;
+    float distance = std::sqrt(std::pow(point.x() - projectionPoint.x(), 2) +
+                               std::pow(point.y() - projectionPoint.y(), 2));
+
+    return distance;
+  }
+
+  /**
+   * find the handler if hit one edge
+   * @param scenePoint position
+   * @param width edge width
+   * @return hit edge. if no hit return nullopt
+   */
+  std::optional<CDT::Edge> ifHitFixedEdge(const QPointF& scenePoint,
+                                          int width = 4) const {
+    const auto& fixedEdge = controller->getFixedEdge();
+    const auto& pointList = controller->getPointFromScene();
+    for (const auto& edge : fixedEdge) {
+      auto p1 = pointList[edge.v1()];
+      auto p2 = pointList[edge.v2()];
+      float d = lengthFromPointToLine(scenePoint, {p1, p2});
+      if (d < width) {
+        return edge;
+      }
+    }
+    return std::nullopt;
+  }
+
  protected:
   void pointMoveEvent(int current, QGraphicsSceneMouseEvent* event) override {
     if (current == -1) {
@@ -157,12 +200,19 @@ class EditMeshPointHandler : public PointEventHandler {
     controller->setPointFromScene(current, event->scenePos());
   }
   void pointPressedEvent(int index, QGraphicsSceneMouseEvent* event) override {
-    if (index == -1) {
+    // if modifier is not shift should unselect all select item
+    if (event->modifiers() != Qt::ShiftModifier) {
       controller->unSelectPoint();
-    } else {
-      if (event->modifiers() != Qt::ShiftModifier) {
-        controller->unSelectPoint();
+      controller->unSelectFixedEdge();
+    }
+    if (index == -1) {
+      auto scale = getScaleFromTheView(controller->scene(), event->widget());
+      auto edge = this->ifHitFixedEdge(event->scenePos(), 3.0 / scale);
+      if (edge.has_value()) {
+        // select fix edge
+        controller->selectFixedEdge(edge.value());
       }
+    } else {
       controller->selectPoint(index);
       startPoint = controller->getPointFromScene()[index];
       event->accept();
@@ -313,7 +363,7 @@ void EditMeshController::connectFixedEdge(int index1, int index2,
   this->fixedEdge.insert(edge);
   if (selectIndex2) {
     this->selectIndex.clear();
-    this->selectIndex.push_back(index2);
+    this->selectIndex.insert(index2);
   }
   this->update();
 }
@@ -428,9 +478,25 @@ void EditMeshController::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 void EditMeshController::keyPressEvent(QKeyEvent* event) {
   AbstractController::keyPressEvent(event);
   if (event->key() == Qt::Key_Delete) {
-    removePoints(this->selectIndex);
+    // delete select point and record undo command
+    // may need to be abstract
+    auto command = std::make_unique<Command::EditMeshControllerCommand>(this);
+    command->recordOldState();
+
+    // should first remove edge of the edit mesh
+    // in order to remove right index
+    for (const auto& edge : this->selectedFixEdge) {
+      removeFixedEdge(edge);
+    }
+    auto selectVec = std::vector<int>();
+    selectVec.assign(selectIndex.begin(), selectIndex.end());
+    removePoints(selectVec);
     this->upDateCDT();
     this->unSelectPoint();
+    this->unSelectFixedEdge();
+
+    command->recordNewState();
+    this->addUndoCommand(command.release());
   }
 }
 
@@ -486,8 +552,19 @@ void EditMeshController::paint(QPainter* painter,
     painter->drawLine(QPointF(v1.x, v1.y), QPointF(v2.x, v2.y));
   }
 
+  // draw the select edge
+  auto selectEdgePen = QPen(Qt::green);
+  selectEdgePen.setWidth(static_cast<int>(1 / scale));
+  painter->setPen(selectEdgePen);
+  for (const auto& edge : this->selectedFixEdge) {
+    auto v1 = editPoint[edge.v1()];
+    auto v2 = editPoint[edge.v2()];
+    painter->drawLine(QPointF(v1.x, v1.y), QPointF(v2.x, v2.y));
+  }
+
   // the notFixed edge use transparent pen
   auto noFixedPen = QPen(Qt::black);
+  noFixedPen.setWidth(static_cast<int>(1 / scale));
   noFixedPen.setColor(QColor(255, 255, 255, 128));
   painter->setPen(noFixedPen);
   for (const auto& edge : this->allEdge) {
@@ -547,7 +624,7 @@ void EditMeshController::selectAtScene(QRectF sceneRect) {
     const auto& vertex = editPoint[i];
     auto p = QPointF(vertex.x, vertex.y);
     if (sceneRect.contains(p)) {
-      this->selectIndex.push_back(i);
+      this->selectIndex.insert(i);
     }
   }
 
@@ -568,15 +645,30 @@ void EditMeshController::setPointFromScene(int index,
 }
 
 void EditMeshController::selectPoint(int index) {
-  this->selectIndex.push_back(index);
-  upDateActiveTool();
-  this->update();
+  // select only smaller than size
+  if (this->editPoint.size() > index) {
+    this->selectIndex.insert(index);
+    upDateActiveTool();
+    this->update();
+  }
 }
 
 void EditMeshController::unSelectPoint() {
   this->selectIndex.clear();
   upDateActiveTool();
   this->update();
+}
+
+void EditMeshController::selectFixedEdge(const CDT::Edge& fixed_edge) {
+  if (this->fixedEdge.contains(fixed_edge)) {
+    this->selectedFixEdge.insert(fixed_edge);
+    update();
+  }
+}
+
+void EditMeshController::unSelectFixedEdge() {
+  this->selectedFixEdge.clear();
+  update();
 }
 
 void EditMeshController::addUndoCommand(QUndoCommand* command) const {
@@ -598,7 +690,11 @@ void EditMeshController::setActiveSelectController(
 }
 
 std::vector<int> EditMeshController::getSelectIndex() const {
-  return this->selectIndex;
+  return {selectIndex.begin(), selectIndex.end()};
+}
+
+std::vector<CDT::Edge> EditMeshController::getSelectedEdge() const {
+  return {selectedFixEdge.begin(), selectedFixEdge.end()};
 }
 
 const CDT::EdgeUSet& EditMeshController::getFixedEdge() const {
@@ -609,9 +705,9 @@ const CDT::EdgeUSet& EditMeshController::getAllEdge() const {
   return this->allEdge;
 }
 
-
 void EditMeshController::setEditMesh(const std::vector<QPointF>& points,
-    const CDT::EdgeUSet& fixedEdge, const CDT::EdgeUSet& allEdge) {
+                                     const CDT::EdgeUSet& fixedEdge,
+                                     const CDT::EdgeUSet& allEdge) {
   this->unSelectPoint();
   this->editPoint.clear();
   for (const auto& point : points) {
