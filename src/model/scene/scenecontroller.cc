@@ -100,6 +100,8 @@ void RootController::setUndoStack(QUndoStack* stack) {
   this->controllerUndoStack = stack;
 }
 
+void RootController::clearUndoStack() { this->controllerUndoStack->clear(); }
+
 void RootController::pushUndoCommand(QUndoCommand* command) {
   if (controllerUndoStack != nullptr) {
     this->controllerUndoStack->push(command);

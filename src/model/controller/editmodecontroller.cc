@@ -43,6 +43,15 @@ ProjectModel::BitmapLayer* Controller::EditModeController::getFirstSelectLayer()
   return firstSelectLayer;
 }
 
+bool warnUndoClear() {
+  QMessageBox msgBox;
+  msgBox.setText("The undo stack will be cleared, do you want to continue?");
+  msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+  msgBox.setDefaultButton(QMessageBox::No);
+
+  return msgBox.exec() == QMessageBox::Yes;
+}
+
 void Controller::EditModeController::handleFailLeaveEditMode() const {
   QMessageBox::warning(nullptr, "Warning", "Mesh not complete");
   if (topBar) {
@@ -118,6 +127,15 @@ void Controller::EditModeController::handleLeaveEditMode() {
     this->handleFailLeaveEditMode();
     return;
   }
+
+  if (!warnUndoClear()) {
+    if (topBar) {
+      topBar->setEditBtnChecked(true);
+    }
+    return;
+  }
+
+  
   this->scene->setSceneMode(Scene::MainStageScene::SceneMode::NORMAL);
   if (view != nullptr) this->view->getToolBar()->setEnableTool(2, false);
 
@@ -125,4 +143,6 @@ void Controller::EditModeController::handleLeaveEditMode() {
     disabled_widget->setDisabled(false);
   }
   this->scene->getControllerRoot()->removeEditMeshController();
+  // need to clear undo stack because of the memory has changed
+  this->scene->getControllerRoot()->clearUndoStack();
 }

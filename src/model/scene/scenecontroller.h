@@ -140,6 +140,8 @@ class RootController : public AbstractController {
    * @param stack
    */
   void setUndoStack(QUndoStack* stack);
+
+  void clearUndoStack();
   void pushUndoCommand(QUndoCommand* command);
 
   /**
