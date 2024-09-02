@@ -169,5 +169,11 @@ class EditMeshController : public AbstractController {
    */
   void removeFixedEdge(int index1, int index2);
   void removeFixedEdge(const CDT::Edge& edge);
+
+  /**
+   * to test the edit mesh if fit the mesh rule
+   * @return test result
+   */
+  bool ifValidTriangle() const;
 };
 }  // namespace Scene

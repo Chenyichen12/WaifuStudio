@@ -430,6 +430,36 @@ void EditMeshController::removeFixedEdge(const CDT::Edge& edge) {
   }
 }
 
+bool EditMeshController::ifValidTriangle() const {
+  if (editPoint.empty()) {
+    return false;
+  }
+  CDT::Triangulation<float> cdt;
+  cdt.insertVertices(editPoint);
+  CDT::EdgeVec vec;
+  vec.assign(fixedEdge.begin(), fixedEdge.end());
+  try {
+    cdt.insertEdges(vec);
+  } catch (...) {
+    return false;
+  }
+
+  cdt.eraseOuterTriangles();
+  std::unordered_set<unsigned int> triIndex;
+
+  for (const auto& triangle : cdt.triangles) {
+    const auto& v = triangle.vertices;
+    triIndex.insert(v[0]);
+    triIndex.insert(v[1]);
+    triIndex.insert(v[2]);
+  }
+  if (triIndex.size() != editPoint.size()) {
+    return false;
+  }
+
+  return true;
+}
+
 void EditMeshController::upDateActiveTool() {
   auto pList = std::vector<QPointF>();
   for (int select_index : this->selectIndex) {
