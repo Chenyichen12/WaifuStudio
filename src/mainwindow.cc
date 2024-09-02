@@ -97,17 +97,13 @@ void MainWindow::setUpMainStage() {
 
   // connect the topbar edit mode handler
   auto editController = new Controller::EditModeController(
-      currentProject->getScene(), currentProject->getLayerModel(),
-      ui->MainStageGraphicsView, currentProject);
-
+      currentProject->getScene(), currentProject->getLayerModel());
+  editController->setView(ui->MainStageGraphicsView);
+  editController->setTopBar(ui->MainStageTopBar);
   editController->setDisabledWidget({ui->controllerTree, ui->psTree});
+
   // ui reset
   ui->MainStageTopBar->reset();
-  connect(ui->MainStageTopBar, &views::MainStageTopBar::enterEditMode,
-          editController, &Controller::EditModeController::handleEnterEditMode);
-  connect(ui->MainStageTopBar, &views::MainStageTopBar::leaveEditMode,
-          editController, &Controller::EditModeController::handleLeaveEditMode);
-
   ui->MainStageGraphicsView->makeCurrent();
   currentProject->getScene()->initGL();
   ui->MainStageGraphicsView->doneCurrent();

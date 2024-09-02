@@ -44,6 +44,8 @@ class LayerModel : public QObject {
    * by call this function it will not emit the selectionChanged signal
    * some layer has the same id in psd tree and controller tree. They will also
    * be selected
+   *
+   * default select way is clear and select
    * @param selectionId layerId
    */
   void selectItems(const std::vector<int>& selectionId);

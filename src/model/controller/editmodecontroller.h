@@ -13,6 +13,7 @@ class BitmapLayer;
 
 namespace views {
 class MainGlGraphicsView;
+class MainStageTopBar;
 }
 
 class QWidget;
@@ -22,7 +23,11 @@ class EditModeController : public QObject {
  private:
   Scene::MainStageScene* scene;
   ProjectModel::LayerModel* layerModel;
-  views::MainGlGraphicsView* view;
+
+  // should check the nullptr of these optional object
+  views::MainGlGraphicsView* view = nullptr;
+  views::MainStageTopBar* topBar = nullptr;
+  Scene::EditMeshController* currentEditMeshController = nullptr;
   /**
    * in some time we should disable some widget when enter the edit model
    * such as the tree view to defence to modify  of the layer
@@ -36,10 +41,12 @@ class EditModeController : public QObject {
    * @return
    */
   ProjectModel::BitmapLayer* getFirstSelectLayer() const;
+
+  void handleFailLeaveEditMode() const;
+
  public:
   EditModeController(Scene::MainStageScene* scene,
                      ProjectModel::LayerModel* layerModel,
-                     views::MainGlGraphicsView* views,
                      QObject* parent = nullptr);
   ~EditModeController() override;
 
@@ -48,6 +55,23 @@ class EditModeController : public QObject {
    * @param widgets
    */
   void setDisabledWidget(const QList<QWidget*>& widgets);
+
+  /**
+   * set the view
+   * will auto add view toolbar in edit mode and hide when leave
+   * @param view 
+   */
+  void setView(views::MainGlGraphicsView* view);
+
+  /**
+   * set the toolBar
+   * will auto set the edit mode button checked state when enter or leave or error
+   * and auto connect the enter and leave edit mode signal
+   * @param topBar 
+   */
+  void setTopBar(views::MainStageTopBar* topBar);
+
+  bool isEditMode() const { return currentEditMeshController != nullptr; }
  public slots:
   void handleEnterEditMode();
   void handleLeaveEditMode();

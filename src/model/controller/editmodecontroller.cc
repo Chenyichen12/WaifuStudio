@@ -1,6 +1,7 @@
 #include "editmodecontroller.h"
 
 #include <QItemSelectionModel>
+#include <QMessageBox>
 
 #include "../model/layer_model.h"
 #include "../scene/editmeshcontroller.h"
@@ -10,6 +11,7 @@
 #include "model/tree_manager.h"
 #include "views/mainglstage.h"
 #include "views/mainstagesidetoolbar.h"
+#include "views/mainstagetopbar.h"
 
 ProjectModel::BitmapLayer* Controller::EditModeController::getFirstSelectLayer()
     const {
@@ -41,13 +43,19 @@ ProjectModel::BitmapLayer* Controller::EditModeController::getFirstSelectLayer()
   return firstSelectLayer;
 }
 
+void Controller::EditModeController::handleFailLeaveEditMode() const {
+  QMessageBox::warning(nullptr, "Warning", "Mesh not complete");
+  if (topBar) {
+    topBar->setEditBtnChecked(true); 
+  }
+}
+
 Controller::EditModeController::EditModeController(
     Scene::MainStageScene* scene, ProjectModel::LayerModel* layerModel,
-    views::MainGlGraphicsView* view, QObject* parent)
+    QObject* parent)
     : QObject(parent) {
   this->scene = scene;
   this->layerModel = layerModel;
-  this->view = view;
 }
 
 Controller::EditModeController::~EditModeController() = default;
@@ -57,19 +65,38 @@ void Controller::EditModeController::setDisabledWidget(
   this->disabledWidgets = widgets;
 }
 
+void Controller::EditModeController::setView(views::MainGlGraphicsView* view) {
+  this->view = view;
+}
+
+void Controller::EditModeController::setTopBar(views::MainStageTopBar* topBar) {
+  this->topBar = topBar;
+  connect(topBar, &views::MainStageTopBar::enterEditMode,
+          this, &Controller::EditModeController::handleEnterEditMode);
+  connect(topBar, &views::MainStageTopBar::leaveEditMode, this,
+          &Controller::EditModeController::handleLeaveEditMode);
+}
+
+
 void Controller::EditModeController::handleEnterEditMode() {
   auto editLayer = this->getFirstSelectLayer();
   // get the actual mesh to edit
   auto mesh = scene->getRenderGroup()->findMesh(editLayer->getId());
   if (mesh == nullptr) {
+    topBar->setEditBtnChecked(false);
+    if (topBar) {
+      topBar->setEditBtnChecked(false);
+    }
     return;
   }
 
   // create edit controller
+  // root will manage the controller so not need to delete
   auto editController = new Scene::EditMeshController(
       mesh->getVertices(), mesh->getIncident(), scene->getControllerRoot());
   // add to scene
   scene->getControllerRoot()->setEditMeshController(editController);
+  currentEditMeshController = editController;
 
   // change selection
   if (!editLayer->data(ProjectModel::VisibleRole).toBool()) {
@@ -78,17 +105,24 @@ void Controller::EditModeController::handleEnterEditMode() {
   this->layerModel->selectItems({editLayer->getId()});
   this->scene->setSceneMode(Scene::MainStageScene::SceneMode::EDIT);
 
-  this->view->getToolBar()->setEnableTool(2, true);
+  if (view != nullptr) view->getToolBar()->setEnableTool(2, true);
+
   for (const auto& disabled_widget : this->disabledWidgets) {
     disabled_widget->setDisabled(true);
   }
 }
 
 void Controller::EditModeController::handleLeaveEditMode() {
+  if (currentEditMeshController != nullptr &&
+      !currentEditMeshController->ifValidTriangle()) {
+    this->handleFailLeaveEditMode();
+    return;
+  }
   this->scene->setSceneMode(Scene::MainStageScene::SceneMode::NORMAL);
-  this->view->getToolBar()->setEnableTool(2, false);
+  if (view != nullptr) this->view->getToolBar()->setEnableTool(2, false);
+
   for (const auto& disabled_widget : this->disabledWidgets) {
     disabled_widget->setDisabled(false);
   }
   this->scene->getControllerRoot()->removeEditMeshController();
- }
+}

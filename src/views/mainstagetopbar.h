@@ -14,6 +14,14 @@ class MainStageTopBar : public QWidget {
    * reset the first state
    */
   void reset();
+
+  /**
+   * set the check state of the edit button
+   * will block the signals of edit mode
+   * @param checked
+   */
+  void setEditBtnChecked(bool checked);
+
  signals:
   void enterEditMode();
   void leaveEditMode();
