@@ -41,7 +41,9 @@ class EditMeshActualRectController : public AbstractRectSelectController {
 
  public:
   explicit EditMeshActualRectController(EditMeshController* controller)
-      : AbstractRectSelectController(controller), editMesh(controller) {}
+      : AbstractRectSelectController(controller), editMesh(controller) {
+    this->setVisible(false);
+  }
 
  protected:
   std::vector<int> getSelectIndex() override {
@@ -108,6 +110,7 @@ class EditMeshRotationController : public AbstractRotationSelectController {
   explicit EditMeshRotationController(EditMeshController* controller)
       : AbstractRotationSelectController(controller) {
     this->editMesh = controller;
+    this->setVisible(false);
   }
 
  protected:

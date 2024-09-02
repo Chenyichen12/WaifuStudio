@@ -18,7 +18,9 @@ class MeshActualRectController : public AbstractRectSelectController {
 
  public:
   explicit MeshActualRectController(MeshController* controller)
-      : AbstractRectSelectController(controller), mesh(controller) {}
+      : AbstractRectSelectController(controller), mesh(controller) {
+    this->setVisible(false);
+  }
 
  protected:
   std::vector<int> getSelectIndex() override {
@@ -88,6 +90,7 @@ class MeshRotationSelectController : public AbstractRotationSelectController {
   explicit MeshRotationSelectController(MeshController* controller)
       : AbstractRotationSelectController(controller), controller(controller) {
     ifAutoMoveUpdate = false;
+    this->setVisible(false);
   }
 
  protected:
@@ -250,7 +253,7 @@ MeshController::MeshController(Mesh* controlMesh, QGraphicsItem* parent)
     rotationController->setRadius(r->boundingRect().width() / 150);
     rotationController->setLineLength(r->boundingRect().width() / 15);
   }
-  this->setActiveSelectController(RectController);
+  this->MeshController::setActiveSelectController(RectController);
 }
 
 void MeshController::setActiveSelectController(

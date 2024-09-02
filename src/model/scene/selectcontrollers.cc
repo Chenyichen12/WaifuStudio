@@ -14,8 +14,8 @@ AbstractSelectController::AbstractSelectController(QGraphicsItem* parent)
 
 void AbstractSelectController::setBoundRect(
     const std::vector<QPointF>& pointList) {
-  auto boundRect = AbstractSelectController::boundRectFromPoints(pointList);
-  this->setBoundRect(boundRect);
+  auto bound_rect = AbstractSelectController::boundRectFromPoints(pointList);
+  this->setBoundRect(bound_rect);
 }
 
 void AbstractSelectController::setBoundRect(const QRectF& rect) {
