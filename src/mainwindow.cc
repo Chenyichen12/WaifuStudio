@@ -4,7 +4,7 @@
 #include "mainwindow.h"
 
 #include "QFileDialog"
-#include "model/controller/editmodecontroller.h"
+#include "controller/editmodecontroller.h"
 #include "model/layer_model.h"
 #include "model/project.h"
 #include "model/scene/mainstagescene.h"

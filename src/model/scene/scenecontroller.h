@@ -160,9 +160,19 @@ class RootController : public AbstractController {
 
   /**
    * to remove edit controller and release memory
-   * @param controller 
    */
   void removeEditMeshController();
+  /**
+   * move the edit controller owner's to caller
+   * @return if success release the controller
+   */
+  bool releaseEditMeshController();
+
+  /**
+   * get edit controller
+   * @return edit controller
+   */
+  AbstractController* getEditMeshController() const;
 
   /**
    * the general function to find the root controller

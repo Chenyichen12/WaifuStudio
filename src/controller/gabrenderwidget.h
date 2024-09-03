@@ -1,6 +1,6 @@
 #pragma once
 #include <QOpenglWidget>
-#include "../scene/mesh.h"
+#include "model/scene/mesh.h"
 class QOpenGLShaderProgram;
 namespace Controller {
 class RenderMesh;

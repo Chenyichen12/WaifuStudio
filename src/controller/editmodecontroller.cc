@@ -3,8 +3,8 @@
 #include <QItemSelectionModel>
 #include <QMessageBox>
 
-#include "../model/layer_model.h"
-#include "../scene/editmeshcontroller.h"
+#include "model/layer_model.h"
+#include "model/scene/editmeshcontroller.h"
 #include "model/layer.h"
 #include "model/scene/mainstagescene.h"
 #include "model/scene/meshrendergroup.h"
@@ -12,8 +12,9 @@
 #include "views/mainglstage.h"
 #include "views/mainstagesidetoolbar.h"
 #include "views/mainstagetopbar.h"
+namespace Controller {
 
-ProjectModel::BitmapLayer* Controller::EditModeController::getFirstSelectLayer()
+ProjectModel::BitmapLayer* EditModeController::getFirstSelectLayer()
     const {
   const auto& layerSelection =
       this->layerModel->getControllerTreeSelectionModel()->selection();
@@ -52,14 +53,14 @@ bool warnUndoClear() {
   return msgBox.exec() == QMessageBox::Yes;
 }
 
-void Controller::EditModeController::handleFailLeaveEditMode() const {
+void EditModeController::handleFailLeaveEditMode() const {
   QMessageBox::warning(nullptr, "Warning", "Mesh not complete");
   if (topBar) {
-    topBar->setEditBtnChecked(true); 
+    topBar->setEditBtnChecked(true);
   }
 }
 
-Controller::EditModeController::EditModeController(
+EditModeController::EditModeController(
     Scene::MainStageScene* scene, ProjectModel::LayerModel* layerModel,
     QObject* parent)
     : QObject(parent) {
@@ -67,27 +68,26 @@ Controller::EditModeController::EditModeController(
   this->layerModel = layerModel;
 }
 
-Controller::EditModeController::~EditModeController() = default;
+EditModeController::~EditModeController() = default;
 
-void Controller::EditModeController::setDisabledWidget(
+void EditModeController::setDisabledWidget(
     const QList<QWidget*>& widgets) {
   this->disabledWidgets = widgets;
 }
 
-void Controller::EditModeController::setView(views::MainGlGraphicsView* view) {
+void EditModeController::setView(views::MainGlGraphicsView* view) {
   this->view = view;
 }
 
-void Controller::EditModeController::setTopBar(views::MainStageTopBar* topBar) {
+void EditModeController::setTopBar(views::MainStageTopBar* topBar) {
   this->topBar = topBar;
-  connect(topBar, &views::MainStageTopBar::enterEditMode,
-          this, &Controller::EditModeController::handleEnterEditMode);
+  connect(topBar, &views::MainStageTopBar::enterEditMode, this,
+          &Controller::EditModeController::handleEnterEditMode);
   connect(topBar, &views::MainStageTopBar::leaveEditMode, this,
           &Controller::EditModeController::handleLeaveEditMode);
 }
 
-
-void Controller::EditModeController::handleEnterEditMode() {
+void EditModeController::handleEnterEditMode() {
   auto editLayer = this->getFirstSelectLayer();
   // get the actual mesh to edit
   auto mesh = scene->getRenderGroup()->findMesh(editLayer->getId());
@@ -121,7 +121,7 @@ void Controller::EditModeController::handleEnterEditMode() {
   }
 }
 
-void Controller::EditModeController::handleLeaveEditMode() {
+void EditModeController::handleLeaveEditMode() {
   if (currentEditMeshController != nullptr &&
       !currentEditMeshController->ifValidTriangle()) {
     this->handleFailLeaveEditMode();
@@ -135,7 +135,6 @@ void Controller::EditModeController::handleLeaveEditMode() {
     return;
   }
 
-  
   this->scene->setSceneMode(Scene::MainStageScene::SceneMode::NORMAL);
   if (view != nullptr) this->view->getToolBar()->setEnableTool(2, false);
 
@@ -146,3 +145,4 @@ void Controller::EditModeController::handleLeaveEditMode() {
   // need to clear undo stack because of the memory has changed
   this->scene->getControllerRoot()->clearUndoStack();
 }
+}  // namespace Controller

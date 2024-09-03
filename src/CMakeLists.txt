@@ -2,9 +2,11 @@ project(WaifuStudio)
 
 file(GLOB_RECURSE ModelSource model/*.h model/*.cc)
 
+file(GLOB_RECURSE ControllerSource controller/*.h controller/*.cc)
+
 file(GLOB ViewSource views/*.h views/*.cc)
 
-set(SOURCE ${ModelSource} ${ViewSource} mainwindow.cc psdparser.cc)
+set(SOURCE ${ModelSource} ${ViewSource} ${ControllerSource} mainwindow.cc psdparser.cc)
 
 file(GLOB HEADER include/*.h)
 

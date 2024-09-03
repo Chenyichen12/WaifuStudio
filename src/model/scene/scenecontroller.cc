@@ -141,6 +141,20 @@ void RootController::removeEditMeshController() {
   }
 }
 
+bool RootController::releaseEditMeshController() {
+  if (editController != nullptr) {
+    editController->setControllerParent(nullptr);
+    editController->setParentItem(nullptr);
+    editController = nullptr;
+    return true;
+  }
+  return false;
+}
+
+AbstractController* RootController::getEditMeshController() const {
+  return editController;
+}
+
 RootController* RootController::findRootController(
     const AbstractController* controller) {
   // should use parentItem because some controller parent is set after create
