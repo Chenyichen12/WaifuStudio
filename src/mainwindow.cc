@@ -95,9 +95,10 @@ void MainWindow::setUpMainStage() {
       ui->MainStageGraphicsView, &views::MainGlGraphicsView::mouseSelectClick,
       currentProject->getScene(), &Scene::MainStageScene::handleSelectClick);
 
-  // connect the topbar edit mode handler
+  // connect the top bar edit mode handler
   auto editController = new Controller::EditModeController(
-      currentProject->getScene(), currentProject->getLayerModel());
+      currentProject->getScene(), currentProject->getLayerModel(),currentProject);
+  editController->setUndoStack(currentProject->getUndoStack());
   editController->setView(ui->MainStageGraphicsView);
   editController->setTopBar(ui->MainStageTopBar);
   editController->setDisabledWidget({ui->controllerTree, ui->psTree});

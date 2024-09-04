@@ -108,51 +108,13 @@ void RootController::pushUndoCommand(QUndoCommand* command) {
   }
 }
 
-void RootController::setActiveSelectController(ActiveSelectController controller) {
+void RootController::setActiveSelectController(
+    ActiveSelectController controller) {
   this->activeSelectController = controller;
   this->forEachController([&](AbstractController* c) {
     c->setActiveSelectController(controller);
     return true;
   });
-}
-
-void RootController::setEditMeshController(AbstractController* controller) {
-  // delete the pre controller if so
-  if (this->editController != nullptr) {
-    removeEditMeshController();
-  }
-  controller->setControllerParent(this);
-  controller->setActiveSelectController(this->activeSelectController);
-  forEachController([&](auto c) {
-    if (c->type() != EditMeshControllerType) {
-      c->unSelectTheController();
-    }
-    return true;
-  });
-  this->editController = controller;
-}
-
-
-void RootController::removeEditMeshController() {
-  if (editController != nullptr) {
-    editController->setControllerParent(nullptr);
-    delete editController;
-    editController = nullptr; 
-  }
-}
-
-bool RootController::releaseEditMeshController() {
-  if (editController != nullptr) {
-    editController->setControllerParent(nullptr);
-    editController->setParentItem(nullptr);
-    editController = nullptr;
-    return true;
-  }
-  return false;
-}
-
-AbstractController* RootController::getEditMeshController() const {
-  return editController;
 }
 
 RootController* RootController::findRootController(
@@ -166,5 +128,12 @@ RootController* RootController::findRootController(
     parent = parent->parentItem();
   }
   return nullptr;
+}
+
+void RootController::unSelectAllController() const {
+  this->forEachController([](auto c) {
+    c->unSelectTheController();
+    return true;
+  });
 }
 }  // namespace Scene

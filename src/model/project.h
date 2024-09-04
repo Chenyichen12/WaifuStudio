@@ -13,6 +13,9 @@ class LayerModel;
 class BitmapManager;
 class Project;
 
+/**
+ * the builder to build project
+ */
 class ProjectBuilder {
  private:
   BitmapManager* manager = nullptr;
@@ -20,6 +23,10 @@ class ProjectBuilder {
   Scene::MainStageScene* sceneModel = nullptr;
 
  protected:
+  /**
+   * the default function to set up a scene
+   * use the default way to create mesh
+   */
   void setUpScene();
 
  public:
@@ -31,6 +38,11 @@ class ProjectBuilder {
   void setLayerModel(LayerModel*);
   ProjectBuilder() = default;
 };
+
+/**
+ * the project model
+ * contains all model data in project
+ */
 class Project : public QObject {
   friend ProjectBuilder;
 
@@ -45,7 +57,7 @@ class Project : public QObject {
   BitmapManager* getBitmapManager() const { return bitmapManager; }
   LayerModel* getLayerModel() const { return layerModel; }
   Scene::MainStageScene* getScene() const;
-  
+  QUndoStack* getUndoStack() const { return undoStack; }
   void undo();
   void redo();
 };

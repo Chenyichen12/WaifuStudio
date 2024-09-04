@@ -184,6 +184,7 @@ void MainStageScene::handleToolChanged(int index) {
       break;
     case 2:
       controllerRoot->setActiveSelectController(PenController);
+      break;
     default:
       break;
   }

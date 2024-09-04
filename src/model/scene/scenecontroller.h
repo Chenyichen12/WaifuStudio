@@ -118,7 +118,6 @@ class RootController : public AbstractController {
   QUndoStack* controllerUndoStack = nullptr;
   ActiveSelectController activeSelectController = RectController;
 
-  AbstractController* editController = nullptr;
  public:
   RootController(int width, int height);
   QRectF boundingRect() const override;
@@ -151,28 +150,6 @@ class RootController : public AbstractController {
    */
   void setActiveSelectController(ActiveSelectController controller) override;
 
-  /**
-   * call this to add controller to edit
-   * take the ownership  of the controller
-   * @param controller 
-   */
-  void setEditMeshController(AbstractController* controller);
-
-  /**
-   * to remove edit controller and release memory
-   */
-  void removeEditMeshController();
-  /**
-   * move the edit controller owner's to caller
-   * @return if success release the controller
-   */
-  bool releaseEditMeshController();
-
-  /**
-   * get edit controller
-   * @return edit controller
-   */
-  AbstractController* getEditMeshController() const;
 
   /**
    * the general function to find the root controller
@@ -180,6 +157,11 @@ class RootController : public AbstractController {
    * @return 
    */
   static RootController* findRootController(const AbstractController* controller);
+
+  /**
+   * call the unselected function to all controller
+   */
+  void unSelectAllController() const;
 };
 
 

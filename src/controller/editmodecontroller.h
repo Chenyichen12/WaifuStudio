@@ -1,6 +1,9 @@
 #pragma once
 #include <QObject>
 
+class QUndoCommand;
+class QUndoStack;
+
 namespace Scene {
 class MainStageScene;
 class EditMeshController;
@@ -19,6 +22,8 @@ class MainStageTopBar;
 class QWidget;
 
 namespace Controller {
+class UiEditCommand;
+
 class EditModeController : public QObject {
  private:
   Scene::MainStageScene* scene;
@@ -28,6 +33,8 @@ class EditModeController : public QObject {
   views::MainGlGraphicsView* view = nullptr;
   views::MainStageTopBar* topBar = nullptr;
   Scene::EditMeshController* currentEditMeshController = nullptr;
+
+  QUndoStack* undoStack = nullptr;
   /**
    * in some time we should disable some widget when enter the edit model
    * such as the tree view to defence to modify  of the layer
@@ -44,12 +51,29 @@ class EditModeController : public QObject {
 
   void handleFailLeaveEditMode() const;
 
+  /**
+   * create ui undo command
+   * not contains model changed
+   * just change ui appearance
+   * @param parent undo command parent
+   * @return 
+   */
+  UiEditCommand* createUiEditCommand(QUndoCommand* parent = nullptr) const;
+
  public:
   EditModeController(Scene::MainStageScene* scene,
                      ProjectModel::LayerModel* layerModel,
                      QObject* parent = nullptr);
   ~EditModeController() override;
 
+  /**
+   * controller will have editing current edit controller
+   * the controller will be used to create model command
+   * should be used carefully
+   * @param currentEditMesh mesh controllers
+   */
+  void setCurrentEditMeshController(
+      Scene::EditMeshController* currentEditMesh);
   /**
    * set the disabled widget when enter edit
    * @param widgets
@@ -72,6 +96,12 @@ class EditModeController : public QObject {
   void setTopBar(views::MainStageTopBar* topBar);
 
   bool isEditMode() const { return currentEditMeshController != nullptr; }
+
+  /**
+   * controller will do some command when handler edit mode
+   * @param stack 
+   */
+  void setUndoStack(QUndoStack* stack);
  public slots:
   void handleEnterEditMode();
   void handleLeaveEditMode();

@@ -2,10 +2,11 @@
 
 #include <QItemSelectionModel>
 #include <QMessageBox>
+#include <QUndoCommand>
 
+#include "model/layer.h"
 #include "model/layer_model.h"
 #include "model/scene/editmeshcontroller.h"
-#include "model/layer.h"
 #include "model/scene/mainstagescene.h"
 #include "model/scene/meshrendergroup.h"
 #include "model/tree_manager.h"
@@ -13,9 +14,122 @@
 #include "views/mainstagesidetoolbar.h"
 #include "views/mainstagetopbar.h"
 namespace Controller {
+/**
+ * the command when controller enter edit mode
+ */
+class AbstractSceneEditCommand : public QUndoCommand {
+ private:
+  Scene::MainStageScene* scene;
+  bool ifOwnController = true;
 
-ProjectModel::BitmapLayer* EditModeController::getFirstSelectLayer()
-    const {
+ protected:
+  Scene::EditMeshController* newController;
+  virtual void leave() {
+    scene->setSceneMode(Scene::MainStageScene::SceneMode::NORMAL);
+    newController->setParentItem(nullptr);
+    newController->setControllerParent(nullptr);
+    scene->removeItem(newController);
+    ifOwnController = true;
+  }
+  virtual void enter() {
+    scene->getControllerRoot()->unSelectAllController();
+    scene->setSceneMode(Scene::MainStageScene::SceneMode::EDIT);
+    newController->setParentItem(scene->getControllerRoot());
+    newController->setControllerParent(scene->getControllerRoot());
+
+    // if add to scene it will no longer own the controller
+    ifOwnController = false;
+  }
+
+ public:
+  AbstractSceneEditCommand(Scene::MainStageScene* scene,
+                           Scene::EditMeshController* controller,
+                           QUndoCommand* parent = nullptr)
+      : QUndoCommand(parent), scene(scene), newController(controller) {}
+  ~AbstractSceneEditCommand() override {
+    if (ifOwnController) {
+      delete newController;
+    }
+  }
+
+  void redo() override = 0;
+  void undo() override = 0;
+};
+class SceneEditCommand : public AbstractSceneEditCommand {
+ private:
+  EditModeController* controller;
+
+ protected:
+  bool isLeave = true;
+  void leave() override {
+    AbstractSceneEditCommand::leave();
+    controller->setCurrentEditMeshController(nullptr);
+  }
+  void enter() override {
+    AbstractSceneEditCommand::enter();
+    controller->setCurrentEditMeshController(newController);
+  }
+
+ public:
+  SceneEditCommand(Scene::MainStageScene* scene,
+                   Scene::EditMeshController* controller,
+                   EditModeController* editModeController,
+                   QUndoCommand* parent = nullptr)
+      : AbstractSceneEditCommand(scene, controller, parent),
+        controller(editModeController) {}
+  void setIsLeave(bool isLeave) { this->isLeave = isLeave; }
+  void redo() override { isLeave ? leave() : enter(); }
+  void undo() override { isLeave ? enter() : leave(); }
+};
+
+class UiEditCommand : QUndoCommand {
+ protected:
+  void leave() {
+    if (view) {
+      view->getToolBar()->setEnableTool(2, false);
+    }
+    if (topBar) {
+      topBar->setEditBtnChecked(false);
+    }
+    for (const auto& disabled_widget : disabledWidgets) {
+      disabled_widget->setDisabled(false);
+    }
+  }
+  void enter() {
+    if (view) {
+      view->getToolBar()->setEnableTool(2, true);
+    }
+    if (topBar) {
+      topBar->setEditBtnChecked(true);
+    }
+    for (const auto& disabled_widget : disabledWidgets) {
+      disabled_widget->setDisabled(true);
+    }
+  }
+
+ public:
+  UiEditCommand(QUndoCommand* parent = nullptr) : QUndoCommand(parent) {}
+  bool ifEnter = true;
+  views::MainGlGraphicsView* view = nullptr;
+  views::MainStageTopBar* topBar = nullptr;
+  QList<QWidget*> disabledWidgets;
+  void redo() override {
+    if (ifEnter) {
+      enter();
+    } else {
+      leave();
+    }
+  }
+  void undo() override {
+    if (ifEnter) {
+      leave();
+    } else {
+      enter();
+    }
+  }
+};
+
+ProjectModel::BitmapLayer* EditModeController::getFirstSelectLayer() const {
   const auto& layerSelection =
       this->layerModel->getControllerTreeSelectionModel()->selection();
   ProjectModel::BitmapLayer* firstSelectLayer = nullptr;
@@ -60,9 +174,18 @@ void EditModeController::handleFailLeaveEditMode() const {
   }
 }
 
-EditModeController::EditModeController(
-    Scene::MainStageScene* scene, ProjectModel::LayerModel* layerModel,
-    QObject* parent)
+UiEditCommand* EditModeController::createUiEditCommand(
+    QUndoCommand* parent) const {
+  auto uiEditCommand = new UiEditCommand(parent);
+  uiEditCommand->topBar = this->topBar;
+  uiEditCommand->view = this->view;
+  uiEditCommand->disabledWidgets = this->disabledWidgets;
+  return uiEditCommand;
+}
+
+EditModeController::EditModeController(Scene::MainStageScene* scene,
+                                       ProjectModel::LayerModel* layerModel,
+                                       QObject* parent)
     : QObject(parent) {
   this->scene = scene;
   this->layerModel = layerModel;
@@ -70,8 +193,12 @@ EditModeController::EditModeController(
 
 EditModeController::~EditModeController() = default;
 
-void EditModeController::setDisabledWidget(
-    const QList<QWidget*>& widgets) {
+void EditModeController::setCurrentEditMeshController(
+    Scene::EditMeshController* currentEditMesh) {
+  currentEditMeshController = currentEditMesh;
+}
+
+void EditModeController::setDisabledWidget(const QList<QWidget*>& widgets) {
   this->disabledWidgets = widgets;
 }
 
@@ -87,37 +214,37 @@ void EditModeController::setTopBar(views::MainStageTopBar* topBar) {
           &Controller::EditModeController::handleLeaveEditMode);
 }
 
+void EditModeController::setUndoStack(QUndoStack* stack) {
+  this->undoStack = stack;
+}
+
 void EditModeController::handleEnterEditMode() {
   auto editLayer = this->getFirstSelectLayer();
   // get the actual mesh to edit
   auto mesh = scene->getRenderGroup()->findMesh(editLayer->getId());
   if (mesh == nullptr) {
-    topBar->setEditBtnChecked(false);
     if (topBar) {
       topBar->setEditBtnChecked(false);
     }
     return;
   }
+  // change selection
+  this->layerModel->selectItems({});
 
+  auto commandGroup = std::make_unique<QUndoCommand>();
   // create edit controller
-  // root will manage the controller so not need to delete
   auto editController = new Scene::EditMeshController(
       mesh->getVertices(), mesh->getIncident(), scene->getControllerRoot());
   // add to scene
-  scene->getControllerRoot()->setEditMeshController(editController);
   currentEditMeshController = editController;
+  auto sceneCommand =  new SceneEditCommand(scene, editController, this, commandGroup.get());
+  sceneCommand->setIsLeave(false);
+  createUiEditCommand(commandGroup.get());
 
-  // change selection
-  if (!editLayer->data(ProjectModel::VisibleRole).toBool()) {
-    layerModel->setItemVisible(editLayer->getId(), true);
-  }
-  this->layerModel->selectItems({editLayer->getId()});
-  this->scene->setSceneMode(Scene::MainStageScene::SceneMode::EDIT);
-
-  if (view != nullptr) view->getToolBar()->setEnableTool(2, true);
-
-  for (const auto& disabled_widget : this->disabledWidgets) {
-    disabled_widget->setDisabled(true);
+  if (undoStack) {
+    undoStack->push(commandGroup.release());
+  } else {
+    commandGroup->redo();
   }
 }
 
@@ -128,21 +255,23 @@ void EditModeController::handleLeaveEditMode() {
     return;
   }
 
-  if (!warnUndoClear()) {
-    if (topBar) {
-      topBar->setEditBtnChecked(true);
-    }
-    return;
-  }
+  // if (!warnUndoClear()) {
+  //   if (topBar) {
+  //     topBar->setEditBtnChecked(true);
+  //   }
+  //   return;
+  // }
 
-  this->scene->setSceneMode(Scene::MainStageScene::SceneMode::NORMAL);
-  if (view != nullptr) this->view->getToolBar()->setEnableTool(2, false);
+  auto commandGroup = std::make_unique<QUndoCommand>();
+  auto sceneCommand = new SceneEditCommand(scene, currentEditMeshController,
+                                           this, commandGroup.get());
 
-  for (const auto& disabled_widget : this->disabledWidgets) {
-    disabled_widget->setDisabled(false);
+  auto uiCommand = createUiEditCommand(commandGroup.get());
+  uiCommand->ifEnter = false;
+  if (undoStack) {
+    undoStack->push(commandGroup.release());
+  } else {
+    commandGroup->redo();
   }
-  this->scene->getControllerRoot()->removeEditMeshController();
-  // need to clear undo stack because of the memory has changed
-  this->scene->getControllerRoot()->clearUndoStack();
 }
 }  // namespace Controller
