@@ -60,7 +60,7 @@ MainStageScene::MainStageScene(MeshRenderGroup* group,
   auto backRect = QRectF(0, 0, width, height);
   auto bound = backRect.marginsAdded(
       QMarginsF(width / 2, height / 2, width / 2, height / 2));
-
+  this->setItemIndexMethod(NoIndex);
   boundRect = new QGraphicsRectItem(bound);
   this->addItem(boundRect);
   renderGroup = group;
