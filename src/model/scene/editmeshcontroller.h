@@ -28,6 +28,12 @@ class EditMeshController : public AbstractController {
   void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
   void keyPressEvent(QKeyEvent* event) override;
 
+  /**
+   * use the vertices and incident to calculate the CDT
+   * @return current cdt
+   */
+  CDT::Triangulation<float> calculateCDT() const;
+
  public:
   EditMeshController(const std::vector<MeshVertex>& vertices,
                      const std::vector<unsigned int>& incident,
@@ -151,6 +157,12 @@ class EditMeshController : public AbstractController {
    * should upDateCDT to fit the allowable mesh
    */
   void upDateCDT();
+  std::pair<std::vector<QPointF>, std::vector<unsigned int>> getCDTInfo() const;
+  /**
+   * to test the edit mesh if fit the mesh rule
+   * @return test result
+   */
+  bool ifValidTriangle() const;
 
   /**
    * remove the current index
@@ -169,11 +181,5 @@ class EditMeshController : public AbstractController {
    */
   void removeFixedEdge(int index1, int index2);
   void removeFixedEdge(const CDT::Edge& edge);
-
-  /**
-   * to test the edit mesh if fit the mesh rule
-   * @return test result
-   */
-  bool ifValidTriangle() const;
 };
 }  // namespace Scene

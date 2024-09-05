@@ -8,6 +8,7 @@
 #include "QOpenGLVertexArrayObject"
 #include "QPainter"
 #include "QWidget"
+#include "meshmathtool.hpp"
 #include "meshrendergroup.h"
 namespace Scene {
 
@@ -36,33 +37,6 @@ std::unique_ptr<MeshVertex[]> normalization(
   return res;
 }
 
-/**
- * use to calculate Graphics item bound
- * @param vector scene position
- * @return bound
- */
-QRectF calculateBoundRect(const std::vector<MeshVertex>& vector) {
-  float left = FLT_MAX;
-  float top = FLT_MAX;
-  float right = FLT_MIN;
-  float button = FLT_MIN;
-  for (const auto& item : vector) {
-    if (item.pos.x < left) {
-      left = item.pos.x;
-    }
-    if (item.pos.x > right) {
-      right = item.pos.x;
-    }
-    if (item.pos.y < top) {
-      top = item.pos.y;
-    }
-    if (item.pos.y > button) {
-      button = item.pos.y;
-    }
-  }
-
-  return QRectF(QPointF(left, top), QPointF(right, button));
-}
 
 void Mesh::initializeGL(QRect relativeRect) {
   initializeOpenGLFunctions();
@@ -95,7 +69,7 @@ void Mesh::initializeGL(QRect relativeRect) {
 Mesh::Mesh(const std::vector<MeshVertex>& vertices,
            const std::vector<unsigned int>& incident, MeshRenderGroup* parent)
     : QGraphicsItem(parent), vertices(vertices), incident(incident) {
-  this->boundRect = calculateBoundRect(vertices);
+  this->boundRect = MeshMathTool<MeshVertex>::calculateBoundRect(vertices);
   this->vao = new QOpenGLVertexArrayObject();
   this->vbo = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
   this->ibo = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
@@ -118,9 +92,10 @@ void Mesh::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
   totalPoint = painter->transform().map(totalPoint);
 
   parent->getProgram()->bind();
-  glViewport(painter->transform().dx(),
-             widget->height() - painter->transform().dy() - totalPoint.dy(),
-             totalPoint.dx(), totalPoint.dy());
+  // wtf
+  glViewport(painter->transform().dx() * 1.5,
+             (widget->height() - painter->transform().dy() - totalPoint.dy())*1.5,
+             totalPoint.dx() * 1.5, totalPoint.dy() * 1.5);
   vao->bind();
   tex->bind(0);
   parent->getProgram()->setUniformValue("ourTexture", 0);
@@ -132,7 +107,7 @@ void Mesh::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
 void Mesh::setVerticesAt(int index, const MeshVertex& vertex) {
   vertices[index] = vertex;
-  this->boundRect = calculateBoundRect(vertices);
+  this->boundRect = MeshMathTool<MeshVertex>::calculateBoundRect(vertices);
 }
 
 void Mesh::upDateBuffer() {
@@ -145,9 +120,59 @@ void Mesh::upDateBuffer() {
   update();
 }
 
+void Mesh::resetBuffer() {
+  auto par = static_cast<MeshRenderGroup*>(parentItem());
+  auto normalize =
+      normalization(vertices, par->getRenderWidth(), par->getRenderHeight());
+  vbo->bind();
+  vbo->allocate(normalize.get(), vertices.size() * sizeof(MeshVertex));
+  vbo->release();
+  ibo->bind();
+  ibo->allocate(incident.data(), incident.size() * sizeof(unsigned int));
+  ibo->release();
+  update();
+}
+
 void Mesh::setTexture(const QImage& image) { this->image = image; }
 
 QImage Mesh::getTextureImage() const { return this->image; }
+
+void Mesh::setMeshPointFromScene(const std::vector<QPointF>& points,
+                                 const std::vector<unsigned int>& inc) {
+  std::vector<MeshVertex> finalRes;
+  const auto& indexes = MeshMathTool<MeshVertex>::calculateBoundIndex(vertices);
+  for (const auto& point : points) {
+    auto assignPoint = MeshVertex{{point.x(), point.y()}, {}};
+    bool isComplete = false;
+    for (int i = 0; i < incident.size(); i += 3) {
+      auto&& p1 = vertices[incident[i]];
+      auto&& p2 = vertices[incident[i + 1]];
+      auto&& p3 = vertices[incident[i + 2]];
+      if (MeshMathTool<MeshVertex>::isInTriangle(assignPoint, p1, p2, p3)) {
+        auto&& info = MeshMathTool<MeshVertex>::barycentricCoordinates(
+            assignPoint, p1, p2, p3);
+        auto uvP1 = QPointF(p1.uv.x, p1.uv.y);
+        auto uvP2 = QPointF(p2.uv.x, p2.uv.y);
+        auto uvP3 = QPointF(p3.uv.x, p3.uv.y);
+
+        auto uv = MeshMathTool<QPointF>::fromBarycentricCoordinates(info, uvP1,
+                                                                    uvP2, uvP3);
+        assignPoint.uv = {static_cast<float>(uv.x()),
+                          static_cast<float>(uv.y())};
+        isComplete = true;
+        break;
+      }
+    }
+    if (isComplete) {
+      finalRes.push_back(assignPoint);
+      continue;
+    }
+    // TODO: out of triangle handler
+  }
+  this->vertices = finalRes;
+  this->incident = inc;
+  update();
+}
 
 Mesh::~Mesh() {
   delete vao;

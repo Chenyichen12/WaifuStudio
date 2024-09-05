@@ -16,6 +16,8 @@ class MeshRenderGroup;
 struct MeshVertex {
   glm::vec2 pos;
   glm::vec2 uv;
+  float x() const { return pos.x; }
+  float y() const { return pos.y; }
 };
 enum MeshVertexOffset {
   Position = offsetof(MeshVertex, pos),
@@ -70,6 +72,11 @@ class Mesh : public QGraphicsItem, protected QOpenGLFunctions {
    * when the vertex change, should call upDate to refresh the gl buffer
    */
   virtual void upDateBuffer();
+  /**
+   * renew the buffer object to fit new size
+   * usually used when mesh has struct changed
+   */
+  virtual void resetBuffer();
 
   void setTexture(const QImage& image);
   /**
@@ -84,6 +91,14 @@ class Mesh : public QGraphicsItem, protected QOpenGLFunctions {
   void bindId(int id) { layerId = id; }
 
   int getLayerId() const { return layerId; }
+
+  /**
+   * set point for mesh, point from scene
+   * the uv will auto calculate from previous mesh information
+   * @param points points position
+   * @param incident incident
+   */
+  void setMeshPointFromScene(const std::vector<QPointF>& points, const std::vector<unsigned int>& incident);
 };
 
 class MeshBuilder {

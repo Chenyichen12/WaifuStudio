@@ -437,17 +437,7 @@ bool EditMeshController::ifValidTriangle() const {
   if (editPoint.empty()) {
     return false;
   }
-  CDT::Triangulation<float> cdt;
-  cdt.insertVertices(editPoint);
-  CDT::EdgeVec vec;
-  vec.assign(fixedEdge.begin(), fixedEdge.end());
-  try {
-    cdt.insertEdges(vec);
-  } catch (...) {
-    return false;
-  }
-
-  cdt.eraseOuterTriangles();
+  const auto& cdt = calculateCDT();
   std::unordered_set<unsigned int> triIndex;
 
   for (const auto& triangle : cdt.triangles) {
@@ -463,6 +453,24 @@ bool EditMeshController::ifValidTriangle() const {
   return true;
 }
 
+std::pair<std::vector<QPointF>, std::vector<unsigned>>
+EditMeshController::getCDTInfo() const {
+  const auto& cdt = calculateCDT();
+  std::vector<unsigned int> triIndex;
+
+  for (const auto& triangle : cdt.triangles) {
+    const auto& v = triangle.vertices;
+    triIndex.push_back(v[0]);
+    triIndex.push_back(v[1]);
+    triIndex.push_back(v[2]);
+  }
+  auto pointList = std::vector<QPointF>();
+  for (const auto& vertex : cdt.vertices) {
+    pointList.emplace_back(vertex.x, vertex.y);
+  }
+  return {pointList, triIndex};
+}
+
 void EditMeshController::upDateActiveTool() {
   auto pList = std::vector<QPointF>();
   for (int select_index : this->selectIndex) {
@@ -472,6 +480,14 @@ void EditMeshController::upDateActiveTool() {
 }
 
 void EditMeshController::upDateCDT() {
+  const auto& cdt = calculateCDT();
+  this->editPoint = cdt.vertices;
+  this->fixedEdge = cdt.fixedEdges;
+  this->allEdge = CDT::extractEdgesFromTriangles(cdt.triangles);
+  this->update();
+}
+
+CDT::Triangulation<float> EditMeshController::calculateCDT() const {
   CDT::Triangulation<float> cdt;
   cdt.insertVertices(editPoint);
   CDT::EdgeVec vec;
@@ -489,11 +505,7 @@ void EditMeshController::upDateCDT() {
   }
 
   cdt.eraseOuterTriangles();
-
-  this->editPoint = cdt.vertices;
-  this->fixedEdge = cdt.fixedEdges;
-  this->allEdge = CDT::extractEdgesFromTriangles(cdt.triangles);
-  this->update();
+  return cdt;
 }
 
 void EditMeshController::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {

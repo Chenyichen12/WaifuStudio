@@ -306,7 +306,7 @@ void MeshController::paint(QPainter* painter,
     painter->drawLine(QPointF(v2.pos.x, v2.pos.y), QPointF(v3.pos.x, v3.pos.y));
     painter->drawLine(QPointF(v3.pos.x, v3.pos.y), QPointF(v1.pos.x, v1.pos.y));
   }
-
+ // TODO: select index when change mesh point count bug
   for (int i = 0; i < selectedPoint.size(); ++i) {
     auto& point = meshPoint[i];
     if (selectedPoint[i]) {
