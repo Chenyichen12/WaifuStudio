@@ -1,6 +1,6 @@
 project(WaifuStudio)
 
-file(GLOB_RECURSE ModelSource model/*.h model/*.cc)
+file(GLOB_RECURSE ModelSource model/*.h model/*.cc model/*.hpp)
 
 file(GLOB_RECURSE ControllerSource controller/*.h controller/*.cc)
 
