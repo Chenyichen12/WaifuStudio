@@ -93,9 +93,9 @@ void Mesh::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
   parent->getProgram()->bind();
   // wtf
-  glViewport(painter->transform().dx() * 1.5,
-             (widget->height() - painter->transform().dy() - totalPoint.dy())*1.5,
-             totalPoint.dx() * 1.5, totalPoint.dy() * 1.5);
+  glViewport(painter->transform().dx() ,
+             (widget->height() - painter->transform().dy() - totalPoint.dy()),
+             totalPoint.dx(), totalPoint.dy());
   vao->bind();
   tex->bind(0);
   parent->getProgram()->setUniformValue("ourTexture", 0);

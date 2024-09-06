@@ -1,5 +1,5 @@
 #pragma once
-#include <QOpenglWidget>
+#include <QOpenGLWidget>
 #include "model/scene/mesh.h"
 class QOpenGLShaderProgram;
 namespace Controller {
