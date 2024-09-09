@@ -20,4 +20,5 @@ endif ()
 
 add_subdirectory(vendor)
 add_subdirectory(src)
+add_subdirectory(src2)
 add_subdirectory(test)
