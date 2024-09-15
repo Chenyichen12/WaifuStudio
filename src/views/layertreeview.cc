@@ -3,12 +3,12 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-#include "../model/layer.h"
+#include "model/tree/layer.h"
 void views::ItemStyleDelegate::paint(QPainter* painter,
                                      const QStyleOptionViewItem& option,
                                      const QModelIndex& index) const {
   QStyledItemDelegate::paint(painter, option, index);
-  auto is_visible = index.data(ProjectModel::VisibleRole).toBool();
+  auto is_visible = index.data(WaifuL2d::Layer::DataRole::LayerVisible).toBool();
 
   auto visible_img = is_visible ? visibleImg : invisibleImg;
   painter->drawImage(getVisibleBtnRect(option.rect), visible_img);
@@ -104,7 +104,7 @@ void views::LayerTreeView::handleItemVisiblePressed(const QModelIndex& index) {
   this->inVisibleDrag = true;
   cacheVisibleChangedIndex.push_back(index);
 
-  auto visible = index.data(ProjectModel::VisibleRole).toBool();
+  auto visible = index.data(WaifuL2d::Layer::DataRole::LayerVisible).toBool();
   emit shouldSetVisible(index, !visible);
 }
 
@@ -115,7 +115,7 @@ void views::LayerTreeView::handleItemVisibleMoved(const QModelIndex& index) {
     return;
   }
 
-  auto visible = index.data(ProjectModel::VisibleRole).toBool();
+  auto visible = index.data(WaifuL2d::Layer::DataRole::LayerVisible).toBool();
   emit shouldSetVisible(index, !visible);
   cacheVisibleChangedIndex.push_back(index);
 }

@@ -1,19 +1,13 @@
 #include "layer.h"
 
-namespace Tree {
-Layer::Layer(int id) {
-  this->id = id;
+namespace WaifuL2d {
+Layer::Layer() {
   setVisible(true);
   setLocked(false);
 }
 
-Layer::Layer(const QString& name, int id) : Layer(id) {
-  setText(name);
-  this->id = id;
-}
+Layer::Layer(const QString& name) : Layer() { setText(name); }
 QString Layer::getName() const { return text(); }
-
-int Layer::getId() const { return id; }
 
 void Layer::setName(const QString& name) { setText(name); }
 
@@ -30,7 +24,16 @@ bool Layer::getLocked() const {
 }
 
 void Layer::setLocked(bool locked) {
+  setEnabled(!locked);
   setData(locked, Layer::DataRole::LayerLock);
 }
 
-}  // namespace Tree
+BitmapLayer::BitmapLayer(const QString& name, const QImage& image)
+    : Layer(name) {
+  auto img = image.scaledToHeight(25);
+  setIcon(QIcon(QPixmap::fromImage(img)));
+}
+
+GroupLayer::GroupLayer(const QString& name) : Layer(name) {}
+
+}  // namespace WaifuL2d

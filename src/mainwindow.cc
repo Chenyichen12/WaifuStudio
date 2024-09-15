@@ -3,62 +3,34 @@
 //
 #include "mainwindow.h"
 
+#include <QItemSelectionModel>
+#include <QStandardItemModel>
+
 #include "QFileDialog"
-#include "controller/editmodecontroller.h"
-#include "model/layer_model.h"
-#include "model/project.h"
-#include "model/scene/mainstagescene.h"
-#include "psdparser.h"
+#include "model/projectservice.h"
 #include "ui/ui_mainwindow.h"
 #include "views/mainstagesidetoolbar.h"
-void MainWindow::setUpTreeModel(const ProjectModel::LayerModel* m) {
-  ui->psTree->setModel(m->getPsdTreeManager());
-  ui->controllerTree->setModel(m->getControllerTreeManger());
-  ui->psTree->setSelectionModel(m->getPsdTreeSelectionModel());
-  ui->controllerTree->setSelectionModel(m->getControllerTreeSelectionModel());
-
-  connect(ui->psTree, &views::LayerTreeView::shouldSetVisible, m,
-          &ProjectModel::LayerModel::handleItemSetVisible);
-  connect(ui->controllerTree, &views::LayerTreeView::shouldSetVisible, m,
-          &ProjectModel::LayerModel::handleItemSetVisible);
-  connect(ui->psTree, &views::LayerTreeView::itemVisibleEnd, m,
-          &ProjectModel::LayerModel::handleVisibleSelectEnd);
-  connect(ui->controllerTree, &views::LayerTreeView::itemVisibleEnd, m,
-          &ProjectModel::LayerModel::handleVisibleSelectEnd);
-}
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
   setUpMenu();
-  this->currentProject = nullptr;
+  this->projectService = new WaifuL2d::ProjectService(this);
+
+  connect(projectService, &WaifuL2d::ProjectService::projectChanged, this,
+          &MainWindow::handleProjectChanged);
+}
+
+void MainWindow::handleProjectChanged() {
+  ui->controllerTree->setModel(projectService->getLayerModel());
+  ui->controllerTree->setSelectionModel(projectService->getLayerSelectionModel());
 }
 
 MainWindow::~MainWindow() { delete ui; }
 
-void MainWindow::setProject(ProjectModel::Project* p) {
-  if (this->currentProject != nullptr) {
-    delete currentProject;
-    currentProject = nullptr;
-  }
-  this->currentProject = p;
-  currentProject->setParent(this);
-  this->setUpTreeModel(p->getLayerModel());
-  this->setUpMainStage();
-}
 
 void MainWindow::setUpProjectFromPsd(const QString& path) {
-  Parser::PsdParser* parser = new Parser::PsdParser(path);
-  auto&& builder = ProjectModel::ProjectBuilder();
-  parser->Parse();
-  builder.setBitmapManager(parser->extractBitmapManager());
-  builder.setLayerModel(new ProjectModel::LayerModel(
-      parser->extractPsTree(), parser->extractControllerTree()));
-  builder.projectWidth = parser->width();
-  builder.projectHeight = parser->height();
-  auto p = builder.build();
-  this->setProject(p);
-  parser->deleteLater();
+  projectService->initProjectFromPsd(path);
 }
 
 void MainWindow::handlePsdOpen() {
@@ -69,46 +41,9 @@ void MainWindow::handlePsdOpen() {
   setUpProjectFromPsd(fileName);
 }
 
-// ReSharper disable once CppMemberFunctionMayBeConst
 void MainWindow::handleUndoAction() {
-  if (this->currentProject != nullptr) {
-    this->currentProject->undo();
-  }
 }
-// ReSharper disable once CppMemberFunctionMayBeConst
 void MainWindow::handleRedoAction() {
-  if (this->currentProject != nullptr) {
-    this->currentProject->redo();
-  }
-}
-
-void MainWindow::setUpMainStage() {
-  ui->MainStageGraphicsView->setScene(currentProject->getScene());
-  auto toolBar = ui->MainStageGraphicsView->getToolBar();
-  connect(toolBar, &views::MainStageSideToolBar::switchTool,
-          currentProject->getScene(),
-          &Scene::MainStageScene::handleToolChanged);
-  connect(ui->MainStageGraphicsView, &views::MainGlGraphicsView::rubberSelected,
-          currentProject->getScene(),
-          &Scene::MainStageScene::handleRubberSelect);
-  connect(
-      ui->MainStageGraphicsView, &views::MainGlGraphicsView::mouseSelectClick,
-      currentProject->getScene(), &Scene::MainStageScene::handleSelectClick);
-
-  // connect the top bar edit mode handler
-  auto editController = new Controller::EditModeController(
-      currentProject->getScene(), currentProject->getLayerModel(),currentProject);
-  editController->setUndoStack(currentProject->getUndoStack());
-  editController->setView(ui->MainStageGraphicsView);
-  editController->setTopBar(ui->MainStageTopBar);
-  editController->setDisabledWidget({ui->controllerTree, ui->psTree});
-
-  // ui reset
-  ui->MainStageTopBar->reset();
-  ui->MainStageGraphicsView->makeCurrent();
-  currentProject->getScene()->initGL();
-  ui->MainStageGraphicsView->doneCurrent();
-  currentProject->getScene()->handleToolChanged(0);
 }
 
 void MainWindow::setUpMenu() {

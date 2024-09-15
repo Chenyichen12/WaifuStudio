@@ -6,7 +6,7 @@ file(GLOB_RECURSE ControllerSource controller/*.h controller/*.cc)
 
 file(GLOB ViewSource views/*.h views/*.cc)
 
-set(SOURCE ${ModelSource} ${ViewSource} ${ControllerSource} mainwindow.cc psdparser.cc)
+set(SOURCE ${ModelSource} ${ViewSource} ${ControllerSource} mainwindow.cc)
 
 file(GLOB HEADER include/*.h)
 

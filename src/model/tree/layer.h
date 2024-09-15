@@ -1,10 +1,7 @@
 #pragma once
 #include <QStandardItem>
-namespace Tree {
+namespace WaifuL2d {
 class Layer : public QStandardItem {
- private:
-  int id;
-
  public:
   enum Type {
     BitmapLayer = UserType + 1,
@@ -19,9 +16,8 @@ class Layer : public QStandardItem {
     LayerLock = Qt::UserRole + 2,
   };
 
-  Layer(int id);
-  Layer(const QString& name, int id);
-  int getId() const;
+  Layer();
+  Layer(const QString& name);
   int type() const override = 0;
 
   QString getName() const;
@@ -34,4 +30,15 @@ class Layer : public QStandardItem {
   void setLocked(bool locked);
 };
 
-}  // namespace Tree
+class BitmapLayer : public Layer {
+ public:
+  BitmapLayer(const QString& name, const QImage& image);
+  int type() const override { return Type::BitmapLayer; };
+};
+
+class GroupLayer : public Layer {
+ public:
+  GroupLayer(const QString& name);
+  int type() const override { return Type::GroupLayer; };
+};
+}  // namespace WaifuL2d
