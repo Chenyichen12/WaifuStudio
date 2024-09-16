@@ -23,4 +23,11 @@ void LayerModel::removeLayer(Layer* layer, Layer* parent) {
   }
 }
 
+Layer* LayerModel::layerFromIndex(const QModelIndex& index) const {
+  if (!index.isValid()) {
+    return nullptr;
+  }
+  return static_cast<Layer*>(itemFromIndex(index));
+}
+
 }  // namespace WaifuL2d

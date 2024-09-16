@@ -24,7 +24,7 @@ bool Layer::getLocked() const {
 }
 
 void Layer::setLocked(bool locked) {
-  setEnabled(!locked);
+  setSelectable(!locked);
   setData(locked, Layer::DataRole::LayerLock);
 }
 

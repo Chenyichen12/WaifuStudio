@@ -18,17 +18,19 @@ class LayerTreeView : public QTreeView {
   void startDrag(Qt::DropActions supportedActions) override;
  signals:
   void shouldSetVisible(const QModelIndex& index, bool isVisible);
-  void itemVisibleEnd(const QModelIndexList& cacheVisibleChangedIndex);
-
+  void shouldSetLock(const QModelIndex& index, bool isLocked);
  protected:
   void handleItemVisiblePressed(const QModelIndex&);
   void handleItemVisibleMoved(const QModelIndex&);
+  void handleItemLockPressed(const QModelIndex&);
 };
 class ItemStyleDelegate : public QStyledItemDelegate {
   Q_OBJECT
  private:
   QImage visibleImg;
   QImage invisibleImg;
+
+  QImage lockImg;
   int visButtonLength;
 
  protected:
@@ -49,6 +51,8 @@ class ItemStyleDelegate : public QStyledItemDelegate {
  signals:
   void itemVisiblePressed(const QModelIndex&);
   void itemVisibleMoved(const QModelIndex&);
+
+  void itemLockPressed(const QModelIndex&);
 };
 
 }  // namespace views

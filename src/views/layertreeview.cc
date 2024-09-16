@@ -8,10 +8,20 @@ void views::ItemStyleDelegate::paint(QPainter* painter,
                                      const QStyleOptionViewItem& option,
                                      const QModelIndex& index) const {
   QStyledItemDelegate::paint(painter, option, index);
-  auto is_visible = index.data(WaifuL2d::Layer::DataRole::LayerVisible).toBool();
+  auto is_visible =
+      index.data(WaifuL2d::Layer::DataRole::LayerVisible).toBool();
+  auto visibleRect = getVisibleBtnRect(option.rect);
+  painter->drawRect(visibleRect);
+  if (is_visible) {
+    painter->drawImage(visibleRect, visibleImg);
+  }
 
-  auto visible_img = is_visible ? visibleImg : invisibleImg;
-  painter->drawImage(getVisibleBtnRect(option.rect), visible_img);
+  auto is_locked = index.data(WaifuL2d::Layer::DataRole::LayerLock).toBool();
+  auto lockedRect = visibleRect.translated(-visButtonLength - 5, 0);
+  painter->drawRect(lockedRect);
+  if (is_locked) {
+    painter->drawImage(lockedRect.marginsRemoved({2,2,2,2}), lockImg);
+  }
 }
 
 QSize views::ItemStyleDelegate::sizeHint(const QStyleOptionViewItem& option,
@@ -28,6 +38,9 @@ views::ItemStyleDelegate::ItemStyleDelegate(QObject* parent)
   invisibleImg = QImage(":/icon/eye-disabled.png");
 
   invisibleImg = invisibleImg.scaledToHeight(20, Qt::SmoothTransformation);
+
+  lockImg =
+      QImage(":/icon/lock.png").scaledToHeight(20, Qt::SmoothTransformation);
   visButtonLength = 20;
 }
 
@@ -36,11 +49,16 @@ bool views::ItemStyleDelegate::editorEvent(QEvent* event,
                                            const QStyleOptionViewItem& option,
                                            const QModelIndex& index) {
   auto visBtnPos = getVisibleBtnRect(option.rect);
+  auto lockBtnPos = visBtnPos.translated(-visButtonLength - 5, 0);
+
   switch (event->type()) {
     case QEvent::MouseButtonPress: {
       auto mouseEvent = static_cast<QMouseEvent*>(event);
       if (visBtnPos.contains(mouseEvent->pos())) {
         emit itemVisiblePressed(index);
+      }
+      if (lockBtnPos.contains(mouseEvent->pos())) {
+        emit itemLockPressed(index);
       }
       break;
     }
@@ -81,14 +99,13 @@ views::LayerTreeView::LayerTreeView(QWidget* parent) : QTreeView(parent) {
   connect(styleDelegate, &ItemStyleDelegate::itemVisibleMoved, this,
           &LayerTreeView::handleItemVisibleMoved);
 
+  connect(styleDelegate, &ItemStyleDelegate::itemLockPressed, this,
+          &LayerTreeView::handleItemLockPressed);
 }
 
 void views::LayerTreeView::mouseReleaseEvent(QMouseEvent* event) {
   QTreeView::mouseReleaseEvent(event);
   inVisibleDrag = false;
-  if (!cacheVisibleChangedIndex.empty()) {
-    emit itemVisibleEnd(cacheVisibleChangedIndex);
-  }
   cacheVisibleChangedIndex.clear();
 }
 
@@ -98,7 +115,6 @@ void views::LayerTreeView::startDrag(Qt::DropActions supportedActions) {
   }
   QTreeView::startDrag(supportedActions);
 }
-
 
 void views::LayerTreeView::handleItemVisiblePressed(const QModelIndex& index) {
   this->inVisibleDrag = true;
@@ -118,4 +134,9 @@ void views::LayerTreeView::handleItemVisibleMoved(const QModelIndex& index) {
   auto visible = index.data(WaifuL2d::Layer::DataRole::LayerVisible).toBool();
   emit shouldSetVisible(index, !visible);
   cacheVisibleChangedIndex.push_back(index);
+}
+
+void views::LayerTreeView::handleItemLockPressed(const QModelIndex& index) {
+  auto isLocked = index.data(WaifuL2d::Layer::DataRole::LayerLock).toBool();
+  emit shouldSetLock(index, !isLocked);
 }

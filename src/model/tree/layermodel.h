@@ -10,5 +10,7 @@ class LayerModel : public QStandardItemModel {
   void addLayer(Layer* layer, Layer* parent = nullptr);
   QItemSelectionModel* getSelectionModel() const;
   void removeLayer(Layer* layer, Layer* parent = nullptr);
+
+  Layer* layerFromIndex(const QModelIndex& index) const;
 };
 }  // namespace WaifuL2d

@@ -67,7 +67,6 @@ int ProjectService::initProjectFromPsd(const QString& path) {
   // create scene
   proj->scene = new QGraphicsScene();
 
-
   this->project = std::move(proj);
   finizateProject(project.get());
   emit projectChanged();
@@ -83,4 +82,33 @@ QItemSelectionModel* ProjectService::getLayerSelectionModel() const {
 
 QGraphicsScene* ProjectService::getScene() const { return project->scene; }
 
+void ProjectService::setLayerLock(const QModelIndex& index, bool lock) {
+  if (project == nullptr) {
+    return;
+  }
+  auto layer = project->model->layerFromIndex(index);
+  if (layer == nullptr) {
+    return;
+  }
+  layer->setLocked(lock);
+
+  //TODO: undo command
+}
+
+void ProjectService::setLayerVisible(const QModelIndex& index, bool visible) {
+  if (project == nullptr) {
+    return;
+  }
+  auto layer = project->model->layerFromIndex(index);
+  if (layer == nullptr) {
+    return;
+  }
+
+  if(layer->getLocked()){
+    return;
+  }
+  layer->setVisible(visible);
+
+  //TODO: undo command
+}
 }  // namespace WaifuL2d

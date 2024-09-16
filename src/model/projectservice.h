@@ -19,7 +19,6 @@ class ProjectService : public QObject {
   ~ProjectService() override;
 
   /**
-   *
    * @return 0 if success, otherwise return error code
    */
   int initProjectFromPsd(const QString& path);
@@ -28,6 +27,10 @@ class ProjectService : public QObject {
   QItemSelectionModel* getLayerSelectionModel() const;
   QGraphicsScene* getScene() const;
 
+
+public slots:
+  void setLayerVisible(const QModelIndex& index, bool visible);
+  void setLayerLock(const QModelIndex& index, bool lock);
  signals:
   void projectChanged();
 };

@@ -7,5 +7,6 @@
         <file>rotation.png</file>
         <file>move-arrow.png</file>
         <file>pen.png</file>
+        <file>lock.png</file>
     </qresource>
 </RCC>

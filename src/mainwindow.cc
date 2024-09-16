@@ -5,6 +5,7 @@
 
 #include <QItemSelectionModel>
 #include <QStandardItemModel>
+#include <QMessageBox>
 
 #include "QFileDialog"
 #include "model/projectservice.h"
@@ -19,6 +20,11 @@ MainWindow::MainWindow(QWidget* parent)
 
   connect(projectService, &WaifuL2d::ProjectService::projectChanged, this,
           &MainWindow::handleProjectChanged);
+
+  connect(ui->controllerTree, &views::LayerTreeView::shouldSetVisible,
+          projectService, &WaifuL2d::ProjectService::setLayerVisible);
+  connect(ui->controllerTree, &views::LayerTreeView::shouldSetLock, projectService,
+          &WaifuL2d::ProjectService::setLayerLock);
 }
 
 void MainWindow::handleProjectChanged() {
@@ -30,7 +36,12 @@ MainWindow::~MainWindow() { delete ui; }
 
 
 void MainWindow::setUpProjectFromPsd(const QString& path) {
-  projectService->initProjectFromPsd(path);
+  auto psd = projectService->initProjectFromPsd(path);
+  if(psd != 0) {
+    // handle error
+    QMessageBox::warning(this, tr("Error"), tr("Failed to open psd file"));
+    return;
+  }
 }
 
 void MainWindow::handlePsdOpen() {
