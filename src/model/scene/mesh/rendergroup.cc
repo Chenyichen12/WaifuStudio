@@ -48,6 +48,7 @@ RenderGroup::~RenderGroup() {
   for (auto& mesh : meshes) {
     delete mesh;
   }
+  delete program;
 }
 void RenderGroup::paint(QPainter* painter,
                         const QStyleOptionGraphicsItem* option,
@@ -56,8 +57,18 @@ void RenderGroup::paint(QPainter* painter,
     return;
   }
   painter->beginNativePainting();
+  glClearColor(1.0, 1.0, 1.0, 1.0);
+  glClear(GL_COLOR_BUFFER_BIT);
+  painter->endNativePainting();
+
+  // draw a background rect
+  auto brush = QBrush(Qt::gray);
+  painter->setBrush(brush);
+  painter->drawRect(projectRect);
+  painter->beginNativePainting();
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   program->bind();
 
   // set uniform

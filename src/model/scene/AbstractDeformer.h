@@ -6,16 +6,16 @@
 class QUndoCommand;
 namespace WaifuL2d {
 class Layer;
-class MopherManager;
+class DeformManager;
 
-class AbstractMopher : public QGraphicsItem {
+class AbstractDeformer : public QGraphicsItem {
  private:
   const Layer* bindLayer = nullptr;
 
  protected:
-  AbstractMopher* morpherParent;
-  QList<AbstractMopher*> morpherChildren;
-  MopherManager* getManager();
+  AbstractDeformer* morpherParent;
+  QList<AbstractDeformer*> morpherChildren;
+  DeformManager* getManager();
 
  public:
   enum Type {
@@ -29,8 +29,8 @@ class AbstractMopher : public QGraphicsItem {
   virtual void setScenePoints(const QList<QPointF>& points) = 0;
   virtual QPointF scenePointToLocal(const QPointF& point) = 0;
   virtual int type() const override = 0;
-  virtual void setMopherParent(AbstractMopher* parent);
-  AbstractMopher(QGraphicsItem* parent = nullptr);
+  virtual void setMopherParent(AbstractDeformer* parent);
+  AbstractDeformer(QGraphicsItem* parent = nullptr);
 
   void setBindLayer(Layer* layer) { bindLayer = layer; }
   const Layer* getBindLayer() const { return bindLayer; }

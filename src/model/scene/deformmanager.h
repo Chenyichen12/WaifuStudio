@@ -4,20 +4,20 @@
 #include "mophercommand.h"
 namespace WaifuL2d {
 class Layer;
-class AbstractMopher;
-class MopherManager : public QGraphicsObject {
+class AbstractDeformer;
+class DeformManager : public QGraphicsObject {
   Q_OBJECT
-  QList<AbstractMopher*> mophers;
+  QList<AbstractDeformer*> deformer;
 
  public:
-  MopherManager();
-  void addMopher(AbstractMopher* mopher);
-  void removeMopher(AbstractMopher* mopher);
+  DeformManager();
+  void addDeformer(AbstractDeformer* mopher);
+  void removeDeformer(AbstractDeformer* mopher);
   void clearSelection();
   void selectFromLayers(const QList<Layer*>& layers);
   int type() const override { return UserType + 1; }
 
  signals:
-  void mopherCommand(QSharedPointer<MopherCommand> command);
+  void deformCommand(QSharedPointer<MopherCommand> command);
 };
 }  // namespace WaifuL2d

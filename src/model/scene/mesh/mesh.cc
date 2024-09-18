@@ -60,4 +60,11 @@ QList<QPointF> Mesh::getPos() {
   return pos;
 }
 QList<unsigned int> Mesh::getIncident() const { return this->incident; }
+
+Mesh::~Mesh() {
+  delete vao;
+  delete vbo;
+  delete ibo;
+  delete tex;
+}
 }  // namespace WaifuL2d

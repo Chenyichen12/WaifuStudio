@@ -37,5 +37,6 @@ class Mesh {
   QList<QPointF> getPos();
   QList<unsigned int> getIncident() const;
   void setVisible(bool visible) { this->visible = visible; }
+  ~Mesh();
 };
 }  // namespace WaifuL2d

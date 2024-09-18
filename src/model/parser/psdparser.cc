@@ -91,7 +91,9 @@ void PsdParser::parse() {
         meshNode.texture = QImage(
             rawImagePtr, record.getWidth(), record.getHeight(),
             QImage::Format_RGBA8888,
-            [](void* ptr) { delete[] static_cast<unsigned char*>(ptr); },
+            [](void* ptr) {
+              delete[] static_cast<unsigned char*>(ptr);
+            },
             rawImagePtr);
         meshNode.scenePosition = {QPointF(record.m_Left, record.m_Top),
                                   QPointF(record.m_Right, record.m_Top),

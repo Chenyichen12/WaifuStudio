@@ -4,9 +4,9 @@
 #include <QPointF>
 class QUndoCommand;
 namespace WaifuL2d {
-class AbstractMopher;
+class AbstractDeformer;
 class MopherCommand {
-  AbstractMopher* targetMopher;
+  AbstractDeformer* targetMopher;
 
  public:
   QList<QPointF> oldPoints;
@@ -18,7 +18,7 @@ class MopherCommand {
     AngleCommand = 2
   };
   virtual QUndoCommand* createUndoCommand(QUndoCommand* parent = nullptr) = 0;
-  explicit MopherCommand(AbstractMopher* mopher);
+  explicit MopherCommand(AbstractDeformer* mopher);
   ~MopherCommand() = default;
 };
 }  // namespace WaifuL2d

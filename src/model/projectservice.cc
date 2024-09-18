@@ -9,6 +9,7 @@
 #include "tree/layermodel.h"
 #include "scene/mesh/mesh.h"
 #include "scene/mesh/rendergroup.h"
+#include "scene/mainstagescene.h"
 namespace WaifuL2d {
 
 class PsdLayerSimpleFactory {
@@ -51,16 +52,11 @@ class PsdLayerSimpleFactory {
   }
 };
 
-class SimpleScene: public QGraphicsScene{
-  public:
-   RenderGroup* renderGroup;
-   SimpleScene() = default;
-};
 
 struct Project {
   LayerModel* model = nullptr;
   QItemSelectionModel* selectionModel = nullptr;
-  SimpleScene* scene = nullptr;
+  MainStageScene* scene = nullptr;
   ~Project() {
     delete model;
     delete scene;
@@ -82,10 +78,9 @@ int ProjectService::initProjectFromPsd(const QString& path) {
   proj->model = new LayerModel(this);
   proj->selectionModel = new QItemSelectionModel(proj->model);
     // create scene
-  proj->scene = new SimpleScene();
+  proj->scene = new MainStageScene();
   auto renderGroup = new RenderGroup(QRectF(0, 0, result->width, result->height));
-  proj->scene->renderGroup = renderGroup;
-  proj->scene->addItem(renderGroup);
+  proj->scene->setRenderGroup(renderGroup);
 
   auto parseStack = QStack<TreeNode*>();
   parseStack.push(result->root);
@@ -124,7 +119,8 @@ void ProjectService::initGL() {
   if (project == nullptr) {
     return;
   }
-  project->scene->renderGroup->initGL();
+  project->scene->getRenderGroup()->initGL();
+
 }
 
 void ProjectService::setLayerLock(const QModelIndex& index, bool lock) {
