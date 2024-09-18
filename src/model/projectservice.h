@@ -27,6 +27,8 @@ class ProjectService : public QObject {
   QItemSelectionModel* getLayerSelectionModel() const;
   QGraphicsScene* getScene() const;
 
+  void initGL();
+
 
 public slots:
   void setLayerVisible(const QModelIndex& index, bool visible);
