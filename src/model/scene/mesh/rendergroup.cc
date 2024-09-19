@@ -7,10 +7,10 @@
 #include "mesh.h"
 namespace WaifuL2d {
 void RenderGroup::initGL() {
-  if (isGLIintialized) {
+  if (isGlInit) {
     return;
   } else {
-    isGLIintialized = true;
+    isGlInit = true;
   }
   this->initializeOpenGLFunctions();
   program->addShaderFromSourceFile(QOpenGLShader::Vertex,
@@ -26,7 +26,8 @@ void RenderGroup::initGL() {
 
 void RenderGroup::addMesh(Mesh* mesh) {
   meshes.append(mesh);
-  if (isGLIintialized) {
+  mesh->container = this;
+  if (isGlInit) {
     mesh->init(this);
   }
 }
@@ -53,7 +54,7 @@ RenderGroup::~RenderGroup() {
 void RenderGroup::paint(QPainter* painter,
                         const QStyleOptionGraphicsItem* option,
                         QWidget* widget) {
-  if (!isGLIintialized) {
+  if (!isGlInit) {
     return;
   }
   painter->beginNativePainting();

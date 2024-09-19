@@ -5,6 +5,8 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QOpenGLVertexArrayObject>
+
+#include "rendergroup.h"
 namespace WaifuL2d {
 Mesh::Mesh(const QList<MeshVertex>& vertices,
            const QList<unsigned int>& incident)
@@ -67,4 +69,23 @@ Mesh::~Mesh() {
   delete ibo;
   delete tex;
 }
+void Mesh::changeVertexPos(const QPointF& pos, int index) {
+  Q_ASSERT(index < vertices.size() && index >= 0);
+  vertices[index].pos = {pos.x(), pos.y()};
+}
+void Mesh::upDateBuffer() {
+  vbo->bind();
+  vbo->write(0, vertices.data(), vertices.size() * sizeof(MeshVertex));
+  vbo->release();
+  if (container) {
+    container->update();
+  }
+}
+void Mesh::setVisible(bool vis) {
+  visible = vis;
+  if (container) {
+    container->update();
+  }
+}
+
 }  // namespace WaifuL2d

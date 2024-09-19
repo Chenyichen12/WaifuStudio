@@ -15,12 +15,14 @@ class DeformManager : public QGraphicsObject {
   void removeDeformer(AbstractDeformer* mopher);
   void clearSelection();
   void selectFromLayers(const QList<Layer*>& layers);
-  AbstractDeformer* getDeformerFromLayer(Layer* layer);
+  AbstractDeformer* getDeformerFromLayer(const Layer* layer) const;
   int type() const override { return UserType + 1; }
   QRectF boundingRect() const override;
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget) override {}
 
+//  void handleSelectClick(const QPointF& scenePos, bool isMulti, bool& isChanged);
+  void emitDeformCommand(QSharedPointer<MopherCommand> command);
  signals:
   void deformCommand(QSharedPointer<MopherCommand> command);
 };

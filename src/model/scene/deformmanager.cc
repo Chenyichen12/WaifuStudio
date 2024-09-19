@@ -1,9 +1,9 @@
 #include "deformmanager.h"
 
-#include "AbstractDeformer.h"
+#include "abstractdeformer.h"
 namespace WaifuL2d {
 DeformManager::DeformManager() {
-  setFlag(QGraphicsItem::ItemIsSelectable, true);
+  setFlag(QGraphicsItem::ItemIsSelectable, false);
 }
 
 void DeformManager::addDeformer(AbstractDeformer* mopher) {
@@ -28,7 +28,8 @@ void DeformManager::selectFromLayers(const QList<Layer*>& layers) {
     }
   }
 }
-AbstractDeformer* DeformManager::getDeformerFromLayer(Layer* layer) {
+AbstractDeformer* DeformManager::getDeformerFromLayer(
+    const Layer* layer) const {
   for (auto& mopher : deformers) {
     if (mopher->getBindLayer() == layer) {
       return mopher;
@@ -44,4 +45,35 @@ QRectF DeformManager::boundingRect() const {
 
   return total;
 }
+void DeformManager::emitDeformCommand(QSharedPointer<MopherCommand> command) {
+  emit deformCommand(command);
+}
+
+//void DeformManager::handleSelectClick(const QPointF& scenePos, bool isMulti,
+//                                      bool& isChanged) {
+//  AbstractDeformer* readyDeformer = nullptr;
+//  for (auto& deformer : deformers) {
+//    if (deformer->boundingRect().contains(scenePos) &&
+//        !deformer->isSelected()) {
+//      readyDeformer = deformer;
+//      break;
+//    }
+//  }
+//  if (isMulti) {
+//    if (readyDeformer) {
+//      readyDeformer->setSelected(true);
+//      isChanged = true;
+//    } else {
+//      isChanged = false;
+//    }
+//    return;
+//  }
+//
+//  for (auto& deformer : deformers) {
+//    if (deformer->isSelected() && deformer != readyDeformer) {
+//      deformer->setSelected(false);
+//      isChanged = true;
+//    }
+//  }
+//}
 }  // namespace WaifuL2d

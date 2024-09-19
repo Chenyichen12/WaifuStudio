@@ -5,6 +5,7 @@
 #include <QStack>
 #include <QUndoStack>
 
+#include "model/scene/deformer/meshdeformer.h"
 #include "parser/psdparser.h"
 #include "scene/deformmanager.h"
 #include "scene/mainstagescene.h"
@@ -102,7 +103,10 @@ int ProjectService::initProjectFromPsd(const QString& path) {
     auto m = PsdLayerSimpleFactory::createMesh(current, result->meshNode);
     if (m != nullptr) {
       renderGroup->addMesh(m);
+      auto deformer = new MeshDeformer(m);
+      deformManager->addDeformer(deformer);
     }
+
     for (const auto& child : current->children) {
       parseStack.push(child);
     }

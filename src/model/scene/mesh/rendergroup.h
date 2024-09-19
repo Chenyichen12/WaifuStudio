@@ -11,14 +11,13 @@ class RenderGroup : public QGraphicsObject, public QOpenGLFunctions {
   QRectF projectRect;
   QOpenGLShaderProgram* program;
 
-  bool isGLIintialized = false;
+  bool isGlInit = false;
 
  public:
   void initGL();
   void addMesh(Mesh* mesh);
-  RenderGroup(const QRectF& projectRect, QGraphicsItem* parent = nullptr);
+  explicit RenderGroup(const QRectF& projectRect, QGraphicsItem* parent = nullptr);
   void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr) override;
-  // void setVisible(Mesh* mesh, bool visible);
   QRectF boundingRect() const override;
   ~RenderGroup() override;
 };

@@ -1,4 +1,5 @@
-#include "AbstractDeformer.h"
+#include "abstractdeformer.h"
+
 #include "deformmanager.h"
 namespace WaifuL2d {
 DeformManager* AbstractDeformer::getManager() {
