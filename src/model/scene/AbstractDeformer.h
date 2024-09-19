@@ -13,26 +13,26 @@ class AbstractDeformer : public QGraphicsItem {
   const Layer* bindLayer = nullptr;
 
  protected:
-  AbstractDeformer* morpherParent;
-  QList<AbstractDeformer*> morpherChildren;
+  AbstractDeformer* deformerParent;
+  QList<AbstractDeformer*> deformerChildren;
   DeformManager* getManager();
 
  public:
   enum Type {
     ManagerType = UserType + 1,
-    MeshMopherType = UserType + 2,
-    RectMopherType = UserType + 3,
-    RotationMopherType = UserType + 4,
+    MeshDeformerType = UserType + 2,
+    RectDeformerType = UserType + 3,
+    RotationDeformerType = UserType + 4,
   };
   virtual QList<QPointF> getScenePoints() = 0;
   virtual void setScenePoint(const QPointF& point, int index) = 0;
   virtual void setScenePoints(const QList<QPointF>& points) = 0;
   virtual QPointF scenePointToLocal(const QPointF& point) = 0;
   virtual int type() const override = 0;
-  virtual void setMopherParent(AbstractDeformer* parent);
+  virtual void setDeformerParent(AbstractDeformer* parent);
   AbstractDeformer(QGraphicsItem* parent = nullptr);
 
-  void setBindLayer(Layer* layer) { bindLayer = layer; }
+  void setBindLayer(const Layer* layer) { bindLayer = layer; }
   const Layer* getBindLayer() const { return bindLayer; }
 };
 }  // namespace WaifuL2d

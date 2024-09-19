@@ -40,6 +40,7 @@ class ItemStyleDelegate : public QStyledItemDelegate {
 
   QRect getVisibleBtnRect(const QRect& relative) const;
 
+
  public:
   void paint(QPainter* painter, const QStyleOptionViewItem& option,
              const QModelIndex& index) const override;
@@ -48,6 +49,7 @@ class ItemStyleDelegate : public QStyledItemDelegate {
 
   ItemStyleDelegate(QObject* parent = nullptr);
 
+  static bool isLightColor(const QColor& color);
  signals:
   void itemVisiblePressed(const QModelIndex&);
   void itemVisibleMoved(const QModelIndex&);

@@ -14,7 +14,7 @@ void DeformManager::removeDeformer(AbstractDeformer* mopher) {
   // TODO: need to improve this
   deformers.removeOne(mopher);
   mopher->setParentItem(nullptr);
-  mopher->setMopherParent(nullptr);
+  mopher->setDeformerParent(nullptr);
 }
 void DeformManager::clearSelection() {
   for (auto& mopher : deformers) {

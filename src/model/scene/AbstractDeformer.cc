@@ -13,14 +13,14 @@ DeformManager* AbstractDeformer::getManager() {
   return nullptr;
 }
 
-void AbstractDeformer::setMopherParent(AbstractDeformer* parent) {
-  if (morpherParent) {
-    morpherParent->morpherChildren.removeOne(this);
+void AbstractDeformer::setDeformerParent(AbstractDeformer* parent) {
+  if (deformerParent) {
+    deformerParent->deformerChildren.removeOne(this);
   }
 
-  morpherParent = parent;
+  deformerParent = parent;
   if (parent) {
-    parent->morpherChildren.append(this);
+    parent->deformerChildren.append(this);
   }
 }
 AbstractDeformer::AbstractDeformer(QGraphicsItem* parent) : QGraphicsItem(parent) {

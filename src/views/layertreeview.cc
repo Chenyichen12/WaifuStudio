@@ -30,6 +30,14 @@ QSize views::ItemStyleDelegate::sizeHint(const QStyleOptionViewItem& option,
   return {size.width(), 40};
 }
 
+bool views::ItemStyleDelegate::isLightColor(const QColor& color) {
+  int r = color.red();
+  int g = color.green();
+  int b = color.blue();
+  double brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+  return brightness > 128;
+}
+
 views::ItemStyleDelegate::ItemStyleDelegate(QObject* parent)
     : QStyledItemDelegate(parent) {
   visibleImg = QImage(":/icon/eye-enabled.png");
@@ -41,6 +49,16 @@ views::ItemStyleDelegate::ItemStyleDelegate(QObject* parent)
 
   lockImg =
       QImage(":/icon/lock.png").scaledToHeight(20, Qt::SmoothTransformation);
+
+  // light resolve
+  QPalette palette = qApp->palette();
+  bool isLight = isLightColor(palette.color(QPalette::Base));
+  if (!isLight) {
+    visibleImg.invertPixels();
+    invisibleImg.invertPixels();
+    lockImg.invertPixels();
+  }
+
   visButtonLength = 20;
 }
 
