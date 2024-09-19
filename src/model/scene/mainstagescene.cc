@@ -1,11 +1,13 @@
 #include "mainstagescene.h"
 
+#include <QGraphicsSceneMouseEvent>
+#include <QTime>
+
 #include "deformmanager.h"
 #include "mesh/rendergroup.h"
 namespace WaifuL2d {
 struct MouseState {
-  bool isMove = false;
-  bool isPress = false;
+  QTime startTime;
 };
 MainStageScene::MainStageScene(QObject* parent) : QGraphicsScene(parent) {
   backGroundItem = new QGraphicsRectItem();
@@ -32,19 +34,16 @@ void MainStageScene::setDeformManager(DeformManager* deformManager) {
   deformManager->setZValue(2);
 }
 void MainStageScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-  mouseState->isPress = true;
+  mouseState->startTime = QTime::currentTime();
 }
 void MainStageScene::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
-  if (mouseState->isPress) {
-    mouseState->isMove = true;
-  }
 }
 void MainStageScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
-  if (!mouseState->isMove) {
-    // click handler select item
+  auto time = mouseState->startTime.msecsTo(QTime::currentTime());
+  if (time < 200) {
+    deformManager->handleSelectClick(event->scenePos(),
+                                     event->modifiers() == Qt::ShiftModifier);
   }
-  mouseState->isMove = false;
-  mouseState->isPress = false;
 }
 MainStageScene::~MainStageScene() = default;
 }  // namespace WaifuL2d

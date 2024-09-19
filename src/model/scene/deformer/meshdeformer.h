@@ -20,6 +20,7 @@ class MeshDeformer: public AbstractDeformer{
   void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr) override;
   QRectF boundingRect() const override;
 
+  void setDeformerSelect(bool select) override;
  protected:
   void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;

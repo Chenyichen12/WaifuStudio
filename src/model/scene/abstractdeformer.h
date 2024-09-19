@@ -28,6 +28,11 @@ class AbstractDeformer : public QGraphicsItem {
   virtual void setScenePoint(const QPointF& point, int index) = 0;
   virtual void setScenePoints(const QList<QPointF>& points) = 0;
   virtual QPointF scenePointToLocal(const QPointF& point) = 0;
+
+  virtual void setSmallSize(int size){};
+
+  virtual void setDeformerSelect(bool select) { setVisible(select); };
+  virtual bool isDeformerSelected() const { return isVisible(); }
   int type() const override = 0;
   virtual void setDeformerParent(AbstractDeformer* parent);
   explicit AbstractDeformer(QGraphicsItem* parent = nullptr);

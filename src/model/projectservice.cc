@@ -1,10 +1,10 @@
 #include "projectservice.h"
 
 #include <QGraphicsScene>
-#include <QItemSelectionModel>
 #include <QStack>
 #include <QUndoStack>
 
+#include "layerselectionmodel.h"
 #include "model/scene/deformer/meshdeformer.h"
 #include "parser/psdparser.h"
 #include "scene/deformmanager.h"
@@ -55,20 +55,24 @@ class PsdLayerSimpleFactory {
   }
 };
 
-struct Project {
+struct Project : public QObject {
   LayerModel* model = nullptr;
-  QItemSelectionModel* selectionModel = nullptr;
+  LayerSelectionModel* selectionModel = nullptr;
   MainStageScene* scene = nullptr;
   QUndoStack* undoStack;
 
   Project() { undoStack = new QUndoStack(); }
-  ~Project() {
-    delete model;
-    delete scene;
-    delete undoStack;
+
+  void setParentManager() {
+    model->setParent(this);
+    selectionModel->setModel(model);
+    scene->setParent(this);
+    undoStack->setParent(this);
   }
 };
-void ProjectService::finizateProject(Project* project) {}
+void ProjectService::finizateProject(Project* project) {
+  project->setParentManager();
+}
 ProjectService::ProjectService(QObject* parent) : QObject(parent) {}
 
 ProjectService::~ProjectService() = default;
@@ -82,9 +86,10 @@ int ProjectService::initProjectFromPsd(const QString& path) {
   const auto& result = parser.getResult();
   auto proj = std::make_unique<Project>();
   proj->model = new LayerModel(this);
-  proj->selectionModel = new QItemSelectionModel(proj->model);
   // create scene
   proj->scene = new MainStageScene();
+
+  // create deformer manager
   auto deformManager = new DeformManager();
   auto renderGroup =
       new RenderGroup(QRectF(0, 0, result->width, result->height));
@@ -92,6 +97,7 @@ int ProjectService::initProjectFromPsd(const QString& path) {
   proj->scene->setRenderGroup(renderGroup);
   proj->scene->setDeformManager(deformManager);
 
+  proj->selectionModel = new LayerSelectionModel(proj->model,proj->scene->getDeformManager());
   auto parseStack = QStack<TreeNode*>();
   parseStack.push(result->root);
   while (!parseStack.empty()) {
@@ -99,12 +105,13 @@ int ProjectService::initProjectFromPsd(const QString& path) {
     auto l = PsdLayerSimpleFactory::createLayer(current, result->meshNode);
     if (l != nullptr) {
       proj->model->appendRow(l);
-    }
-    auto m = PsdLayerSimpleFactory::createMesh(current, result->meshNode);
-    if (m != nullptr) {
-      renderGroup->addMesh(m);
-      auto deformer = new MeshDeformer(m);
-      deformManager->addDeformer(deformer);
+      auto m = PsdLayerSimpleFactory::createMesh(current, result->meshNode);
+      if (m != nullptr) {
+        renderGroup->addMesh(m);
+        auto deformer = new MeshDeformer(m);
+        deformer->setBindLayer(l);
+        deformManager->addDeformer(deformer);
+      }
     }
 
     for (const auto& child : current->children) {

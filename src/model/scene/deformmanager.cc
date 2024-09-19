@@ -6,15 +6,23 @@ DeformManager::DeformManager() {
   setFlag(QGraphicsItem::ItemIsSelectable, false);
 }
 
-void DeformManager::addDeformer(AbstractDeformer* mopher) {
-  deformers.append(mopher);
-  mopher->setParentItem(this);
+void DeformManager::setSmallSize(int size) {
+  smallSize = size;
+  for (auto& deformer : deformers) {
+    deformer->setSmallSize(size);
+  }
 }
-void DeformManager::removeDeformer(AbstractDeformer* mopher) {
+
+void DeformManager::addDeformer(AbstractDeformer* deformer) {
+  deformers.append(deformer);
+  deformer->setParentItem(this);
+  deformer->setSmallSize(smallSize);
+}
+void DeformManager::removeDeformer(AbstractDeformer* deformer) {
   // TODO: need to improve this
-  deformers.removeOne(mopher);
-  mopher->setParentItem(nullptr);
-  mopher->setDeformerParent(nullptr);
+  deformers.removeOne(deformer);
+  deformer->setParentItem(nullptr);
+  deformer->setDeformerParent(nullptr);
 }
 void DeformManager::clearSelection() {
   for (auto& mopher : deformers) {
@@ -24,7 +32,9 @@ void DeformManager::clearSelection() {
 void DeformManager::selectFromLayers(const QList<Layer*>& layers) {
   for (auto& mopher : deformers) {
     if (layers.contains(mopher->getBindLayer())) {
-      mopher->setSelected(true);
+      mopher->setDeformerSelect(true);
+    } else {
+      mopher->setDeformerSelect(false);
     }
   }
 }
@@ -49,31 +59,34 @@ void DeformManager::emitDeformCommand(QSharedPointer<MopherCommand> command) {
   emit deformCommand(command);
 }
 
-//void DeformManager::handleSelectClick(const QPointF& scenePos, bool isMulti,
-//                                      bool& isChanged) {
-//  AbstractDeformer* readyDeformer = nullptr;
-//  for (auto& deformer : deformers) {
-//    if (deformer->boundingRect().contains(scenePos) &&
-//        !deformer->isSelected()) {
-//      readyDeformer = deformer;
-//      break;
-//    }
-//  }
-//  if (isMulti) {
-//    if (readyDeformer) {
-//      readyDeformer->setSelected(true);
-//      isChanged = true;
-//    } else {
-//      isChanged = false;
-//    }
-//    return;
-//  }
-//
-//  for (auto& deformer : deformers) {
-//    if (deformer->isSelected() && deformer != readyDeformer) {
-//      deformer->setSelected(false);
-//      isChanged = true;
-//    }
-//  }
-//}
+void DeformManager::handleSelectClick(const QPointF& scenePos, bool isMulti) {
+  AbstractDeformer* readyDeformer = nullptr;
+  for (auto& deformer : deformers) {
+    if (deformer->boundingRect().contains(scenePos) &&
+        !deformer->isDeformerSelected()) {
+      readyDeformer = deformer;
+      break;
+    }
+  }
+  if (isMulti) {
+    if (readyDeformer) {
+      emit deformShouldSelect(getSelectedDeformers() << readyDeformer);
+    }
+    return;
+  }
+  if (readyDeformer) {
+    emit deformShouldSelect(QList<AbstractDeformer*>() << readyDeformer);
+  } else {
+    emit deformShouldSelect(QList<AbstractDeformer*>());
+  }
+}
+QList<AbstractDeformer*> DeformManager::getSelectedDeformers() const {
+  QList<AbstractDeformer*> selectedDeformers;
+  for (auto& deformer : deformers) {
+    if (deformer->isDeformerSelected()) {
+      selectedDeformers.append(deformer);
+    }
+  }
+  return selectedDeformers;
+}
 }  // namespace WaifuL2d

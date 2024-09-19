@@ -11,7 +11,7 @@
 namespace WaifuL2d {
 MeshDeformer::MeshDeformer(WaifuL2d::Mesh *mesh, QGraphicsItem *parent)
     : AbstractDeformer(parent), mesh(mesh) {
-  this->setFlag(QGraphicsItem::ItemIsSelectable, true);
+  setVisible(false);
 }
 QList<QPointF> MeshDeformer::getScenePoints() const { return mesh->getPos(); }
 void MeshDeformer::setScenePoint(const QPointF &point, int index) {
@@ -34,9 +34,6 @@ QPointF MeshDeformer::scenePointToLocal(const QPointF &point) {
 void MeshDeformer::paint(QPainter *painter,
                          const QStyleOptionGraphicsItem *option,
                          QWidget *widget) {
-  if (!isSelected()) {
-    return;
-  }
   const auto &pos = getScenePoints();
   painter->setBrush(Qt::red);
   for (auto &&p : pos) {
@@ -56,13 +53,22 @@ void MeshDeformer::clearSelection() {
   update();
 }
 void MeshDeformer::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-//    QGraphicsItem::mousePressEvent(event);
+  //    QGraphicsItem::mousePressEvent(event);
 }
 void MeshDeformer::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-//    QGraphicsItem::mouseMoveEvent(event);
+  //    QGraphicsItem::mouseMoveEvent(event);
 }
 void MeshDeformer::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
-//    QGraphicsItem::mouseReleaseEvent(event);
+  //    QGraphicsItem::mouseReleaseEvent(event);
+}
+void MeshDeformer::setDeformerSelect(bool select) {
+  if (!select) {
+    this->setVisible(false);
+    return;
+  }
+  if (this->isEnabled()) {
+    this->setVisible(select);
+  }
 }
 
 }  // namespace WaifuL2d
