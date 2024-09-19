@@ -4,6 +4,7 @@
 #include <QPainter>
 
 #include "model/tree/layer.h"
+#include <QApplication>
 void views::ItemStyleDelegate::paint(QPainter* painter,
                                      const QStyleOptionViewItem& option,
                                      const QModelIndex& index) const {

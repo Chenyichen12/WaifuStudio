@@ -5,8 +5,13 @@
 #include "QDragMoveEvent"
 views::MainGlViewPort::MainGlViewPort(QWidget* parent) : QOpenGLWidget(parent) {
   auto format = QSurfaceFormat();
-  format.setVersion(3, 3);
+  format.setDepthBufferSize(32);
+  format.setMajorVersion(3);
+  format.setMinorVersion(3);
   format.setProfile(QSurfaceFormat::CoreProfile);
+#ifdef Q_OS_MAC
+  QSurfaceFormat::setDefaultFormat(format);
+#endif
   setFormat(format);
 }
 void views::MainGlViewPort::initializeGL() {
