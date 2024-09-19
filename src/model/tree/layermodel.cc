@@ -3,6 +3,7 @@
 #include <QItemSelectionModel>
 
 #include "layer.h"
+#include <QSTack>
 namespace WaifuL2d {
 
 LayerModel::LayerModel(QObject* parent) : QStandardItemModel(parent) {}
@@ -30,4 +31,18 @@ Layer* LayerModel::layerFromIndex(const QModelIndex& index) const {
   return static_cast<Layer*>(itemFromIndex(index));
 }
 
+QList<Layer*> LayerModel::getOrderedList() const {
+  QList<Layer*> list;
+  QStack<QStandardItem*> parseStack;
+  parseStack.push(invisibleRootItem());
+  while(!parseStack.isEmpty()) {
+    QStandardItem* item = parseStack.pop();
+    for (int i = 0; i < item->rowCount(); i++) {
+      parseStack.push(item->child(i));
+    }
+    Layer* layer = static_cast<Layer*>(item);
+    list.append(layer);
+  }
+  return list;
+}
 }  // namespace WaifuL2d

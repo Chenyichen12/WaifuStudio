@@ -31,8 +31,11 @@ class ProjectService : public QObject {
 
 
 public slots:
-  void setLayerVisible(const QModelIndex& index, bool visible);
+  void setLayerVisible(const QModelIndex& index, bool visible, bool isStart);
   void setLayerLock(const QModelIndex& index, bool lock);
+
+  void undo();
+  void redo();
  signals:
   void projectChanged();
 };

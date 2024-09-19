@@ -20,7 +20,7 @@ void views::ItemStyleDelegate::paint(QPainter* painter,
   auto lockedRect = visibleRect.translated(-visButtonLength - 5, 0);
   painter->drawRect(lockedRect);
   if (is_locked) {
-    painter->drawImage(lockedRect.marginsRemoved({2,2,2,2}), lockImg);
+    painter->drawImage(lockedRect.marginsRemoved({2, 2, 2, 2}), lockImg);
   }
 }
 
@@ -121,7 +121,7 @@ void views::LayerTreeView::handleItemVisiblePressed(const QModelIndex& index) {
   cacheVisibleChangedIndex.push_back(index);
 
   auto visible = index.data(WaifuL2d::Layer::DataRole::LayerVisible).toBool();
-  emit shouldSetVisible(index, !visible);
+  emit shouldSetVisible(index, !visible, true);
 }
 
 void views::LayerTreeView::handleItemVisibleMoved(const QModelIndex& index) {
@@ -132,7 +132,7 @@ void views::LayerTreeView::handleItemVisibleMoved(const QModelIndex& index) {
   }
 
   auto visible = index.data(WaifuL2d::Layer::DataRole::LayerVisible).toBool();
-  emit shouldSetVisible(index, !visible);
+  emit shouldSetVisible(index, !visible, false);
   cacheVisibleChangedIndex.push_back(index);
 }
 

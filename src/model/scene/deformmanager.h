@@ -7,7 +7,7 @@ class Layer;
 class AbstractDeformer;
 class DeformManager : public QGraphicsObject {
   Q_OBJECT
-  QList<AbstractDeformer*> deformer;
+  QList<AbstractDeformer*> deformers;
 
  public:
   DeformManager();
@@ -15,7 +15,11 @@ class DeformManager : public QGraphicsObject {
   void removeDeformer(AbstractDeformer* mopher);
   void clearSelection();
   void selectFromLayers(const QList<Layer*>& layers);
+  AbstractDeformer* getDeformerFromLayer(Layer* layer);
   int type() const override { return UserType + 1; }
+  QRectF boundingRect() const override;
+  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
+             QWidget* widget) override {}
 
  signals:
   void deformCommand(QSharedPointer<MopherCommand> command);

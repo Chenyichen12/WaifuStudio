@@ -17,7 +17,7 @@ class LayerTreeView : public QTreeView {
   void mouseReleaseEvent(QMouseEvent* event) override;
   void startDrag(Qt::DropActions supportedActions) override;
  signals:
-  void shouldSetVisible(const QModelIndex& index, bool isVisible);
+  void shouldSetVisible(const QModelIndex& index, bool isVisible, bool isStart);
   void shouldSetLock(const QModelIndex& index, bool isLocked);
  protected:
   void handleItemVisiblePressed(const QModelIndex&);
