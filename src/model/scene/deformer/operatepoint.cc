@@ -17,7 +17,15 @@ void OperatePoint::mousePressEvent(QGraphicsSceneMouseEvent *event) {
   QGraphicsEllipseItem::mousePressEvent(event);
 }
 void OperatePoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-  oper->pointShouldMove(id, event->scenePos());
+  oper->pointShouldMove(id, event->scenePos(), false);
+  isMove = true;
+}
+
+void OperatePoint::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+  if (isMove) {
+    oper->pointShouldMove(id, event->scenePos(), true);
+    isMove = false;
+  }
 }
 QVariant OperatePoint::itemChange(QGraphicsItem::GraphicsItemChange change,
                                   const QVariant &value) {

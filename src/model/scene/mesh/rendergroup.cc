@@ -38,11 +38,6 @@ RenderGroup::RenderGroup(const QRectF& projectRect, QGraphicsItem* parent)
   program = new QOpenGLShaderProgram();
 }
 
-// void RenderGroup::setVisible(Mesh* mesh, bool visible) {
-//   mesh->setVisible(visible);
-//   update();
-// }
-
 QRectF RenderGroup::boundingRect() const { return projectRect; }
 
 RenderGroup::~RenderGroup() {

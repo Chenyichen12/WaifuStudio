@@ -55,7 +55,7 @@ QRectF DeformManager::boundingRect() const {
 
   return total;
 }
-void DeformManager::emitDeformCommand(QSharedPointer<MopherCommand> command) {
+void DeformManager::emitDeformCommand(QSharedPointer<DeformerCommand> command) {
   emit deformCommand(command);
 }
 

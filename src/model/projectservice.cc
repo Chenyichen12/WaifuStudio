@@ -72,6 +72,10 @@ struct Project : public QObject {
 };
 void ProjectService::finizateProject(Project* project) {
   project->setParentManager();
+  connect(project->scene->getDeformManager(), &DeformManager::deformCommand,
+          this,[this](QSharedPointer<DeformerCommand> command) {
+            this->project->undoStack->push(command->createUndoCommand());
+          });
 }
 ProjectService::ProjectService(QObject* parent) : QObject(parent) {}
 

@@ -6,10 +6,13 @@
 
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
-
+#include <QUndoCommand>
+#include "../deformmanager.h"
 #include "../mesh/mesh.h"
 #include "../meshmathtool.hpp"
 namespace WaifuL2d {
+
+
 MeshDeformer::MeshDeformer(WaifuL2d::Mesh *mesh, QGraphicsItem *parent)
     : AbstractDeformer(parent), mesh(mesh) {
   setVisible(false);
@@ -31,6 +34,7 @@ void MeshDeformer::setScenePoint(const QPointF &point, int index) {
 void MeshDeformer::setScenePoints(const QList<QPointF> &points) {
   for (int i = 0; i < mesh->getPos().size(); i++) {
     mesh->changeVertexPos(points[i], i);
+    operatePoints[i]->setPos(points[i]);
   }
   mesh->upDateBuffer();
   update();
@@ -77,8 +81,17 @@ void MeshDeformer::setDeformerSelect(bool select) {
   }
 }
 void MeshDeformer::pointSelectedChange(int id) { qDebug() << id; }
-void MeshDeformer::pointShouldMove(int index, const QPointF &point) {
-  qDebug() << point;
+void MeshDeformer::pointShouldMove(int index, const QPointF &point,
+                                   bool isEnd) {
+ auto m = this->getManager();
+ if(m){
+   auto command = QSharedPointer<DeformerPointCommand>(new DeformerPointCommand(this, isEnd));
+   command->oldPoints = getScenePoints();
+   auto newPoints = getScenePoints();
+   newPoints[index] = point;
+   command->newPoints = newPoints;
+   m->emitDeformCommand(command);
+ }
 }
 void MeshDeformer::setSmallSize(int size) {
   smallSize = size;

@@ -1,7 +1,7 @@
 #pragma once
 #include <QGraphicsObject>
 
-#include "mophercommand.h"
+#include "deformercommand.h"
 namespace WaifuL2d {
 class Layer;
 class AbstractDeformer;
@@ -33,11 +33,11 @@ class DeformManager : public QGraphicsObject {
    * get the selected deformers
    */
   QList<AbstractDeformer*> getSelectedDeformers() const;
-  void emitDeformCommand(QSharedPointer<MopherCommand> command);
+  void emitDeformCommand(QSharedPointer<DeformerCommand> command);
 
   void setSmallSize(int size);
  signals:
-  void deformCommand(QSharedPointer<MopherCommand> command);
+  void deformCommand(QSharedPointer<DeformerCommand> command);
   void deformShouldSelect(QList<AbstractDeformer*> deformers);
 };
 }  // namespace WaifuL2d

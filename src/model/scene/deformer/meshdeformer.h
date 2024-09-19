@@ -9,7 +9,6 @@ class Mesh;
 class MeshDeformer: public AbstractDeformer, public PointOperator{
  private:
   Mesh* mesh;
-  QList<unsigned int> selectedPoints;
   QList<OperatePoint*> operatePoints;
   int smallSize = 10;
  public:
@@ -26,7 +25,7 @@ class MeshDeformer: public AbstractDeformer, public PointOperator{
   void setDeformerSelect(bool select) override;
 
   void pointSelectedChange(int id) override;
-  void pointShouldMove(int index, const QPointF& point) override;
+  void pointShouldMove(int index, const QPointF& point, bool isEnd) override;
 
   void setSmallSize(int size) override;
  protected:
