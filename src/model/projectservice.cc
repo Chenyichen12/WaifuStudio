@@ -91,6 +91,7 @@ int ProjectService::initProjectFromPsd(const QString& path) {
 
   // create deformer manager
   auto deformManager = new DeformManager();
+  deformManager->setSmallSize(result->width/200);
   auto renderGroup =
       new RenderGroup(QRectF(0, 0, result->width, result->height));
   // two main components

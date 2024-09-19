@@ -3,12 +3,15 @@
 //
 #pragma once
 #include "../abstractdeformer.h"
+#include "operatepoint.h"
 namespace WaifuL2d {
 class Mesh;
-class MeshDeformer: public AbstractDeformer{
+class MeshDeformer: public AbstractDeformer, public PointOperator{
  private:
   Mesh* mesh;
   QList<unsigned int> selectedPoints;
+  QList<OperatePoint*> operatePoints;
+  int smallSize = 10;
  public:
   explicit MeshDeformer(Mesh* mesh, QGraphicsItem* parent = nullptr);
 
@@ -21,15 +24,13 @@ class MeshDeformer: public AbstractDeformer{
   QRectF boundingRect() const override;
 
   void setDeformerSelect(bool select) override;
+
+  void pointSelectedChange(int id) override;
+  void pointShouldMove(int index, const QPointF& point) override;
+
+  void setSmallSize(int size) override;
  protected:
   void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-  void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
-  void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
-
- public:
-  void selectPoint(int index);
-  void clearSelection();
-
 };
 
 }  // namespace WaifuL2d

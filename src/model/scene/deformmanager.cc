@@ -62,8 +62,11 @@ void DeformManager::emitDeformCommand(QSharedPointer<MopherCommand> command) {
 void DeformManager::handleSelectClick(const QPointF& scenePos, bool isMulti) {
   AbstractDeformer* readyDeformer = nullptr;
   for (auto& deformer : deformers) {
-    if (deformer->boundingRect().contains(scenePos) &&
-        !deformer->isDeformerSelected()) {
+    if (deformer->boundingRect().contains(scenePos)) {
+      if(deformer->isDeformerSelected()){
+        readyDeformer = deformer;
+        continue;
+      }
       readyDeformer = deformer;
       break;
     }

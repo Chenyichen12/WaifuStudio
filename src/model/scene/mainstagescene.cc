@@ -35,15 +35,18 @@ void MainStageScene::setDeformManager(DeformManager* deformManager) {
 }
 void MainStageScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
   mouseState->startTime = QTime::currentTime();
+  QGraphicsScene::mousePressEvent(event);
 }
 void MainStageScene::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+  QGraphicsScene::mouseMoveEvent(event);
 }
 void MainStageScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
   auto time = mouseState->startTime.msecsTo(QTime::currentTime());
-  if (time < 200) {
+  if (time < 100) {
     deformManager->handleSelectClick(event->scenePos(),
                                      event->modifiers() == Qt::ShiftModifier);
   }
+  QGraphicsScene::mouseReleaseEvent(event);
 }
 MainStageScene::~MainStageScene() = default;
 }  // namespace WaifuL2d
