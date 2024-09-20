@@ -11,7 +11,9 @@ OperatePoint::OperatePoint(int id, WaifuL2d::PointOperator *oper,
                            QGraphicsItem *parent)
     : oper(oper), QGraphicsEllipseItem(parent), id(id) {
   this->setFlag(QGraphicsItem::ItemIsSelectable, true);
+  this->setFlag(QGraphicsItem::ItemIgnoresTransformations);
   this->setBrush(QBrush(Qt::white));
+  this->setRect(-4, -4, 8, 8);
 }
 void OperatePoint::mousePressEvent(QGraphicsSceneMouseEvent *event) {
   QGraphicsEllipseItem::mousePressEvent(event);
@@ -34,6 +36,7 @@ QVariant OperatePoint::itemChange(QGraphicsItem::GraphicsItemChange change,
   }
   return QGraphicsItem::itemChange(change, value);
 }
+
 void OperatePoint::paint(QPainter *painter,
                          const QStyleOptionGraphicsItem *option,
                          QWidget *widget) {

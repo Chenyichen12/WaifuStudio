@@ -14,6 +14,7 @@ void LayerModel::addLayer(Layer* layer, Layer* parent) {
   } else {
     parent->appendRow(layer);
   }
+  layer->setId(AutoIncrementId++);
 }
 
 void LayerModel::removeLayer(Layer* layer, Layer* parent) {

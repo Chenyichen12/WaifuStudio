@@ -6,14 +6,14 @@
 #include <QItemSelectionModel>
 namespace WaifuL2d {
 class LayerModel;
-class DeformManager;
+class MainStageScene;
 class LayerSelectionModel : public QItemSelectionModel {
  private:
   LayerModel* model;
-  DeformManager* deformManager;
+  MainStageScene* scene;
 
  public:
-  LayerSelectionModel(LayerModel* model, DeformManager* deformManager);
+  LayerSelectionModel(LayerModel* model, MainStageScene* scene);
  public slots:
   void select(const QItemSelection& selection,
               QItemSelectionModel::SelectionFlags command) override;

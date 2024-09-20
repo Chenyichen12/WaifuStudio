@@ -78,6 +78,9 @@ void Mesh::upDateBuffer() {
   vbo->write(0, vertices.data(), vertices.size() * sizeof(MeshVertex));
   vbo->release();
   if (container) {
+#ifdef Q_OS_MACOS
+    container->update();
+#endif
     container->update();
   }
 }

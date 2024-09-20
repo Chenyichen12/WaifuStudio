@@ -7,7 +7,7 @@
 #include "layerselectionmodel.h"
 #include "model/scene/deformer/meshdeformer.h"
 #include "parser/psdparser.h"
-#include "scene/deformmanager.h"
+#include "scene/deformercommand.h"
 #include "scene/mainstagescene.h"
 #include "scene/mesh/mesh.h"
 #include "scene/mesh/rendergroup.h"
@@ -72,9 +72,11 @@ struct Project : public QObject {
 };
 void ProjectService::finizateProject(Project* project) {
   project->setParentManager();
-  connect(project->scene->getDeformManager(), &DeformManager::deformCommand,
-          this,[this](QSharedPointer<DeformerCommand> command) {
-            this->project->undoStack->push(command->createUndoCommand());
+  connect(project->scene, &MainStageScene::deformerCommand, project->undoStack,
+          [this](std::shared_ptr<DeformerCommand> command) {
+            //TODO: some new things can be done here
+            auto copy = new DeformerCommand(*command);
+            this->project->undoStack->push(copy);
           });
 }
 ProjectService::ProjectService(QObject* parent) : QObject(parent) {}
@@ -93,29 +95,25 @@ int ProjectService::initProjectFromPsd(const QString& path) {
   // create scene
   proj->scene = new MainStageScene();
 
-  // create deformer manager
-  auto deformManager = new DeformManager();
-  deformManager->setSmallSize(result->width/200);
+  proj->selectionModel = new LayerSelectionModel(proj->model, proj->scene);
   auto renderGroup =
       new RenderGroup(QRectF(0, 0, result->width, result->height));
   // two main components
   proj->scene->setRenderGroup(renderGroup);
-  proj->scene->setDeformManager(deformManager);
-
-  proj->selectionModel = new LayerSelectionModel(proj->model,proj->scene->getDeformManager());
   auto parseStack = QStack<TreeNode*>();
   parseStack.push(result->root);
   while (!parseStack.empty()) {
     auto current = parseStack.pop();
     auto l = PsdLayerSimpleFactory::createLayer(current, result->meshNode);
+
     if (l != nullptr) {
-      proj->model->appendRow(l);
+      proj->model->addLayer(l);
       auto m = PsdLayerSimpleFactory::createMesh(current, result->meshNode);
       if (m != nullptr) {
         renderGroup->addMesh(m);
         auto deformer = new MeshDeformer(m);
-        deformer->setBindLayer(l);
-        deformManager->addDeformer(deformer);
+        deformer->setBindId(l->getId());
+        proj->scene->addDeformer(deformer);
       }
     }
 
@@ -143,7 +141,7 @@ void ProjectService::initGL() {
   if (project == nullptr) {
     return;
   }
-  project->scene->getRenderGroup()->initGL();
+  project->scene->initGL();
 }
 
 void ProjectService::setLayerLock(const QModelIndex& index, bool lock) {
@@ -180,8 +178,7 @@ void ProjectService::setLayerVisible(const QModelIndex& index, bool visible,
   }
   // undo command
   auto command =
-      new VisibleCommand(project->scene->getRenderGroup(), project->model,
-                         project->scene->getDeformManager(), index, visible);
+      new VisibleCommand(project->model, project->scene, index, visible);
   command->setStart(isStart);
   project->undoStack->push(command);
 }

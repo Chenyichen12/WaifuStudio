@@ -2,48 +2,38 @@
 
 #include "abstractdeformer.h"
 namespace WaifuL2d {
-DeformerCommand::DeformerCommand(AbstractDeformer* mopher)
-    : targetMopher(mopher) {}
-
-DeformerPointCommand::DeformerPointCommand(WaifuL2d::AbstractDeformer* deformer,
-                                           bool isEnd)
-    : DeformerCommand(deformer), isEnd(isEnd) {}
-QUndoCommand* DeformerPointCommand::createUndoCommand(QUndoCommand* parent) {
-  return new PointUndoCommand(this->targetMopher, this->oldPoints,
-                              this->newPoints, this->isEnd, parent);
-}
-DeformerPointCommand::PointUndoCommand::PointUndoCommand(
-    AbstractDeformer* deformer, const QList<QPointF>& oldPoints,
-    const QList<QPointF>& newPoints, bool isEnd, QUndoCommand* parent)
-    : QUndoCommand(parent),
-      deformer(deformer),
-      oldPoints(oldPoints),
-      newPoints(newPoints),
-      isEnd(isEnd) {}
-
-void DeformerPointCommand::PointUndoCommand::undo() {
-  deformer->setScenePoints(oldPoints);
-}
-void DeformerPointCommand::PointUndoCommand::redo() {
-  deformer->setScenePoints(newPoints);
+DeformerCommand::DeformerCommand(AbstractDeformer* deformer,
+                                 QUndoCommand* parent)
+    : QUndoCommand(parent), targetDeformer(deformer) {}
+DeformerCommand::DeformerCommand(const DeformerCommand& other,
+                                 QUndoCommand* parent)
+    : QUndoCommand(parent) {
+  this->targetDeformer = other.targetDeformer;
+  this->isEnd = other.isEnd;
+  this->oldPoints = other.oldPoints;
+  this->newPoints = other.newPoints;
+  this->oldAngle = other.oldAngle;
+  this->newAngle = other.newAngle;
 }
 
-int DeformerPointCommand::PointUndoCommand::id() const {
-  return DeformerCommand::PointCommand;
-}
+void DeformerCommand::redo() { targetDeformer->setScenePoints(newPoints); }
 
-bool DeformerPointCommand::PointUndoCommand::mergeWith(
-    const QUndoCommand* other) {
-  if (other->id() != id()) return false;
-  auto otherCommand =
-      static_cast<const DeformerPointCommand::PointUndoCommand*>(other);
-  if (this->isEnd) {
+void DeformerCommand::undo() { targetDeformer->setScenePoints(oldPoints); }
+
+bool DeformerCommand::mergeWith(const QUndoCommand* other) {
+  if (other->id() != id()) {
     return false;
   }
-  if (deformer != otherCommand->deformer) {
+  if(this->isEnd){
     return false;
   }
+  auto otherCommand = static_cast<const DeformerCommand*>(other);
+  if (targetDeformer != otherCommand->targetDeformer) {
+    return false;
+  }
+  this->isEnd = otherCommand->isEnd;
   newPoints = otherCommand->newPoints;
+  newAngle = otherCommand->newAngle;
   return true;
 }
 }  // namespace WaifuL2d

@@ -12,8 +12,9 @@ class Layer : public QStandardItem {
   };
 
   enum DataRole {
-    LayerVisible = Qt::UserRole + 1,
-    LayerLock = Qt::UserRole + 2,
+    LayerId = Qt::UserRole + 1,
+    LayerVisible = Qt::UserRole + 2,
+    LayerLock = Qt::UserRole + 3,
   };
 
   Layer();
@@ -28,6 +29,9 @@ class Layer : public QStandardItem {
 
   bool getLocked() const;
   void setLocked(bool locked);
+
+  void setId(int id);
+  int getId() const;
 };
 
 class BitmapLayer : public Layer {

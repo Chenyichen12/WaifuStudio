@@ -2,13 +2,12 @@
 
 #include "model/tree/layer.h"
 #include "model/tree/layermodel.h"
+#include "model/scene/mainstagescene.h"
 namespace WaifuL2d {
-VisibleCommand::VisibleCommand(RenderGroup* renderGroup, LayerModel* layerModel,
-                               DeformManager* deformManager,
+VisibleCommand::VisibleCommand(LayerModel* layerModel, MainStageScene* scene,
                                const QModelIndex& index, bool visible)
-    : renderGroup(renderGroup),
-      layerModel(layerModel),
-      deformManager(deformManager),
+    : layerModel(layerModel),
+      scene(scene),
       indexes({index}),
       visibles({visible}) {}
 
@@ -24,6 +23,7 @@ void VisibleCommand::undo() {
       continue;
     }
     layer->setVisible(!visibles[i]);
+    scene->setDeformerVisible(layer->getId(), !visibles[i]);
   }
 }
 
@@ -38,6 +38,7 @@ void VisibleCommand::redo() {
       continue;
     }
     layer->setVisible(visibles[i]);
+    scene->setDeformerVisible(layer->getId(), visibles[i]);
   }
 }
 
@@ -49,8 +50,7 @@ bool VisibleCommand::mergeWith(const QUndoCommand* command) {
   if (other->isStart) {
     return false;
   }
-  if (other->deformManager != deformManager ||
-      other->renderGroup != renderGroup || other->layerModel != layerModel) {
+  if (scene != other->scene || other->layerModel != layerModel) {
     return false;
   }
 

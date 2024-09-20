@@ -5,42 +5,27 @@
 #include <QUndoCommand>
 namespace WaifuL2d {
 class AbstractDeformer;
-class DeformerCommand {
+class DeformerCommand : public QUndoCommand {
  protected:
-  AbstractDeformer* targetMopher;
+  AbstractDeformer* targetDeformer;
+  bool isEnd = false;
 
  public:
   QList<QPointF> oldPoints;
   QList<QPointF> newPoints;
   qreal oldAngle = 0;
   qreal newAngle = 0;
-  enum DeformerUndoId { PointCommand = 1, AngleCommand = 2 };
-  virtual QUndoCommand* createUndoCommand(QUndoCommand* parent = nullptr) = 0;
-  explicit DeformerCommand(AbstractDeformer* mopher);
-  ~DeformerCommand() = default;
-};
 
-class DeformerPointCommand : public DeformerCommand {
-  bool isEnd;
-
- public:
-  class PointUndoCommand : public QUndoCommand {
-    QList<QPointF> oldPoints;
-    QList<QPointF> newPoints;
-    bool isEnd;
-    AbstractDeformer* deformer;
-
-   public:
-    void undo() override;
-    void redo() override;
-    bool mergeWith(const QUndoCommand* other) override;
-    int id() const override;
-    PointUndoCommand(AbstractDeformer* deformer,const QList<QPointF>& oldPoints,
-                     const QList<QPointF>& newPoints, bool isEnd,
-                     QUndoCommand* parent = nullptr);
-  };
-  DeformerPointCommand(AbstractDeformer* deformer, bool isEnd = false);
-  QUndoCommand* createUndoCommand(QUndoCommand* parent = nullptr) override;
+  enum DeformerUndoId { BasicMoveCommand = 1 };
+  explicit DeformerCommand(AbstractDeformer* deformer,
+                           QUndoCommand* parent = nullptr);
+  DeformerCommand(const DeformerCommand& other, QUndoCommand* parent = nullptr);
+  bool mergeWith(const QUndoCommand* other) override;
+  void undo() override;
+  void redo() override;
+  int id() const override { return BasicMoveCommand; }
+  void setEnd(bool end) { isEnd = end; }
+  bool getEnd() const { return isEnd; }
 };
 }  // namespace WaifuL2d
 

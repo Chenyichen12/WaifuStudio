@@ -27,7 +27,8 @@ void Layer::setLocked(bool locked) {
   setSelectable(!locked);
   setData(locked, Layer::DataRole::LayerLock);
 }
-
+void Layer::setId(int id) { setData(id, DataRole::LayerId); }
+int Layer::getId() const { return data(DataRole::LayerId).toInt(); }
 BitmapLayer::BitmapLayer(const QString& name, const QImage& image)
     : Layer(name) {
   auto img = image.scaledToHeight(25);
