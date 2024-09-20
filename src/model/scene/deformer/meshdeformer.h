@@ -11,6 +11,8 @@ class MeshDeformer : public AbstractDeformer, public PointOperator {
   Mesh* mesh;
   QList<OperatePoint*> operatePoints;
 
+  bool deformerSelect = false;
+
  public:
   explicit MeshDeformer(Mesh* mesh, QGraphicsItem* parent = nullptr);
 
@@ -22,7 +24,7 @@ class MeshDeformer : public AbstractDeformer, public PointOperator {
              QWidget* widget = nullptr) override;
   QRectF boundingRect() const override;
   void setDeformerSelect(bool select) override;
-
+  bool isDeformerSelected() const override { return deformerSelect; }
   void pointSelectedChange(int id) override;
   void pointShouldMove(int index, const QPointF& point, bool isEnd) override;
 

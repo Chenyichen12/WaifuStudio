@@ -15,6 +15,15 @@ void LayerModel::addLayer(Layer* layer, Layer* parent) {
     parent->appendRow(layer);
   }
   layer->setId(AutoIncrementId++);
+  quickFindCache.insert(std::make_pair(layer->getId(), layer));
+}
+
+Layer* LayerModel::layerFromId(int id) const {
+  auto it = quickFindCache.find(id);
+  if (it != quickFindCache.end()) {
+    return it->second;
+  }
+  return nullptr;
 }
 
 void LayerModel::removeLayer(Layer* layer, Layer* parent) {
@@ -23,6 +32,7 @@ void LayerModel::removeLayer(Layer* layer, Layer* parent) {
   } else {
     parent->removeRow(layer->row());
   }
+  quickFindCache.erase(layer->getId());
 }
 
 Layer* LayerModel::layerFromIndex(const QModelIndex& index) const {

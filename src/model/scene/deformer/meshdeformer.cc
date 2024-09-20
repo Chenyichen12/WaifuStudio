@@ -15,13 +15,13 @@ namespace WaifuL2d {
 
 MeshDeformer::MeshDeformer(WaifuL2d::Mesh *mesh, QGraphicsItem *parent)
     : AbstractDeformer(parent), mesh(mesh) {
-  setVisible(true);
   const auto &pointList = mesh->getPos();
   for (int i = 0; i < pointList.size(); i++) {
     OperatePoint *op = new OperatePoint(i, this, this);
     operatePoints.push_back(op);
     op->setPos(pointList[i]);
   }
+  this->setDeformerSelect(false);
 }
 QList<QPointF> MeshDeformer::getScenePoints() const { return mesh->getPos(); }
 void MeshDeformer::setScenePoints(const QList<QPointF> &points) {
@@ -39,6 +39,9 @@ QPointF MeshDeformer::scenePointToLocal(const QPointF &point) {
 void MeshDeformer::paint(QPainter *painter,
                          const QStyleOptionGraphicsItem *option,
                          QWidget *widget) {
+  if (!deformerSelect) {
+    return;
+  }
   auto pen = QPen();
   pen.setWidth(1 / painter->transform().m11());
   pen.setColor(Qt::black);
@@ -64,13 +67,11 @@ void MeshDeformer::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void MeshDeformer::setDeformerSelect(bool select) {
-  if (!select) {
-    this->setVisible(false);
-    return;
+  deformerSelect = select;
+  for (auto &op : operatePoints) {
+    op->setVisible(deformerSelect);
   }
-  if (this->isEnabled()) {
-    this->setVisible(select);
-  }
+  update();
 }
 void MeshDeformer::pointSelectedChange(int id) { qDebug() << id; }
 void MeshDeformer::pointShouldMove(int index, const QPointF &point,
@@ -87,7 +88,7 @@ void MeshDeformer::pointShouldMove(int index, const QPointF &point,
 
 QVariant MeshDeformer::itemChange(QGraphicsItem::GraphicsItemChange change,
                                   const QVariant &value) {
-  if (change == QGraphicsItem::ItemEnabledChange) {
+  if (change == QGraphicsItem::ItemVisibleChange) {
     if (!value.toBool()) {
       this->setDeformerSelect(false);
     }

@@ -4,22 +4,36 @@
 #include "layerselectionmodel.h"
 
 #include "scene/abstractdeformer.h"
+#include "scene/mainstagescene.h"
 #include "tree/layer.h"
 #include "tree/layermodel.h"
 namespace WaifuL2d {
 LayerSelectionModel::LayerSelectionModel(WaifuL2d::LayerModel *model,
                                          MainStageScene *scene)
-    : QItemSelectionModel(model), model(model), scene(scene) {}
+    : QItemSelectionModel(model), model(model), scene(scene) {
+  connect(scene, &MainStageScene::shouldSelectDeformers, this,
+          [this](const QList<int> &ids) {
+            QItemSelection selection;
+            for (auto id : ids) {
+              auto layer = this->model->layerFromId(id);
+              if (layer) {
+                selection.select(layer->index(), layer->index());
+              }
+            }
+            this->select(selection, QItemSelectionModel::ClearAndSelect);
+          });
+}
 
 void LayerSelectionModel::select(const QItemSelection &selection,
                                  QItemSelectionModel::SelectionFlags command) {
-  QList<Layer *> layers;
+  QList<int> ids;
   for (auto &index : selection.indexes()) {
     auto layer = model->layerFromIndex(index);
     if (layer) {
-      layers.append(layer);
+      ids.append(layer->getId());
     }
   }
+  scene->selectDeformersById(ids);
 
   QItemSelectionModel::select(selection, command);
 }

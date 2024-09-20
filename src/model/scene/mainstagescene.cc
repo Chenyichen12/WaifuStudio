@@ -17,7 +17,25 @@ class RootDeformer : public AbstractDeformer {
   void setScenePoints(const QList<QPointF>& points) override {}
   QPointF scenePointToLocal(const QPointF& point) override { return point; }
   int type() const override { return RootType; }
+
+  typedef std::function<bool(AbstractDeformer*)> callBack;
+  void forEachDown(const callBack& call) const {
+    auto callStack = QStack<AbstractDeformer*>();
+    for (const auto& deformer : deformerChildren) {
+      callStack.push(deformer);
+    }
+    while (!callStack.isEmpty()) {
+      auto deformer = callStack.pop();
+      if (call(deformer)) {
+        return;
+      }
+      for (const auto& child : deformer->getDeformerChildren()) {
+        callStack.push(child);
+      }
+    }
+  }
 };
+
 MainStageScene::MainStageScene(QObject* parent) : QGraphicsScene(parent) {
   backGroundItem = new QGraphicsRectItem();
   backGroundItem->setBrush(Qt::transparent);
@@ -42,15 +60,72 @@ void MainStageScene::setRenderGroup(RenderGroup* renderGroup) {
 
 void MainStageScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
   QGraphicsScene::mousePressEvent(event);
+  mouseState.pressed = true;
 }
 void MainStageScene::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
   QGraphicsScene::mouseMoveEvent(event);
+  if (mouseState.pressed) {
+    mouseState.moved = true;
+  }
 }
 void MainStageScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
   QGraphicsScene::mouseReleaseEvent(event);
+  if (event->isAccepted()) {
+    return;
+  }
+  if (mouseState.moved) {
+    mouseState.clear();
+    return;
+  } else {
+    mouseState.clear();
+  };
+  auto posItems = items(event->scenePos());
+  std::reverse(posItems.begin(), posItems.end());
+  auto deformers = QList<AbstractDeformer*>();
+  bool isMulti = event->modifiers() == Qt::ControlModifier;
+  for (const auto& item : posItems) {
+    if (AbstractDeformer::isDeformer(item->type())) {
+      deformers.push_back(static_cast<AbstractDeformer*>(item));
+    }
+  }
+
+  AbstractDeformer* readyDeformer = nullptr;
+  AbstractDeformer* existDeformer = nullptr;
+  for (const auto& item : deformers) {
+    if (item->isDeformerSelected()) {
+      existDeformer = item;
+      break;
+    } else {
+      readyDeformer = item;
+    }
+  }
+
+  QList<int> readySelectLayers;
+  if (existDeformer) {
+    readySelectLayers.append(existDeformer->getBindId());
+  }
+  rootDeformer->forEachDown([&readySelectLayers, isMulti](AbstractDeformer* d) {
+    if (isMulti) {
+      if (d->isDeformerSelected()) {
+        readySelectLayers.append(d->getBindId());
+      }
+    }
+    return false;
+  });
+  if (readyDeformer && !existDeformer) {
+    readySelectLayers.append(readyDeformer->getBindId());
+  }
+
+  emit shouldSelectDeformers(readySelectLayers);
 }
 MainStageScene::~MainStageScene() = default;
-
+void MainStageScene::selectDeformersById(const QList<int>& id) {
+  rootDeformer->forEachDown([&id](AbstractDeformer* d) {
+    qDebug()<<id.contains(d->getBindId());
+    d->setDeformerSelect(id.contains(d->getBindId()));
+    return false;
+  });
+}
 void MainStageScene::emitDeformerCommand(
     std::shared_ptr<DeformerCommand> command) {
   emit deformerCommand(command);
@@ -72,23 +147,20 @@ void MainStageScene::initGL() {
 }
 
 AbstractDeformer* MainStageScene::findDeformerById(int id) {
-  auto findStack = QStack<AbstractDeformer*>({rootDeformer});
-  while (!findStack.isEmpty()) {
-    auto deformer = findStack.pop();
-    if (deformer->getBindId() == id) {
-      return deformer;
+  AbstractDeformer* result = nullptr;
+  rootDeformer->forEachDown([id, &result](AbstractDeformer* d){
+    if(d->getBindId() == id){
+      result = d;
+      return true;
     }
-    for (auto child : deformer->getDeformerChildren()) {
-      findStack.push(child);
-    }
-  }
-  return nullptr;
+    return false;
+  });
+  return result;
 }
 void MainStageScene::setDeformerVisible(int id, bool visible) {
   auto deformer = findDeformerById(id);
   if (deformer) {
-    deformer->setEnabled(visible);
-    deformer->setDeformerSelect(visible);
+    deformer->setVisible(visible);
   }
 }
 }  // namespace WaifuL2d

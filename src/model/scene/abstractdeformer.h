@@ -17,12 +17,31 @@ class AbstractDeformer : public QGraphicsItem {
   QList<AbstractDeformer*> deformerChildren;
 
  public:
+#define TYPE_ENUM_LIST              \
+  X(RootType, UserType + 1)         \
+  X(MeshDeformerType, UserType + 2) \
+  X(RectDeformerType, UserType + 3) \
+  X(RotationDeformerType, UserType + 4)
+
+  // 定义enum
   enum Type {
-    RootType = UserType + 1,
-    MeshDeformerType = UserType + 2,
-    RectDeformerType = UserType + 3,
-    RotationDeformerType = UserType + 4,
+#define X(EnumName, EnumValue) EnumName = EnumValue,
+    TYPE_ENUM_LIST
+#undef X
   };
+
+  static bool isDeformer(int type) {
+    switch (type) {
+#define X(EnumName, EnumValue) \
+  case EnumValue:              \
+    return true;
+      TYPE_ENUM_LIST
+#undef X
+      default:
+        return false;
+    }
+  };
+
   virtual QList<QPointF> getScenePoints() const = 0;
   virtual void setScenePoints(const QList<QPointF>& points) = 0;
   virtual QPointF scenePointToLocal(const QPointF& point) = 0;
