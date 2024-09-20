@@ -10,6 +10,7 @@ class MainStageScene : public QGraphicsScene {
   RenderGroup* renderGroup = nullptr;
   QGraphicsRectItem* backGroundItem;
   AbstractDeformer* rootDeformer;
+
  protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
@@ -21,8 +22,9 @@ class MainStageScene : public QGraphicsScene {
   void initGL();
   ~MainStageScene() override;
   void setRenderGroup(RenderGroup* renderGroup);
-  void addDeformer(AbstractDeformer* deformer, AbstractDeformer* parent = nullptr);
-  void setDeformerVisible(int id,bool visible);
+  void addDeformer(AbstractDeformer* deformer,
+                   AbstractDeformer* parent = nullptr);
+  void setDeformerVisible(int id, bool visible);
   AbstractDeformer* findDeformerById(int id);
   void emitDeformerCommand(std::shared_ptr<DeformerCommand> command);
  signals:

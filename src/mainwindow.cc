@@ -59,12 +59,8 @@ void MainWindow::handlePsdOpen() {
   setUpProjectFromPsd(fileName);
 }
 
-void MainWindow::handleUndoAction() {
-  projectService->undo();
-}
-void MainWindow::handleRedoAction() {
-  projectService->redo();
-}
+void MainWindow::handleUndoAction() { projectService->undo(); }
+void MainWindow::handleRedoAction() { projectService->redo(); }
 
 void MainWindow::setUpMenu() {
   auto openMenu = ui->menubar->addMenu(tr("Open"));

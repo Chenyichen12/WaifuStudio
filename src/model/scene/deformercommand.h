@@ -27,7 +27,7 @@ class DeformerCommand {
     BasicDeformerCommandInfo info;
 
    public:
-    BasicMoveCommand(BasicDeformerCommandInfo info,QUndoCommand* parent);
+    BasicMoveCommand(BasicDeformerCommandInfo info, QUndoCommand* parent);
     void undo() override;
     void redo() override;
     bool mergeWith(const QUndoCommand* other) override;

@@ -1,7 +1,6 @@
 #pragma once
 #include <QWidget>
 
-
 class QPushButton;
 namespace views {
 class MainStageSideToolBar : public QWidget {
@@ -18,18 +17,19 @@ class MainStageSideToolBar : public QWidget {
   void handleSwitchTool(int index);
   static QString generateButtonStyleSheet(const QString& iconPath);
   QPushButton* addBtn(const QString& iconPath);
+
  public:
   MainStageSideToolBar(QWidget* parent = nullptr);
   void setPositionFromRect(const QRect& rect);
 
   int getCurrentTool() const;
 
-  void setEnableTool(int index,bool enable);
+  void setEnableTool(int index, bool enable);
  signals:
- /**
-  * signal when switch tool in the sidebar
-  * @param index the tool index to switch
-  */
+  /**
+   * signal when switch tool in the sidebar
+   * @param index the tool index to switch
+   */
   void switchTool(int index);
 };
-}
+}  // namespace views

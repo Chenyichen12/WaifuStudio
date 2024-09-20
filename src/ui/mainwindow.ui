@@ -1,91 +1,91 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>851</width>
-    <height>491</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>MainWindow</string>
-  </property>
-  <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
-     <widget class="QSplitter" name="splitter">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <widget class="views::LayerTreeView" name="controllerTree"/>
-      <widget class="QListView" name="listView"/>
-      <widget class="QWidget" name="layoutWidget">
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="views::MainStageTopBar" name="MainStageTopBar" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>50</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="views::MainGlGraphicsView" name="MainStageGraphicsView">
-          <property name="minimumSize">
-           <size>
-            <width>400</width>
-            <height>0</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>851</width>
-     <height>19</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QStatusBar" name="statusbar"/>
- </widget>
- <customwidgets>
-  <customwidget>
-   <class>views::LayerTreeView</class>
-   <extends>QTreeView</extends>
-   <header>views/layertreeview.h</header>
-  </customwidget>
-  <customwidget>
-   <class>views::MainGlGraphicsView</class>
-   <extends>QGraphicsView</extends>
-   <header>views/mainglstage.h</header>
-  </customwidget>
-  <customwidget>
-   <class>views::MainStageTopBar</class>
-   <extends>QWidget</extends>
-   <header>views/mainstagetopbar.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
- <resources/>
- <connections/>
+    <class>MainWindow</class>
+    <widget class="QMainWindow" name="MainWindow">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>851</width>
+                <height>491</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>MainWindow</string>
+        </property>
+        <widget class="QWidget" name="centralwidget">
+            <layout class="QHBoxLayout" name="horizontalLayout">
+                <item>
+                    <widget class="QSplitter" name="splitter">
+                        <property name="orientation">
+                            <enum>Qt::Horizontal</enum>
+                        </property>
+                        <widget class="views::LayerTreeView" name="controllerTree"/>
+                        <widget class="QListView" name="listView"/>
+                        <widget class="QWidget" name="layoutWidget">
+                            <layout class="QVBoxLayout" name="verticalLayout">
+                                <item>
+                                    <widget class="views::MainStageTopBar" name="MainStageTopBar" native="true">
+                                        <property name="sizePolicy">
+                                            <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                                                <horstretch>0</horstretch>
+                                                <verstretch>0</verstretch>
+                                            </sizepolicy>
+                                        </property>
+                                        <property name="minimumSize">
+                                            <size>
+                                                <width>0</width>
+                                                <height>50</height>
+                                            </size>
+                                        </property>
+                                    </widget>
+                                </item>
+                                <item>
+                                    <widget class="views::MainGlGraphicsView" name="MainStageGraphicsView">
+                                        <property name="minimumSize">
+                                            <size>
+                                                <width>400</width>
+                                                <height>0</height>
+                                            </size>
+                                        </property>
+                                    </widget>
+                                </item>
+                            </layout>
+                        </widget>
+                    </widget>
+                </item>
+            </layout>
+        </widget>
+        <widget class="QMenuBar" name="menubar">
+            <property name="geometry">
+                <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <width>851</width>
+                    <height>19</height>
+                </rect>
+            </property>
+        </widget>
+        <widget class="QStatusBar" name="statusbar"/>
+    </widget>
+    <customwidgets>
+        <customwidget>
+            <class>views::LayerTreeView</class>
+            <extends>QTreeView</extends>
+            <header>views/layertreeview.h</header>
+        </customwidget>
+        <customwidget>
+            <class>views::MainGlGraphicsView</class>
+            <extends>QGraphicsView</extends>
+            <header>views/mainglstage.h</header>
+        </customwidget>
+        <customwidget>
+            <class>views::MainStageTopBar</class>
+            <extends>QWidget</extends>
+            <header>views/mainstagetopbar.h</header>
+            <container>1</container>
+        </customwidget>
+    </customwidgets>
+    <resources/>
+    <connections/>
 </ui>

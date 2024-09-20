@@ -19,6 +19,7 @@ class LayerTreeView : public QTreeView {
  signals:
   void shouldSetVisible(const QModelIndex& index, bool isVisible, bool isStart);
   void shouldSetLock(const QModelIndex& index, bool isLocked);
+
  protected:
   void handleItemVisiblePressed(const QModelIndex&);
   void handleItemVisibleMoved(const QModelIndex&);
@@ -39,7 +40,6 @@ class ItemStyleDelegate : public QStyledItemDelegate {
                    const QModelIndex& index) override;
 
   QRect getVisibleBtnRect(const QRect& relative) const;
-
 
  public:
   void paint(QPainter* painter, const QStyleOptionViewItem& option,

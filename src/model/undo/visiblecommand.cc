@@ -1,8 +1,8 @@
 #include "visiblecommand.h"
 
+#include "model/scene/mainstagescene.h"
 #include "model/tree/layer.h"
 #include "model/tree/layermodel.h"
-#include "model/scene/mainstagescene.h"
 namespace WaifuL2d {
 VisibleCommand::VisibleCommand(LayerModel* layerModel, MainStageScene* scene,
                                const QModelIndex& index, bool visible)

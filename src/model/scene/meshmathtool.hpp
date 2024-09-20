@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <QRectF>
+#include <vector>
 namespace WaifuL2d {
 
 template <typename T>
@@ -74,7 +74,7 @@ class MeshMathTool {
     float right = vector[0].x();
     float top = vector[0].y();
     float button = vector[0].y();
-    for(size_t i = 0; i< size;i++){
+    for (size_t i = 0; i < size; i++) {
       const Point& item = vector[i];
       if (item.x() < left) {
         left = item.x();
@@ -93,4 +93,4 @@ class MeshMathTool {
   }
 };
 
-}  // namespace Scene
+}  // namespace WaifuL2d

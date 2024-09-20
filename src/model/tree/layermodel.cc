@@ -1,9 +1,9 @@
 #include "layermodel.h"
 
 #include <QItemSelectionModel>
+#include <QSTack>
 
 #include "layer.h"
-#include <QSTack>
 namespace WaifuL2d {
 
 LayerModel::LayerModel(QObject* parent) : QStandardItemModel(parent) {}
@@ -36,7 +36,7 @@ QList<Layer*> LayerModel::getOrderedList() const {
   QList<Layer*> list;
   QStack<QStandardItem*> parseStack;
   parseStack.push(invisibleRootItem());
-  while(!parseStack.isEmpty()) {
+  while (!parseStack.isEmpty()) {
     QStandardItem* item = parseStack.pop();
     for (int i = 0; i < item->rowCount(); i++) {
       parseStack.push(item->child(i));

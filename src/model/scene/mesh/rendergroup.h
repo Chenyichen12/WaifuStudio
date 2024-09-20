@@ -16,8 +16,10 @@ class RenderGroup : public QGraphicsObject, public QOpenGLFunctions {
  public:
   void initGL();
   void addMesh(Mesh* mesh);
-  explicit RenderGroup(const QRectF& projectRect, QGraphicsItem* parent = nullptr);
-  void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr) override;
+  explicit RenderGroup(const QRectF& projectRect,
+                       QGraphicsItem* parent = nullptr);
+  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
+             QWidget* widget = nullptr) override;
   QRectF boundingRect() const override;
   ~RenderGroup() override;
 };

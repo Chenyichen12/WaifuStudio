@@ -9,7 +9,7 @@
 namespace WaifuL2d {
 LayerSelectionModel::LayerSelectionModel(WaifuL2d::LayerModel *model,
                                          MainStageScene *scene)
-    : QItemSelectionModel(model),model(model), scene(scene) {}
+    : QItemSelectionModel(model), model(model), scene(scene) {}
 
 void LayerSelectionModel::select(const QItemSelection &selection,
                                  QItemSelectionModel::SelectionFlags command) {

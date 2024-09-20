@@ -6,6 +6,4 @@ WaifuL2d::TreeNode::~TreeNode() {
   }
 }
 
-WaifuL2d::ParseResult::~ParseResult() {
-    delete root;
-}
+WaifuL2d::ParseResult::~ParseResult() { delete root; }

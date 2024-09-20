@@ -1,8 +1,9 @@
 #include "mainglstage.h"
 
-#include "mainstagesidetoolbar.h"
 #include <QOpenGLFunctions>
+
 #include "QDragMoveEvent"
+#include "mainstagesidetoolbar.h"
 views::MainGlViewPort::MainGlViewPort(QWidget* parent) : QOpenGLWidget(parent) {
   auto format = QSurfaceFormat();
   format.setDepthBufferSize(32);

@@ -1,9 +1,9 @@
 #pragma once
 #include <QHash>
+#include <QImage>
 #include <QList>
 #include <QPointF>
 #include <QString>
-#include <QImage>
 namespace WaifuL2d {
 
 struct TreeNode {

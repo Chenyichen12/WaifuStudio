@@ -26,14 +26,15 @@ class Mesh {
   QList<unsigned int> incident;
   QImage meshImage;
   bool visible = true;
-  
+
   QOpenGLVertexArrayObject* vao;
   QOpenGLBuffer* vbo;
   QOpenGLBuffer* ibo;
   QOpenGLTexture* tex;
-  
+
   friend RenderGroup;
   RenderGroup* container = nullptr;
+
  public:
   Mesh(const QList<MeshVertex>& vertices, const QList<unsigned int>& incident);
   void init(QOpenGLFunctions* f);

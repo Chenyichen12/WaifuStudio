@@ -11,7 +11,8 @@ void AbstractDeformer::setDeformerParent(AbstractDeformer* parent) {
     parent->deformerChildren.append(this);
   }
 }
-AbstractDeformer::AbstractDeformer(QGraphicsItem* parent) : QGraphicsItem(parent) {
+AbstractDeformer::AbstractDeformer(QGraphicsItem* parent)
+    : QGraphicsItem(parent) {
   this->setFlag(QGraphicsItem::ItemIsSelectable, true);
 }
 }  // namespace WaifuL2d
