@@ -74,9 +74,9 @@ void ProjectService::finizateProject(Project* project) {
   project->setParentManager();
   connect(project->scene, &MainStageScene::deformerCommand, project->undoStack,
           [this](std::shared_ptr<DeformerCommand> command) {
-            //TODO: some new things can be done here
-            auto copy = new DeformerCommand(*command);
-            this->project->undoStack->push(copy);
+            // TODO: some new things can be done here
+            auto com = command->createUndoCommand();
+            this->project->undoStack->push(com);
           });
 }
 ProjectService::ProjectService(QObject* parent) : QObject(parent) {}

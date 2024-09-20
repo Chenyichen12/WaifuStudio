@@ -75,11 +75,12 @@ void MeshDeformer::setDeformerSelect(bool select) {
 void MeshDeformer::pointSelectedChange(int id) { qDebug() << id; }
 void MeshDeformer::pointShouldMove(int index, const QPointF &point,
                                    bool isEnd) {
-  auto command = std::make_shared<DeformerCommand>(this);
-  command->oldPoints = this->getScenePoints();
-  command->newPoints = this->getScenePoints();
-  command->newPoints[index] = point;
-  command->setEnd(isEnd);
+  auto command = std::make_shared<DeformerCommand>();
+  command->info.oldPoints = this->getScenePoints();
+  command->info.newPoints = this->getScenePoints();
+  command->info.newPoints[index] = point;
+  command->info.isEnd = isEnd;
+  command->info.target = this;
   auto sc = static_cast<MainStageScene *>(scene());
   sc->emitDeformerCommand(command);
 }
@@ -87,7 +88,7 @@ void MeshDeformer::pointShouldMove(int index, const QPointF &point,
 QVariant MeshDeformer::itemChange(QGraphicsItem::GraphicsItemChange change,
                                   const QVariant &value) {
   if (change == QGraphicsItem::ItemEnabledChange) {
-    if(!value.toBool()){
+    if (!value.toBool()) {
       this->setDeformerSelect(false);
     }
     this->mesh->setVisible(value.toBool());
