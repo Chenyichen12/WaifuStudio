@@ -1,6 +1,6 @@
 #pragma once
-#include <QGraphicsScene>
 #include <QDebug>
+#include <QGraphicsScene>
 namespace WaifuL2d {
 class RenderGroup;
 class DeformerCommand;

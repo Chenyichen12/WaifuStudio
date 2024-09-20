@@ -28,6 +28,7 @@ class MeshDeformer : public AbstractDeformer, public PointOperator {
   void pointSelectedChange(int id) override;
   void pointShouldMove(int index, const QPointF& point, bool isEnd) override;
   bool isHitDeformer(const QPointF& point) const override;
+
  protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   QVariant itemChange(QGraphicsItem::GraphicsItemChange change,
