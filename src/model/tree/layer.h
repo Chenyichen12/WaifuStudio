@@ -3,13 +3,31 @@
 namespace WaifuL2d {
 class Layer : public QStandardItem {
  public:
+#define TYPE_ENUM_LIST                 \
+  X(BitmapLayer, UserType + 1)         \
+  X(GroupLayer, UserType + 2)          \
+  X(MeshMopherLayer, UserType + 3)     \
+  X(RotationMopherLayer, UserType + 4) \
+  X(BezierMopherLayer, UserType + 5)
+
   enum Type {
-    BitmapLayer = UserType + 1,
-    GroupLayer = UserType + 2,
-    MeshMopherLayer = UserType + 3,
-    RotationMopherLayer = UserType + 4,
-    BezierMopherLayer = UserType + 5
+#define X(EnumName, EnumValue) EnumName = EnumValue,
+    TYPE_ENUM_LIST
+#undef X
   };
+
+  static bool isLayer(int type) {
+    switch (type) {
+#define X(EnumName, EnumValue) \
+  case EnumValue:              \
+    return true;
+      TYPE_ENUM_LIST
+#undef X
+      default:
+        return false;
+    }
+  };
+#undef TYPE_ENUM_LIST
 
   enum DataRole {
     LayerId = Qt::UserRole + 1,

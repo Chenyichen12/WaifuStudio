@@ -1,5 +1,6 @@
 #pragma once
 #include <QGraphicsScene>
+#include <QDebug>
 namespace WaifuL2d {
 class RenderGroup;
 class DeformerCommand;
@@ -13,10 +14,16 @@ class MainStageScene : public QGraphicsScene {
   RootDeformer* rootDeformer;
   struct {
     bool pressed = false;
-    bool moved = false;
+    QPointF startPos;
+    QPointF lastPos;
     void clear() {
       pressed = false;
-      moved = false;
+      startPos = QPointF();
+      lastPos = QPointF();
+    }
+    bool isMoved() const {
+      auto delta = lastPos - startPos;
+      return delta.manhattanLength() > 20;
     }
   } mouseState;
 

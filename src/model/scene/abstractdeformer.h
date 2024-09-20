@@ -41,6 +41,7 @@ class AbstractDeformer : public QGraphicsItem {
         return false;
     }
   };
+#undef TYPE_ENUM_LIST
 
   virtual QList<QPointF> getScenePoints() const = 0;
   virtual void setScenePoints(const QList<QPointF>& points) = 0;
@@ -48,6 +49,9 @@ class AbstractDeformer : public QGraphicsItem {
 
   virtual void setDeformerSelect(bool select) { setVisible(select); };
   virtual bool isDeformerSelected() const { return isVisible(); }
+  virtual bool isHitDeformer(const QPointF& point) const {
+    return boundingRect().contains(point);
+  }
   int type() const override = 0;
   virtual void setDeformerParent(AbstractDeformer* parent);
   QList<AbstractDeformer*> getDeformerChildren() const {

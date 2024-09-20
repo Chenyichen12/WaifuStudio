@@ -14,6 +14,8 @@ struct MeshVertex {
   glm::vec2 uv;
   float x() const { return pos.x; }
   float y() const { return pos.y; }
+  float u() const { return uv.x; }
+  float v() const { return uv.y; }
 };
 enum MeshVertexOffset {
   Position = offsetof(MeshVertex, pos),
@@ -46,6 +48,8 @@ class Mesh {
 
   void changeVertexPos(const QPointF& pos, int index);
   void upDateBuffer();
+
+  bool hitTest(const QPointF& pos);
 
   ~Mesh();
 };

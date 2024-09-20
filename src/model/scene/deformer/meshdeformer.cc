@@ -96,4 +96,9 @@ QVariant MeshDeformer::itemChange(QGraphicsItem::GraphicsItemChange change,
   }
   return QGraphicsItem::itemChange(change, value);
 }
+
+bool MeshDeformer::isHitDeformer(const QPointF &point) const {
+  return mesh->hitTest(point);
+}
+
 }  // namespace WaifuL2d

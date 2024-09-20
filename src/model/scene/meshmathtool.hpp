@@ -10,6 +10,12 @@ concept HasXY = requires(T t1, T t2) {
   { t1.y() } -> std::convertible_to<double>;
 };
 
+template <typename T>
+concept HasUV = requires(T t1, T t2) {
+  { t1.u() } -> std::convertible_to<double>;
+  { t1.v() } -> std::convertible_to<double>;
+};
+
 template <HasXY Point>
 class MeshMathTool {
  public:
@@ -37,8 +43,10 @@ class MeshMathTool {
     return true;
   }
 
-  static std::tuple<double, double, double> barycentricCoordinates(
-      const Point& p, const Point& a, const Point& b, const Point& c) {
+  static std::array<double, 3> barycentricCoordinates(const Point& p,
+                                                      const Point& a,
+                                                      const Point& b,
+                                                      const Point& c) {
     double areaABC = cross(a, b, a, c);
     double areaPBC = cross(p, b, p, c);
     double areaPCA = cross(p, c, p, a);
@@ -48,20 +56,34 @@ class MeshMathTool {
     double lambda2 = areaPCA / areaABC;
     double lambda3 = areaPAB / areaABC;
 
-    return std::make_tuple(lambda1, lambda2, lambda3);
+    return {lambda1, lambda2, lambda3};
   }
-
-  static Point fromBarycentricCoordinates(
-      const std::tuple<double, double, double>& lambdas, const Point& a,
-      const Point& b, const Point& c) {
-    double lambda1 = std::get<0>(lambdas);
-    double lambda2 = std::get<1>(lambdas);
-    double lambda3 = std::get<2>(lambdas);
+  static std::pair<double, double> fromBarycentricCoordinates(
+      const std::array<double, 3>& lambdas, const Point& a, const Point& b,
+      const Point& c) {
+    double lambda1 = lambdas[0];
+    double lambda2 = lambdas[1];
+    double lambda3 = lambdas[2];
 
     double x = lambda1 * a.x() + lambda2 * b.x() + lambda3 * c.x();
     double y = lambda1 * a.y() + lambda2 * b.y() + lambda3 * c.y();
 
-    return Point(x, y);
+    return std::make_pair(x, y);
+  }
+
+  static std::pair<double, double> fromBarycentricCoordinates(
+      const std::array<double, 3>& lambdas, const Point& a, const Point& b,
+      const Point& c)
+    requires HasUV<Point>
+  {
+    double lambda1 = lambdas[0];
+    double lambda2 = lambdas[1];
+    double lambda3 = lambdas[2];
+
+    double x = lambda1 * a.u() + lambda2 * b.u() + lambda3 * c.u();
+    double y = lambda1 * a.v() + lambda2 * b.v() + lambda3 * c.v();
+
+    return std::make_pair(x, y);
   }
 
   /**

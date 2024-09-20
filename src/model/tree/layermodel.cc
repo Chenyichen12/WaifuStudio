@@ -10,9 +10,9 @@ LayerModel::LayerModel(QObject* parent) : QStandardItemModel(parent) {}
 
 void LayerModel::addLayer(Layer* layer, Layer* parent) {
   if (parent == nullptr) {
-    appendRow(layer);
+    insertRow(0, layer);
   } else {
-    parent->appendRow(layer);
+    parent->insertRow(0, layer);
   }
   layer->setId(AutoIncrementId++);
   quickFindCache.insert(std::make_pair(layer->getId(), layer));

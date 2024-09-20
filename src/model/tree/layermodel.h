@@ -9,7 +9,7 @@ class LayerModel : public QStandardItemModel {
   std::unordered_map<int, Layer*> quickFindCache;
 
  public:
-  LayerModel(QObject* parent = nullptr);
+  explicit LayerModel(QObject* parent = nullptr);
   void addLayer(Layer* layer, Layer* parent = nullptr);
   void removeLayer(Layer* layer, Layer* parent = nullptr);
 

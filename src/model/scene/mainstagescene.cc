@@ -61,11 +61,13 @@ void MainStageScene::setRenderGroup(RenderGroup* renderGroup) {
 void MainStageScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
   QGraphicsScene::mousePressEvent(event);
   mouseState.pressed = true;
+  mouseState.startPos = event->screenPos();
+  mouseState.lastPos = event->screenPos();
 }
 void MainStageScene::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
   QGraphicsScene::mouseMoveEvent(event);
   if (mouseState.pressed) {
-    mouseState.moved = true;
+    mouseState.lastPos = event->screenPos();
   }
 }
 void MainStageScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
@@ -73,7 +75,7 @@ void MainStageScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
   if (event->isAccepted()) {
     return;
   }
-  if (mouseState.moved) {
+  if (mouseState.isMoved()) {
     mouseState.clear();
     return;
   } else {
@@ -95,7 +97,8 @@ void MainStageScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     if (item->isDeformerSelected()) {
       existDeformer = item;
       break;
-    } else {
+    }
+    if (item->isHitDeformer(event->scenePos())) {
       readyDeformer = item;
     }
   }
@@ -121,7 +124,6 @@ void MainStageScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 MainStageScene::~MainStageScene() = default;
 void MainStageScene::selectDeformersById(const QList<int>& id) {
   rootDeformer->forEachDown([&id](AbstractDeformer* d) {
-    qDebug()<<id.contains(d->getBindId());
     d->setDeformerSelect(id.contains(d->getBindId()));
     return false;
   });
@@ -138,6 +140,8 @@ void MainStageScene::addDeformer(WaifuL2d::AbstractDeformer* deformer,
   }
   deformer->setDeformerParent(parent);
   deformer->setParentItem(rootDeformer);
+  auto size = rootDeformer->childItems().size();
+  deformer->setZValue(size);
 }
 
 void MainStageScene::initGL() {
@@ -148,8 +152,8 @@ void MainStageScene::initGL() {
 
 AbstractDeformer* MainStageScene::findDeformerById(int id) {
   AbstractDeformer* result = nullptr;
-  rootDeformer->forEachDown([id, &result](AbstractDeformer* d){
-    if(d->getBindId() == id){
+  rootDeformer->forEachDown([id, &result](AbstractDeformer* d) {
+    if (d->getBindId() == id) {
       result = d;
       return true;
     }

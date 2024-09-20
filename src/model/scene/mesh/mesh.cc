@@ -6,6 +6,7 @@
 #include <QOpenGLTexture>
 #include <QOpenGLVertexArrayObject>
 
+#include "../meshmathtool.hpp"
 #include "rendergroup.h"
 namespace WaifuL2d {
 Mesh::Mesh(const QList<MeshVertex>& vertices,
@@ -40,6 +41,38 @@ void Mesh::init(QOpenGLFunctions* f) {
 
   tex->create();
   tex->setData(meshImage);
+}
+
+bool Mesh::hitTest(const QPointF& pos) {
+  // test in triangle
+  MeshVertex p = {glm::vec2(pos.x(), pos.y()), glm::vec2(0, 0)};
+  std::optional<std::array<MeshVertex, 3>> result;
+  for (int i = 0; i < incident.size(); i += 3) {
+    auto p0 = vertices[incident[i]];
+    auto p1 = vertices[incident[i + 1]];
+    auto p2 = vertices[incident[i + 2]];
+    if (MeshMathTool<MeshVertex>::isInTriangle(p, p0, p1, p2)) {
+      result = {p0, p1, p2};
+      break;
+    }
+  }
+  if (result == std::nullopt) {
+    return false;
+  }
+
+  // test png alpha
+  auto co = MeshMathTool<MeshVertex>::barycentricCoordinates(
+      p, result.value()[0], result.value()[1], result.value()[2]);
+
+  auto uv = MeshMathTool<MeshVertex>::fromBarycentricCoordinates(
+      co, result.value()[0], result.value()[1], result.value()[2]);
+  int row = uv.second * meshImage.height();
+  int col = uv.first * meshImage.width();
+  auto color = meshImage.pixelColor(col, row);
+  if (color.alpha() <= 10) {
+    return false;
+  }
+  return true;
 }
 
 void Mesh::render(QOpenGLFunctions* f, QOpenGLShaderProgram* program) {

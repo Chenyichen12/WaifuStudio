@@ -33,6 +33,7 @@ BitmapLayer::BitmapLayer(const QString& name, const QImage& image)
     : Layer(name) {
   auto img = image.scaledToHeight(25);
   setIcon(QIcon(QPixmap::fromImage(img)));
+  this->setDropEnabled(false);
 }
 
 GroupLayer::GroupLayer(const QString& name) : Layer(name) {}
