@@ -9,14 +9,14 @@
 namespace WaifuL2d {
 OperatePoint::OperatePoint(int id, WaifuL2d::PointOperator *oper,
                            QGraphicsItem *parent)
-    : oper(oper), QGraphicsEllipseItem(parent), id(id) {
+    : oper(oper), QGraphicsRectItem(parent), id(id) {
   this->setFlag(QGraphicsItem::ItemIsSelectable, true);
   this->setFlag(QGraphicsItem::ItemIgnoresTransformations);
   this->setBrush(QBrush(Qt::white));
-  this->setRect(-4, -4, 8, 8);
+  this->setRect(-radius, -radius, 2 * radius, 2 * radius);
 }
 void OperatePoint::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-  QGraphicsEllipseItem::mousePressEvent(event);
+  QGraphicsRectItem::mousePressEvent(event);
 }
 void OperatePoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
   oper->pointShouldMove(id, event->scenePos(), false);
@@ -28,6 +28,11 @@ void OperatePoint::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     oper->pointShouldMove(id, event->scenePos(), true);
     isMove = false;
   }
+}
+
+void OperatePoint::setRadius(int r) {
+  radius = r;
+  this->setRect(-r, -r, 2 * r, 2 * r);
 }
 QVariant OperatePoint::itemChange(QGraphicsItem::GraphicsItemChange change,
                                   const QVariant &value) {

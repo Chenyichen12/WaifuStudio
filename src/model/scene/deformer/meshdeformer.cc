@@ -11,6 +11,7 @@
 #include "../mainstagescene.h"
 #include "../mesh/mesh.h"
 #include "../meshmathtool.hpp"
+#include "rectangletool.h"
 namespace WaifuL2d {
 
 MeshDeformer::MeshDeformer(WaifuL2d::Mesh *mesh, QGraphicsItem *parent)
@@ -21,6 +22,9 @@ MeshDeformer::MeshDeformer(WaifuL2d::Mesh *mesh, QGraphicsItem *parent)
     operatePoints.push_back(op);
     op->setPos(pointList[i]);
   }
+  auto recttool = new RectangleTool(this);
+  recttool->setRect(this->boundingRect());
+
   this->setDeformerSelect(false);
 }
 QList<QPointF> MeshDeformer::getScenePoints() const { return mesh->getPos(); }
