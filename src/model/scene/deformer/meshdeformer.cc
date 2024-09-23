@@ -31,6 +31,20 @@ MeshDeformer::MeshDeformer(WaifuL2d::Mesh* mesh, QGraphicsItem* parent)
   }
   operateRect = new OperateRectangle(this);
   operateRect->setRect(MeshDeformer::boundingRect());
+  operateRect->rectShouldResize = [this](const QRectF& newRect, bool xFlip,
+                                         bool yFlip, bool isStart,
+                                         const QVariant& data) {
+    if (isStart) {
+      this->rectMoveState.startRect = this->operateRect->getRect();
+      this->rectMoveState.startPoints = this->getScenePoints();
+    }
+
+    auto newPoints = this->rectMoveState.startPoints;
+    MeshMathTool<QPointF>::resizePointInBound(this->rectMoveState.startRect,
+                                              newRect, newPoints.data(),
+                                              newPoints.size());
+    this->handlePointShouldMove(newPoints, isStart);
+  };
   MeshDeformer::setDeformerSelect(false);
 }
 

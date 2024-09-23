@@ -14,6 +14,11 @@ private:
   QList<OperatePoint*> operatePoints;
   OperateRectangle* operateRect;
 
+  struct {
+    QRectF startRect;
+    QList<QPointF> startPoints;
+  } rectMoveState;
+
   bool deformerSelect = false;
 
   void handlePointShouldMove(const QList<QPointF>& newPoints, bool isStart);

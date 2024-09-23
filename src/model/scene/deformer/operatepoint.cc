@@ -174,6 +174,20 @@ void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
       isYFlip = false;
     }
   }
+  switch (which) {
+    case 1:
+    case 7: {
+      newRect.setWidth(startRect.width());
+      break;
+    }
+    case 3:
+    case 5: {
+      newRect.setHeight(startRect.height());
+      break;
+    }
+    default:
+      break;
+  }
 
   rectShouldResize(newRect, isXFlip, isYFlip,
                    isStart, data);

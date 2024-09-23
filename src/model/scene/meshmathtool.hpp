@@ -2,29 +2,33 @@
 
 #include <QRectF>
 #include <vector>
-namespace WaifuL2d {
 
+namespace WaifuL2d {
 template <typename T>
-concept HasXY = requires(T t1, T t2) {
+concept HasXY = requires(T t1, T t2)
+{
   { t1.x() } -> std::convertible_to<double>;
   { t1.y() } -> std::convertible_to<double>;
 };
 
 template <typename T>
-concept HasUV = requires(T t1, T t2) {
+concept HasUV = requires(T t1, T t2)
+{
   { t1.u() } -> std::convertible_to<double>;
   { t1.v() } -> std::convertible_to<double>;
 };
 
 template <HasXY Point>
 class MeshMathTool {
- public:
+public:
   static double cross(double x1, double y1, double x2, double y2) {
     return x1 * y2 - x2 * y1;
   }
+
   static double cross(const Point& aVec, const Point& bVec) {
     return cross(aVec.x(), aVec.y(), bVec.x(), bVec.y());
   }
+
   static double cross(const Point& a, const Point& p1, const Point& b,
                       const Point& p2) {
     return cross(a.x() - p1.x(), a.y() - p1.y(), b.x() - p2.x(),
@@ -44,9 +48,9 @@ class MeshMathTool {
   }
 
   static std::array<double, 3> barycentricCoordinates(const Point& p,
-                                                      const Point& a,
-                                                      const Point& b,
-                                                      const Point& c) {
+    const Point& a,
+    const Point& b,
+    const Point& c) {
     double areaABC = cross(a, b, a, c);
     double areaPBC = cross(p, b, p, c);
     double areaPCA = cross(p, c, p, a);
@@ -58,6 +62,7 @@ class MeshMathTool {
 
     return {lambda1, lambda2, lambda3};
   }
+
   static std::pair<double, double> fromBarycentricCoordinates(
       const std::array<double, 3>& lambdas, const Point& a, const Point& b,
       const Point& c) {
@@ -74,8 +79,7 @@ class MeshMathTool {
   static std::pair<double, double> fromBarycentricCoordinates(
       const std::array<double, 3>& lambdas, const Point& a, const Point& b,
       const Point& c)
-    requires HasUV<Point>
-  {
+    requires HasUV<Point> {
     double lambda1 = lambdas[0];
     double lambda2 = lambdas[1];
     double lambda3 = lambdas[2];
@@ -113,6 +117,26 @@ class MeshMathTool {
     }
     return QRectF(QPointF(left, top), QPointF(right, button));
   }
-};
 
-}  // namespace WaifuL2d
+  static void resizePointInBound(const QRectF& startBound,
+                                 const QRectF& resizeBound,
+                                 Point* vector,
+                                 size_t size,
+                                 bool isXFlip = false,
+                                 bool isYFlip = false) {
+    for (size_t i = 0; i < size; i++) {
+      auto& item = vector[i];
+      auto u = (item.x() - startBound.left()) / startBound.width();
+      auto v = (item.y() - startBound.top()) / startBound.height();
+      if (isXFlip) {
+        u = 1 - u;
+      }
+      if (isYFlip) {
+        v = 1 - v;
+      }
+      item.setX(resizeBound.left() + u * resizeBound.width());
+      item.setY(resizeBound.top() + v * resizeBound.height());
+    }
+  }
+};
+} // namespace WaifuL2d
