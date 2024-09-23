@@ -12,16 +12,24 @@ class MeshDeformer : public AbstractDeformer {
 private:
   Mesh* mesh;
   QList<OperatePoint*> operatePoints;
+
+  /**
+   * record one drag state of the rectangle
+   */
   OperateRectangle* operateRect;
 
   struct {
     QRectF startRect;
-    QList<QPointF> startPoints;
+    QList<QPointF> opPoints;
+    QList<int> opPointIndexes;
   } rectMoveState;
 
   bool deformerSelect = false;
 
   void handlePointShouldMove(const QList<QPointF>& newPoints, bool isStart);
+  void upDateOperateRect();
+
+  QList<int> getSelectedIndex() const;
 
 public:
   explicit MeshDeformer(Mesh* mesh, QGraphicsItem* parent = nullptr);

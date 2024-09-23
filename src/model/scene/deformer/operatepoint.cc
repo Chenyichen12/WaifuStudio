@@ -3,8 +3,6 @@
 //
 #include "operatepoint.h"
 
-#include <QBrush>
-#include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsView>
 #include <QPainter>
@@ -41,7 +39,7 @@ void OperatePoint::setRadius(int r) {
 
 QVariant OperatePoint::itemChange(QGraphicsItem::GraphicsItemChange change,
                                   const QVariant& value) {
-  if (change == QGraphicsItem::ItemSelectedChange) {
+  if (change == QGraphicsItem::ItemSelectedHasChanged) {
     if (this->pointSelectedChange) {
       this->pointSelectedChange(value.toBool(), data);
     }
@@ -66,8 +64,15 @@ void OperatePoint::paint(QPainter* painter,
 }
 
 class OperateRectPoint : public OperatePoint {
+protected:
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
+    OperatePoint::mousePressEvent(event);
+    event->accept();
+  }
+
 public:
   OperateRectPoint(QGraphicsItem* parent = nullptr) : OperatePoint(parent) {
+    this->setFlag(ItemIsSelectable, false);
   }
 
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
@@ -78,7 +83,7 @@ public:
 };
 
 
-QRectF OperateRectangle::getTransfromRectF() const {
+QRectF OperateRectangle::getTransformRectF() const {
   double scale = 1;
   if (this->scene() && !this->scene()->views().empty()) {
     scale = this->scene()->views().first()->transform().m11();
@@ -93,6 +98,7 @@ void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
     startRecord.startRect = rect;
     startRecord.startRect.moveTopLeft(this->pos());
   }
+
   if (!rectShouldResize) {
     return;
   }
@@ -102,6 +108,11 @@ void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
   bool isXFlip;
   bool isYFlip;
   QRectF newRect;
+
+  // if width == 0 or height == 0 it will crash
+  if (startRect.width() == 0 || startRect.height() == 0) {
+    return;
+  }
 
   if (which == 4) {
     newRect = startRect;
@@ -219,11 +230,12 @@ OperateRectangle::~OperateRectangle() {
 void OperateRectangle::setRect(const QRectF& rect) {
   this->rect = {0, 0, rect.width(), rect.height()};
   this->setPos(rect.topLeft());
+  qDebug() << rect;
   update();
 }
 
 QPainterPath OperateRectangle::shape() const {
-  auto r = getTransfromRectF();
+  auto r = getTransformRectF();
   auto path = QPainterPath();
   path.addRect(r);
   return path;
@@ -234,7 +246,7 @@ QRectF OperateRectangle::boundingRect() const { return rect; }
 void OperateRectangle::paint(QPainter* painter,
                              const QStyleOptionGraphicsItem* option,
                              QWidget* widget) {
-  auto r = getTransfromRectF();
+  auto r = getTransformRectF();
   auto points = r.topLeft();
   auto width = r.width();
   auto height = r.height();

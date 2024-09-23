@@ -28,25 +28,63 @@ MeshDeformer::MeshDeformer(WaifuL2d::Mesh* mesh, QGraphicsItem* parent)
       newPoints[index] = point;
       this->handlePointShouldMove(newPoints, isStart);
     };
+    op->pointSelectedChange = [this](bool isSelected, const QVariant& data) {
+      this->upDateOperateRect();
+    };
   }
   operateRect = new OperateRectangle(this);
   operateRect->setRect(MeshDeformer::boundingRect());
+
   operateRect->rectShouldResize = [this](const QRectF& newRect, bool xFlip,
                                          bool yFlip, bool isStart,
                                          const QVariant& data) {
     if (isStart) {
       this->rectMoveState.startRect = this->operateRect->getRect();
       this->rectMoveState.startRect.moveTopLeft(this->operateRect->pos());
-      this->rectMoveState.startPoints = this->getScenePoints();
+      auto selectIndex = this->getSelectedIndex();
+      if (selectIndex.empty() || selectIndex.size() == 1) {
+        selectIndex.clear();
+        for (int i = 0; i < operatePoints.size(); i++) {
+          selectIndex.push_back(i);
+        }
+      }
+      this->rectMoveState.opPointIndexes = selectIndex;
+
+      this->rectMoveState.opPoints.clear();
+      for (auto& index : selectIndex) {
+        this->rectMoveState.opPoints.push_back(
+            this->operatePoints[index]->pos());
+      }
     }
 
-    auto newPoints = this->rectMoveState.startPoints;
+    auto newPoints = this->rectMoveState.opPoints;
     MeshMathTool<QPointF>::resizePointInBound(this->rectMoveState.startRect,
                                               newRect, newPoints.data(),
                                               newPoints.size(), xFlip, yFlip);
-    this->handlePointShouldMove(newPoints, isStart);
+
+    auto formatResult = this->getScenePoints();
+    for (int i = 0; i < this->rectMoveState.opPointIndexes.size(); i++) {
+      formatResult[this->rectMoveState.opPointIndexes[i]] = newPoints[i];
+    }
+    this->handlePointShouldMove(formatResult, isStart);
   };
   MeshDeformer::setDeformerSelect(false);
+}
+
+void MeshDeformer::upDateOperateRect() {
+  auto selectIndex = getSelectedIndex();
+  if (selectIndex.empty() || selectIndex.size() == 1) {
+    operateRect->setRect(boundingRect());
+  } else {
+    auto points = QList<QPointF>();
+    for (auto& index : selectIndex) {
+      points.push_back(operatePoints[index]->pos());
+    }
+    auto bound =
+        MeshMathTool<QPointF>::calculateBoundRect(points.data(), points.size());
+    operateRect->setRect(bound);
+    update();
+  }
 }
 
 QList<QPointF> MeshDeformer::getScenePoints() const { return mesh->getPos(); }
@@ -56,9 +94,7 @@ void MeshDeformer::setScenePoints(const QList<QPointF>& points) {
     mesh->changeVertexPos(points[i], i);
     operatePoints[i]->setPos(points[i]);
   }
-  auto bound = this->boundingRect();
-  operateRect->setRect(bound);
-
+  upDateOperateRect();
   mesh->upDateBuffer();
   update();
 }
@@ -92,8 +128,8 @@ void MeshDeformer::paint(QPainter* painter,
 
 QRectF MeshDeformer::boundingRect() const {
   const auto& pos = getScenePoints();
-  auto bound = MeshMathTool<
-    QPointF>::calculateBoundRect(pos.data(), pos.size());
+  auto bound =
+      MeshMathTool<QPointF>::calculateBoundRect(pos.data(), pos.size());
   return bound;
 }
 
@@ -138,5 +174,15 @@ void MeshDeformer::handlePointShouldMove(const QList<QPointF>& newPoints,
   command->info.target = this;
   auto sc = static_cast<MainStageScene*>(scene());
   sc->emitDeformerCommand(command);
+}
+
+QList<int> MeshDeformer::getSelectedIndex() const {
+  QList<int> result;
+  for (int i = 0; i < operatePoints.size(); i++) {
+    if (operatePoints[i]->isSelected()) {
+      result.push_back(i);
+    }
+  }
+  return result;
 }
 } // namespace WaifuL2d

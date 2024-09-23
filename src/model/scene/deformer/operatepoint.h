@@ -37,7 +37,7 @@ class OperateRectangle : public QGraphicsItem {
   std::array<OperatePoint*, 9> operatePoints;
   QRectF rect;
   static constexpr int padding = 5;
-  QRectF getTransfromRectF() const;
+  QRectF getTransformRectF() const;
 
   typedef void RectShouldResize(const QRectF& newRect,
                                 bool xFlip,
