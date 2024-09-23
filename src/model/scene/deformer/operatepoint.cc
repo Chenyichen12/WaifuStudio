@@ -64,24 +64,49 @@ void OperatePoint::paint(QPainter* painter,
 }
 
 class OperateRectPoint : public OperatePoint {
+  int role = 4;
+  static constexpr std::array<Qt::CursorShape, 9> cursorMap = {
+      Qt::SizeFDiagCursor,
+      Qt::SizeVerCursor,
+      Qt::SizeBDiagCursor,
+      Qt::SizeHorCursor,
+      Qt::SizeAllCursor,
+      Qt::SizeHorCursor,
+      Qt::SizeBDiagCursor,
+      Qt::SizeVerCursor,
+      Qt::SizeFDiagCursor,
+  };
+
 protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
     OperatePoint::mousePressEvent(event);
     event->accept();
   }
 
+  void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override {
+    OperatePoint::hoverMoveEvent(event);
+    setCursor(QCursor(cursorMap[role]));
+  }
+
 public:
   OperateRectPoint(QGraphicsItem* parent = nullptr) : OperatePoint(parent) {
     this->setFlag(ItemIsSelectable, false);
+    this->setAcceptHoverEvents(true);
+    setRadius(3);
   }
 
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget) override {
+    painter->setPen(Qt::black);
     painter->setBrush(Qt::green);
     painter->drawRect(this->rect());
   }
-};
 
+  void setRole(int role) {
+    Q_ASSERT(role < 9 && role >= 0);
+    this->role = role;
+  }
+};
 
 QRectF OperateRectangle::getTransformRectF() const {
   double scale = 1;
@@ -217,6 +242,7 @@ OperateRectangle::OperateRectangle(QGraphicsItem* parent)
                                     const QVariant& data) {
       this->handleRectPointMove(data.toInt(), point, isStart);
     };
+    point->setRole(i);
     operatePoints[i] = point;
   }
 }
@@ -230,7 +256,6 @@ OperateRectangle::~OperateRectangle() {
 void OperateRectangle::setRect(const QRectF& rect) {
   this->rect = {0, 0, rect.width(), rect.height()};
   this->setPos(rect.topLeft());
-  qDebug() << rect;
   update();
 }
 
@@ -259,5 +284,11 @@ void OperateRectangle::paint(QPainter* painter,
   operatePoints[6]->setPos(points + QPointF(0, height));
   operatePoints[7]->setPos(points + QPointF(width / 2, height));
   operatePoints[8]->setPos(points + QPointF(width, height));
+
+  auto pen = QPen();
+  pen.setWidthF(1 / painter->transform().m11());
+  pen.setColor(Qt::green);
+  painter->setPen(pen);
+  painter->drawRect(r);
 }
 } // namespace WaifuL2d
