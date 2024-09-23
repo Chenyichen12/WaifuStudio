@@ -3,6 +3,7 @@
 #include <QMetaType>
 #include <QPointF>
 #include <QUndoCommand>
+
 namespace WaifuL2d {
 class AbstractDeformer;
 
@@ -10,23 +11,25 @@ struct BasicDeformerCommandInfo {
   AbstractDeformer* target;
   QList<QPointF> oldPoints;
   QList<QPointF> newPoints;
-  bool isEnd;
+  bool isStart;
   qreal oldAngle = 0;
   qreal newAngle = 0;
 };
+
 class DeformerCommand {
- public:
+public:
   BasicDeformerCommandInfo info;
+
   enum DeformerUndoId { BasicMoveCommandId = 0 };
 
   explicit DeformerCommand();
   virtual QUndoCommand* createUndoCommand(QUndoCommand* parent = nullptr);
 
   class BasicMoveCommand : public QUndoCommand {
-   private:
+  private:
     BasicDeformerCommandInfo info;
 
-   public:
+  public:
     BasicMoveCommand(BasicDeformerCommandInfo info, QUndoCommand* parent);
     void undo() override;
     void redo() override;
@@ -34,6 +37,6 @@ class DeformerCommand {
     int id() const override { return BasicMoveCommandId; }
   };
 };
-}  // namespace WaifuL2d
+} // namespace WaifuL2d
 
 // Q_DECLARE_METATYPE(WaifuL2d::MopherCommand)

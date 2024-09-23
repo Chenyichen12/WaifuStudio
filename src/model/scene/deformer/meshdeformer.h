@@ -4,16 +4,21 @@
 #pragma once
 #include "../abstractdeformer.h"
 #include "operatepoint.h"
+
 namespace WaifuL2d {
 class Mesh;
-class MeshDeformer : public AbstractDeformer, public PointOperator {
- private:
+
+class MeshDeformer : public AbstractDeformer {
+private:
   Mesh* mesh;
   QList<OperatePoint*> operatePoints;
+  OperateRectangle* operateRect;
 
   bool deformerSelect = false;
 
- public:
+  void handlePointShouldMove(const QList<QPointF>& newPoints, bool isStart);
+
+public:
   explicit MeshDeformer(Mesh* mesh, QGraphicsItem* parent = nullptr);
 
   QList<QPointF> getScenePoints() const override;
@@ -25,14 +30,11 @@ class MeshDeformer : public AbstractDeformer, public PointOperator {
   QRectF boundingRect() const override;
   void setDeformerSelect(bool select) override;
   bool isDeformerSelected() const override { return deformerSelect; }
-  void pointSelectedChange(int id) override;
-  void pointShouldMove(int index, const QPointF& point, bool isEnd) override;
   bool isHitDeformer(const QPointF& point) const override;
 
- protected:
+protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   QVariant itemChange(QGraphicsItem::GraphicsItemChange change,
                       const QVariant& value) override;
 };
-
-}  // namespace WaifuL2d
+} // namespace WaifuL2d

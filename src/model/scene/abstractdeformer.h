@@ -13,7 +13,7 @@ class AbstractDeformer : public QGraphicsItem {
   int id = -1;
 
  protected:
-  AbstractDeformer* deformerParent;
+  AbstractDeformer* deformerParent = nullptr;
   QList<AbstractDeformer*> deformerChildren;
 
  public:
