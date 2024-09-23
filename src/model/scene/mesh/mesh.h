@@ -8,6 +8,7 @@ class QOpenGLVertexArrayObject;
 class QOpenGLBuffer;
 class QOpenGLTexture;
 class QOpenGLShaderProgram;
+
 namespace WaifuL2d {
 struct MeshVertex {
   glm::vec2 pos;
@@ -17,12 +18,14 @@ struct MeshVertex {
   float u() const { return uv.x; }
   float v() const { return uv.y; }
 };
+
 enum MeshVertexOffset {
   Position = offsetof(MeshVertex, pos),
   UV = offsetof(MeshVertex, uv)
 };
 
 class RenderGroup;
+
 class Mesh {
   QList<MeshVertex> vertices;
   QList<unsigned int> incident;
@@ -37,7 +40,9 @@ class Mesh {
   friend RenderGroup;
   RenderGroup* container = nullptr;
 
- public:
+  qreal zValue = 0;
+
+public:
   Mesh(const QList<MeshVertex>& vertices, const QList<unsigned int>& incident);
   void init(QOpenGLFunctions* f);
   void render(QOpenGLFunctions* f, QOpenGLShaderProgram* program);
@@ -50,7 +55,8 @@ class Mesh {
   void upDateBuffer();
 
   bool hitTest(const QPointF& pos);
+  void setZValue(qreal z);
 
   ~Mesh();
 };
-}  // namespace WaifuL2d
+} // namespace WaifuL2d

@@ -30,8 +30,8 @@ MeshDeformer::MeshDeformer(WaifuL2d::Mesh* mesh, QGraphicsItem* parent)
     };
   }
   operateRect = new OperateRectangle(this);
-  operateRect->setRect(this->boundingRect());
-  this->setDeformerSelect(false);
+  operateRect->setRect(MeshDeformer::boundingRect());
+  MeshDeformer::setDeformerSelect(false);
 }
 
 QList<QPointF> MeshDeformer::getScenePoints() const { return mesh->getPos(); }
@@ -98,6 +98,9 @@ QVariant MeshDeformer::itemChange(QGraphicsItem::GraphicsItemChange change,
       this->setDeformerSelect(false);
     }
     this->mesh->setVisible(value.toBool());
+  }
+  if (change == QGraphicsItem::ItemZValueChange) {
+    this->mesh->setZValue(value.toDouble());
   }
   return QGraphicsItem::itemChange(change, value);
 }

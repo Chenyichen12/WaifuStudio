@@ -5,6 +5,7 @@
 #include <QWidget>
 
 #include "mesh.h"
+
 namespace WaifuL2d {
 void RenderGroup::initGL() {
   if (isGlInit) {
@@ -33,7 +34,7 @@ void RenderGroup::addMesh(Mesh* mesh) {
 }
 
 RenderGroup::RenderGroup(const QRectF& projectRect, QGraphicsItem* parent)
-    : projectRect(projectRect), QGraphicsObject(parent) {
+  : projectRect(projectRect), QGraphicsObject(parent) {
   setFlag(QGraphicsItem::ItemIsSelectable, false);
   program = new QOpenGLShaderProgram();
 }
@@ -46,6 +47,7 @@ RenderGroup::~RenderGroup() {
   }
   delete program;
 }
+
 void RenderGroup::paint(QPainter* painter,
                         const QStyleOptionGraphicsItem* option,
                         QWidget* widget) {
@@ -90,4 +92,10 @@ void RenderGroup::paint(QPainter* painter,
   program->release();
   painter->endNativePainting();
 }
-}  // namespace WaifuL2d
+
+void RenderGroup::reorderMesh() {
+  std::sort(meshes.begin(), meshes.end(),
+            [](Mesh* a, Mesh* b) { return a->zValue < b->zValue; });
+  update();
+}
+} // namespace WaifuL2d

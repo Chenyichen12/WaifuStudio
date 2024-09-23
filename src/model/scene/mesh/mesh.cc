@@ -8,10 +8,11 @@
 
 #include "../meshmathtool.hpp"
 #include "rendergroup.h"
+
 namespace WaifuL2d {
 Mesh::Mesh(const QList<MeshVertex>& vertices,
            const QList<unsigned int>& incident)
-    : vertices(vertices), incident(incident) {
+  : vertices(vertices), incident(incident) {
   this->vao = new QOpenGLVertexArrayObject();
   this->vbo = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
   this->ibo = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
@@ -75,6 +76,13 @@ bool Mesh::hitTest(const QPointF& pos) {
   return true;
 }
 
+void Mesh::setZValue(qreal z) {
+  zValue = z;
+  if (container) {
+    container->reorderMesh();
+  }
+}
+
 void Mesh::render(QOpenGLFunctions* f, QOpenGLShaderProgram* program) {
   if (!visible) {
     return;
@@ -86,7 +94,9 @@ void Mesh::render(QOpenGLFunctions* f, QOpenGLShaderProgram* program) {
   tex->release();
   vao->release();
 }
+
 void Mesh::setTexture(const QImage& image) { meshImage = image; }
+
 QList<QPointF> Mesh::getPos() {
   QList<QPointF> pos;
   for (auto& vertex : vertices) {
@@ -94,6 +104,7 @@ QList<QPointF> Mesh::getPos() {
   }
   return pos;
 }
+
 QList<unsigned int> Mesh::getIncident() const { return this->incident; }
 
 Mesh::~Mesh() {
@@ -102,10 +113,12 @@ Mesh::~Mesh() {
   delete ibo;
   delete tex;
 }
+
 void Mesh::changeVertexPos(const QPointF& pos, int index) {
   Q_ASSERT(index < vertices.size() && index >= 0);
   vertices[index].pos = {pos.x(), pos.y()};
 }
+
 void Mesh::upDateBuffer() {
   vbo->bind();
   vbo->write(0, vertices.data(), vertices.size() * sizeof(MeshVertex));
@@ -117,11 +130,11 @@ void Mesh::upDateBuffer() {
     container->update();
   }
 }
+
 void Mesh::setVisible(bool vis) {
   visible = vis;
   if (container) {
     container->update();
   }
 }
-
-}  // namespace WaifuL2d
+} // namespace WaifuL2d
