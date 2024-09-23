@@ -45,6 +45,10 @@ class OperateRectangle : public QGraphicsItem {
                                 bool isStart,
                                 const QVariant& data);
 
+  struct {
+    QRectF startRect;
+  } startRecord;
+
   void handleRectPointMove(int which, const QPointF& where, bool isStart);
 
 public:

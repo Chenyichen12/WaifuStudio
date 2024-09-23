@@ -89,6 +89,94 @@ QRectF OperateRectangle::getTransfromRectF() const {
 
 void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
                                            bool isStart) {
+  if (isStart) {
+    startRecord.startRect = rect;
+  }
+  if (!rectShouldResize) {
+    return;
+  }
+
+  auto startRect = startRecord.startRect;
+
+  bool isXFlip;
+  bool isYFlip;
+  QRectF newRect;
+
+  if (which == 4) {
+    newRect = startRect;
+    newRect.moveCenter(where);
+    rectShouldResize(newRect, false, false, isStart, data);
+  }
+
+  switch (which) {
+    case 0:
+    case 3:
+    case 6: {
+      if (where.x() > startRect.right()) {
+        isXFlip = true;
+        newRect.setX(startRect.right());
+      } else {
+        isXFlip = false;
+        newRect.setX(where.x());
+      }
+
+      newRect.setWidth(qAbs(where.x() - startRect.right()));
+      break;
+    }
+    case 2:
+    case 5:
+    case 8: {
+      if (where.x() < startRect.left()) {
+        isXFlip = true;
+        newRect.setX(where.x());
+      } else {
+        isXFlip = false;
+        newRect.setX(startRect.left());
+      }
+
+      newRect.setWidth(qAbs(where.x() - startRect.left()));
+      break;
+    }
+    default: {
+      isXFlip = false;
+    }
+  }
+
+  switch (which) {
+    case 0:
+    case 1:
+    case 2: {
+      if (where.y() > startRect.bottom()) {
+        isYFlip = true;
+        newRect.setY(startRect.bottom());
+      } else {
+        isYFlip = false;
+        newRect.setY(where.y());
+      }
+
+      newRect.setHeight(qAbs(where.y() - startRect.bottom()));
+      break;
+    }
+    case 6:
+    case 7:
+    case 8: {
+      if (where.y() < startRect.top()) {
+        isYFlip = true;
+        newRect.setY(where.y());
+      } else {
+        isYFlip = false;
+        newRect.setY(startRect.top());
+      }
+      newRect.setHeight(qAbs(where.y() - startRect.top()));
+      break;
+    }
+    default: {
+      isYFlip = false;
+    }
+  }
+
+  rectShouldResize(newRect, isXFlip, isYFlip,
+                   isStart, data);
 }
 
 OperateRectangle::OperateRectangle(QGraphicsItem* parent)

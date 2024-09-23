@@ -88,6 +88,7 @@ void MeshDeformer::setDeformerSelect(bool select) {
   for (auto& op : operatePoints) {
     op->setVisible(deformerSelect);
   }
+  operateRect->setVisible(deformerSelect);
   update();
 }
 
