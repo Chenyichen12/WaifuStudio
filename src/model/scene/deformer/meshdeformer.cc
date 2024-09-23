@@ -36,13 +36,14 @@ MeshDeformer::MeshDeformer(WaifuL2d::Mesh* mesh, QGraphicsItem* parent)
                                          const QVariant& data) {
     if (isStart) {
       this->rectMoveState.startRect = this->operateRect->getRect();
+      this->rectMoveState.startRect.moveTopLeft(this->operateRect->pos());
       this->rectMoveState.startPoints = this->getScenePoints();
     }
 
     auto newPoints = this->rectMoveState.startPoints;
     MeshMathTool<QPointF>::resizePointInBound(this->rectMoveState.startRect,
                                               newRect, newPoints.data(),
-                                              newPoints.size());
+                                              newPoints.size(), xFlip, yFlip);
     this->handlePointShouldMove(newPoints, isStart);
   };
   MeshDeformer::setDeformerSelect(false);
@@ -55,6 +56,9 @@ void MeshDeformer::setScenePoints(const QList<QPointF>& points) {
     mesh->changeVertexPos(points[i], i);
     operatePoints[i]->setPos(points[i]);
   }
+  auto bound = this->boundingRect();
+  operateRect->setRect(bound);
+
   mesh->upDateBuffer();
   update();
 }

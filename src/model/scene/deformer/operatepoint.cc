@@ -91,6 +91,7 @@ void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
                                            bool isStart) {
   if (isStart) {
     startRecord.startRect = rect;
+    startRecord.startRect.moveTopLeft(this->pos());
   }
   if (!rectShouldResize) {
     return;
@@ -106,6 +107,7 @@ void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
     newRect = startRect;
     newRect.moveCenter(where);
     rectShouldResize(newRect, false, false, isStart, data);
+    return;
   }
 
   switch (which) {
@@ -177,11 +179,13 @@ void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
   switch (which) {
     case 1:
     case 7: {
+      newRect.setX(startRect.x());
       newRect.setWidth(startRect.width());
       break;
     }
     case 3:
     case 5: {
+      newRect.setY(startRect.y());
       newRect.setHeight(startRect.height());
       break;
     }
