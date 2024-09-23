@@ -35,6 +35,7 @@ public:
 
 class OperateRectangle : public QGraphicsItem {
   std::array<OperatePoint*, 9> operatePoints;
+  std::array<OperatePoint*, 4> operateRotationPoints;
   QRectF rect;
   static constexpr int padding = 5;
   QRectF getTransformRectF() const;
@@ -44,12 +45,15 @@ class OperateRectangle : public QGraphicsItem {
                                 bool yFlip,
                                 bool isStart,
                                 const QVariant& data);
+  typedef void RectShouldRotate(qreal angle, bool isStart,
+                                const QVariant& data);
 
   struct {
     QRectF startRect;
   } startRecord;
 
   void handleRectPointMove(int which, const QPointF& where, bool isStart);
+  qreal getViewPortScale() const;
 
 public:
   OperateRectangle(QGraphicsItem* parent = nullptr);
@@ -64,5 +68,6 @@ public:
 
   QVariant data;
   std::function<RectShouldResize> rectShouldResize = nullptr;
+  std::function<RectShouldRotate> rectShouldRotate = nullptr;
 };
 } // namespace WaifuL2d

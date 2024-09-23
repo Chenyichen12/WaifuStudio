@@ -51,7 +51,7 @@ void OperatePoint::paint(QPainter* painter,
                          const QStyleOptionGraphicsItem* option,
                          QWidget* widget) {
   auto pen = QPen();
-  pen.setWidth(rect().width() / 10);
+  pen.setWidthF(rect().width() / 10);
   pen.setColor(Qt::black);
   painter->setPen(pen);
   if (this->isSelected()) {
@@ -66,15 +66,9 @@ void OperatePoint::paint(QPainter* painter,
 class OperateRectPoint : public OperatePoint {
   int role = 4;
   static constexpr std::array<Qt::CursorShape, 9> cursorMap = {
-      Qt::SizeFDiagCursor,
-      Qt::SizeVerCursor,
-      Qt::SizeBDiagCursor,
-      Qt::SizeHorCursor,
-      Qt::SizeAllCursor,
-      Qt::SizeHorCursor,
-      Qt::SizeBDiagCursor,
-      Qt::SizeVerCursor,
-      Qt::SizeFDiagCursor,
+      Qt::SizeFDiagCursor, Qt::SizeVerCursor, Qt::SizeBDiagCursor,
+      Qt::SizeHorCursor, Qt::SizeAllCursor, Qt::SizeHorCursor,
+      Qt::SizeBDiagCursor, Qt::SizeVerCursor, Qt::SizeFDiagCursor,
   };
 
 protected:
@@ -98,21 +92,46 @@ public:
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget) override {
     painter->setPen(Qt::black);
+    painter->setPen(Qt::green);
     painter->setBrush(Qt::green);
     painter->drawRect(this->rect());
   }
 
-  void setRole(int role) {
+  void setRole(const int role) {
     Q_ASSERT(role < 9 && role >= 0);
     this->role = role;
   }
 };
 
-QRectF OperateRectangle::getTransformRectF() const {
-  double scale = 1;
-  if (this->scene() && !this->scene()->views().empty()) {
-    scale = this->scene()->views().first()->transform().m11();
+class OperateRotatePoint : public OperatePoint {
+protected:
+  void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override {
+    static auto rotationImage =
+        QPixmap(":/icon/rotation.png")
+        .scaledToHeight(20, Qt::SmoothTransformation);
+    QCursor cursor(rotationImage);
+    setCursor(cursor);
   }
+
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
+    OperatePoint::mousePressEvent(event);
+    event->accept();
+  }
+
+public:
+  OperateRotatePoint(QGraphicsItem* parent = nullptr) : OperatePoint(parent) {
+    this->setFlag(ItemIsSelectable, false);
+    this->setAcceptHoverEvents(true);
+    setRadius(3);
+  }
+
+  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
+             QWidget* widget) override {
+  }
+};
+
+QRectF OperateRectangle::getTransformRectF() const {
+  qreal scale = getViewPortScale();
   return rect.marginsAdded(
       {padding / scale, padding / scale, padding / scale, padding / scale});
 }
@@ -229,8 +248,15 @@ void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
       break;
   }
 
-  rectShouldResize(newRect, isXFlip, isYFlip,
-                   isStart, data);
+  rectShouldResize(newRect, isXFlip, isYFlip, isStart, data);
+}
+
+qreal OperateRectangle::getViewPortScale() const {
+  double scale = 1;
+  if (this->scene() && !this->scene()->views().empty()) {
+    scale = this->scene()->views().first()->transform().m11();
+  }
+  return scale;
 }
 
 OperateRectangle::OperateRectangle(QGraphicsItem* parent)
@@ -239,11 +265,29 @@ OperateRectangle::OperateRectangle(QGraphicsItem* parent)
     auto point = new OperateRectPoint(this);
     point->data = i;
     point->pointShouldMove = [this](const QPointF& point, bool isStart,
-                                    const QVariant& data) {
-      this->handleRectPointMove(data.toInt(), point, isStart);
+                                    const QVariant& pointData) {
+      this->handleRectPointMove(pointData.toInt(), point, isStart);
     };
     point->setRole(i);
     operatePoints[i] = point;
+  }
+
+  for (int i = 0; i < 4; i++) {
+    auto point = new OperateRotatePoint(this);
+    point->data = i;
+    point->pointShouldMove = [this](const QPointF& point, bool isStart,
+                                    const QVariant& pointData) {
+      auto origin = this->operateRotationPoints[pointData.toInt()]->pos();
+      auto baseLine = QLineF(rect.center(), origin);
+      auto newLine = QLineF(rect.center(), point);
+      auto angle = newLine.angleTo(baseLine);
+      angle = angle * 2 * M_PI / 360;
+      if (this->rectShouldRotate != nullptr) {
+        this->rectShouldRotate(angle, isStart, this->data);
+      }
+    };
+
+    operateRotationPoints[i] = point;
   }
 }
 
@@ -284,6 +328,14 @@ void OperateRectangle::paint(QPainter* painter,
   operatePoints[6]->setPos(points + QPointF(0, height));
   operatePoints[7]->setPos(points + QPointF(width / 2, height));
   operatePoints[8]->setPos(points + QPointF(width, height));
+
+  auto scale = getViewPortScale();
+  auto margin = 10 / scale;
+  auto rOuter = r.marginsAdded({margin, margin, margin, margin});
+  operateRotationPoints[0]->setPos(rOuter.topLeft());
+  operateRotationPoints[1]->setPos(rOuter.topRight());
+  operateRotationPoints[2]->setPos(rOuter.bottomLeft());
+  operateRotationPoints[3]->setPos(rOuter.bottomRight());
 
   auto pen = QPen();
   pen.setWidthF(1 / painter->transform().m11());

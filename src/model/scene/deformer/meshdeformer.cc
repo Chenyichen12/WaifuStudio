@@ -68,6 +68,13 @@ MeshDeformer::MeshDeformer(WaifuL2d::Mesh* mesh, QGraphicsItem* parent)
     }
     this->handlePointShouldMove(formatResult, isStart);
   };
+  operateRect->rectShouldRotate = [this](qreal angle, bool isStart,
+                                         const QVariant& data) {
+    auto points = this->getScenePoints();
+    MeshMathTool<QPointF>::rotatePoints(angle, points.data(), points.size());
+    qDebug() << points[0];
+  };
+
   MeshDeformer::setDeformerSelect(false);
 }
 

@@ -123,7 +123,12 @@ public:
                                  Point* vector,
                                  size_t size,
                                  bool isXFlip = false,
-                                 bool isYFlip = false) {
+                                 bool isYFlip = false)
+    requires requires(Point p)
+    {
+      { p.setX(0.0) };
+      { p.setY(0.0) };
+    } {
     for (size_t i = 0; i < size; i++) {
       auto& item = vector[i];
       auto u = (item.x() - startBound.left()) / startBound.width();
@@ -136,6 +141,19 @@ public:
       }
       item.setX(resizeBound.left() + u * resizeBound.width());
       item.setY(resizeBound.top() + v * resizeBound.height());
+    }
+  }
+
+  static void rotatePoints(double angle, Point* points, size_t size) {
+    auto center = calculateBoundRect(points, size).center();
+    for (int i = 0; i < size; i++) {
+      auto& point = points[i];
+      auto x = point.x();
+      auto y = point.y();
+      point.setX(center.x() + (x - center.x()) * cos(angle) -
+                 (y - center.y()) * sin(angle));
+      point.setY(center.y() + (x - center.x()) * sin(angle) +
+                 (y - center.y()) * cos(angle));
     }
   }
 };
