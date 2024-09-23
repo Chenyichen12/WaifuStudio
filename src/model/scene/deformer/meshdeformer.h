@@ -20,9 +20,14 @@ private:
 
   struct {
     QRectF startRect;
-    QList<QPointF> opPoints;
+    QList<QPointF> startOpPoints;
     QList<int> opPointIndexes;
   } rectMoveState;
+
+  struct {
+    QList<QPointF> startOpPoints;
+    QList<int> opPointIndexes;
+  } rectRotateState;
 
   bool deformerSelect = false;
 

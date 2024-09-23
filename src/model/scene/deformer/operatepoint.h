@@ -50,8 +50,13 @@ class OperateRectangle : public QGraphicsItem {
 
   struct {
     QRectF startRect;
-  } startRecord;
+  } startRectRecord;
 
+  struct {
+    QLineF startLine;
+  } startRotateRecord;
+
+  void handleRotateMove(int which, const QPointF& where, bool isStart);
   void handleRectPointMove(int which, const QPointF& where, bool isStart);
   qreal getViewPortScale() const;
 

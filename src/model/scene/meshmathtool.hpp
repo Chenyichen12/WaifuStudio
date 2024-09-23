@@ -18,6 +18,13 @@ concept HasUV = requires(T t1, T t2)
   { t1.v() } -> std::convertible_to<double>;
 };
 
+template <typename T>
+concept CanSetXY = requires(T t1, double x)
+{
+  { t1.setX(x) };
+  { t1.setY(x) };
+};
+
 template <HasXY Point>
 class MeshMathTool {
 public:
@@ -124,11 +131,7 @@ public:
                                  size_t size,
                                  bool isXFlip = false,
                                  bool isYFlip = false)
-    requires requires(Point p)
-    {
-      { p.setX(0.0) };
-      { p.setY(0.0) };
-    } {
+    requires CanSetXY<Point> {
     for (size_t i = 0; i < size; i++) {
       auto& item = vector[i];
       auto u = (item.x() - startBound.left()) / startBound.width();
@@ -144,7 +147,8 @@ public:
     }
   }
 
-  static void rotatePoints(double angle, Point* points, size_t size) {
+  static void rotatePoints(double angle, Point* points, size_t size)
+    requires CanSetXY<Point> {
     auto center = calculateBoundRect(points, size).center();
     for (int i = 0; i < size; i++) {
       auto& point = points[i];

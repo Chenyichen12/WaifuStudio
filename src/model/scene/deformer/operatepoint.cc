@@ -136,18 +136,36 @@ QRectF OperateRectangle::getTransformRectF() const {
       {padding / scale, padding / scale, padding / scale, padding / scale});
 }
 
+void OperateRectangle::handleRotateMove(int which, const QPointF& where,
+                                        bool isStart) {
+  if (isStart) {
+    auto origin = this->operateRotationPoints[which]->pos();
+    this->startRotateRecord.startLine = QLineF(rect.center(), origin);
+  }
+
+  if (!this->rectShouldRotate) {
+    return;
+  }
+
+  auto startCenter = this->startRotateRecord.startLine.p1();
+  auto newLine = QLineF(startCenter, where);
+  qreal angle = newLine.angleTo(this->startRotateRecord.startLine);
+  angle = angle * 2 * M_PI / 360;
+  this->rectShouldRotate(angle, isStart, this->data);
+}
+
 void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
                                            bool isStart) {
   if (isStart) {
-    startRecord.startRect = rect;
-    startRecord.startRect.moveTopLeft(this->pos());
+    startRectRecord.startRect = rect;
+    startRectRecord.startRect.moveTopLeft(this->pos());
   }
 
   if (!rectShouldResize) {
     return;
   }
 
-  auto startRect = startRecord.startRect;
+  auto startRect = startRectRecord.startRect;
 
   bool isXFlip;
   bool isYFlip;
@@ -277,14 +295,7 @@ OperateRectangle::OperateRectangle(QGraphicsItem* parent)
     point->data = i;
     point->pointShouldMove = [this](const QPointF& point, bool isStart,
                                     const QVariant& pointData) {
-      auto origin = this->operateRotationPoints[pointData.toInt()]->pos();
-      auto baseLine = QLineF(rect.center(), origin);
-      auto newLine = QLineF(rect.center(), point);
-      auto angle = newLine.angleTo(baseLine);
-      angle = angle * 2 * M_PI / 360;
-      if (this->rectShouldRotate != nullptr) {
-        this->rectShouldRotate(angle, isStart, this->data);
-      }
+      this->handleRotateMove(pointData.toInt(), point, isStart);
     };
 
     operateRotationPoints[i] = point;

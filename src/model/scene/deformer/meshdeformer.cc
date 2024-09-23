@@ -50,14 +50,14 @@ MeshDeformer::MeshDeformer(WaifuL2d::Mesh* mesh, QGraphicsItem* parent)
       }
       this->rectMoveState.opPointIndexes = selectIndex;
 
-      this->rectMoveState.opPoints.clear();
+      this->rectMoveState.startOpPoints.clear();
       for (auto& index : selectIndex) {
-        this->rectMoveState.opPoints.push_back(
+        this->rectMoveState.startOpPoints.push_back(
             this->operatePoints[index]->pos());
       }
     }
 
-    auto newPoints = this->rectMoveState.opPoints;
+    auto newPoints = this->rectMoveState.startOpPoints;
     MeshMathTool<QPointF>::resizePointInBound(this->rectMoveState.startRect,
                                               newRect, newPoints.data(),
                                               newPoints.size(), xFlip, yFlip);
@@ -70,9 +70,31 @@ MeshDeformer::MeshDeformer(WaifuL2d::Mesh* mesh, QGraphicsItem* parent)
   };
   operateRect->rectShouldRotate = [this](qreal angle, bool isStart,
                                          const QVariant& data) {
-    auto points = this->getScenePoints();
-    MeshMathTool<QPointF>::rotatePoints(angle, points.data(), points.size());
-    qDebug() << points[0];
+    if (isStart) {
+      auto selectIndex = this->getSelectedIndex();
+      if (selectIndex.empty() || selectIndex.size() == 1) {
+        selectIndex.clear();
+        for (int i = 0; i < operatePoints.size(); i++) {
+          selectIndex.push_back(i);
+        }
+      }
+      this->rectRotateState.opPointIndexes = selectIndex;
+
+      this->rectRotateState.startOpPoints.clear();
+      for (auto& index : selectIndex) {
+        this->rectRotateState.startOpPoints.push_back(
+            this->operatePoints[index]->pos());
+      }
+    }
+
+    auto newPoints = this->rectRotateState.startOpPoints;
+    MeshMathTool<QPointF>::rotatePoints(angle, newPoints.data(),
+                                        newPoints.size());
+    auto formatResult = this->getScenePoints();
+    for (int i = 0; i < this->rectRotateState.opPointIndexes.size(); i++) {
+      formatResult[this->rectRotateState.opPointIndexes[i]] = newPoints[i];
+    }
+    handlePointShouldMove(formatResult, isStart);
   };
 
   MeshDeformer::setDeformerSelect(false);
