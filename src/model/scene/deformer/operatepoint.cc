@@ -309,6 +309,9 @@ OperateRectangle::~OperateRectangle() {
   for (auto& op : operatePoints) {
     delete op;
   }
+  for (auto& op : operateRotationPoints) {
+    delete op;
+  }
 }
 
 void OperateRectangle::setRect(const QRectF& rect) {

@@ -25,7 +25,7 @@ public:
   QVariant itemChange(QGraphicsItem::GraphicsItemChange change,
                       const QVariant& value) override;
   void setRadius(int r);
-  int getRadius() { return radius; }
+  int getRadius() const { return radius; }
 
   QVariant data;
 
