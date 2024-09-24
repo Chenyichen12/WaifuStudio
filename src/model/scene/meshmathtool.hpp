@@ -147,9 +147,9 @@ public:
     }
   }
 
-  static void rotatePoints(double angle, Point* points, size_t size)
+  static void rotatePoints(double angle, const Point& center, Point* points,
+                           size_t size)
     requires CanSetXY<Point> {
-    auto center = calculateBoundRect(points, size).center();
     for (int i = 0; i < size; i++) {
       auto& point = points[i];
       auto x = point.x();

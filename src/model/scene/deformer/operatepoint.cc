@@ -140,7 +140,10 @@ void OperateRectangle::handleRotateMove(int which, const QPointF& where,
                                         bool isStart) {
   if (isStart) {
     auto origin = this->operateRotationPoints[which]->pos();
-    this->startRotateRecord.startLine = QLineF(rect.center(), origin);
+    origin = mapToScene(origin);
+    auto center = mapToScene(rect.center());
+
+    this->startRotateRecord.startLine = QLineF(center, origin);
   }
 
   if (!this->rectShouldRotate) {
@@ -151,7 +154,7 @@ void OperateRectangle::handleRotateMove(int which, const QPointF& where,
   auto newLine = QLineF(startCenter, where);
   qreal angle = newLine.angleTo(this->startRotateRecord.startLine);
   angle = angle * 2 * M_PI / 360;
-  this->rectShouldRotate(angle, isStart, this->data);
+  this->rectShouldRotate(startCenter, angle, isStart, this->data);
 }
 
 void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
@@ -179,7 +182,7 @@ void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
   if (which == 4) {
     newRect = startRect;
     newRect.moveCenter(where);
-    rectShouldResize(newRect, false, false, isStart, data);
+    rectShouldResize(startRect, newRect, false, false, isStart, data);
     return;
   }
 
@@ -266,7 +269,7 @@ void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
       break;
   }
 
-  rectShouldResize(newRect, isXFlip, isYFlip, isStart, data);
+  rectShouldResize(startRect, newRect, isXFlip, isYFlip, isStart, data);
 }
 
 qreal OperateRectangle::getViewPortScale() const {

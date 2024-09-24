@@ -34,31 +34,17 @@ MeshDeformer::MeshDeformer(WaifuL2d::Mesh* mesh, QGraphicsItem* parent)
   }
   operateRect = new OperateRectangle(this);
   operateRect->setRect(MeshDeformer::boundingRect());
-
-  operateRect->rectShouldResize = [this](const QRectF& newRect, bool xFlip,
+  operateRect->rectShouldResize = [this](const QRectF& startRect,
+                                         const QRectF& newRect, bool xFlip,
                                          bool yFlip, bool isStart,
                                          const QVariant& data) {
     if (isStart) {
-      this->rectMoveState.startRect = this->operateRect->getRect();
-      this->rectMoveState.startRect.moveTopLeft(this->operateRect->pos());
-      auto selectIndex = this->getSelectedIndex();
-      if (selectIndex.empty() || selectIndex.size() == 1) {
-        selectIndex.clear();
-        for (int i = 0; i < operatePoints.size(); i++) {
-          selectIndex.push_back(i);
-        }
-      }
-      this->rectMoveState.opPointIndexes = selectIndex;
-
-      this->rectMoveState.startOpPoints.clear();
-      for (auto& index : selectIndex) {
-        this->rectMoveState.startOpPoints.push_back(
-            this->operatePoints[index]->pos());
-      }
+      this->getOperatePoints(rectMoveState.startOpPoints,
+                             rectMoveState.opPointIndexes);
     }
 
     auto newPoints = this->rectMoveState.startOpPoints;
-    MeshMathTool<QPointF>::resizePointInBound(this->rectMoveState.startRect,
+    MeshMathTool<QPointF>::resizePointInBound(startRect,
                                               newRect, newPoints.data(),
                                               newPoints.size(), xFlip, yFlip);
 
@@ -68,27 +54,18 @@ MeshDeformer::MeshDeformer(WaifuL2d::Mesh* mesh, QGraphicsItem* parent)
     }
     this->handlePointShouldMove(formatResult, isStart);
   };
-  operateRect->rectShouldRotate = [this](qreal angle, bool isStart,
+  operateRect->rectShouldRotate = [this](const QPointF& rotationCenter,
+                                         qreal angle, bool isStart,
                                          const QVariant& data) {
     if (isStart) {
-      auto selectIndex = this->getSelectedIndex();
-      if (selectIndex.empty() || selectIndex.size() == 1) {
-        selectIndex.clear();
-        for (int i = 0; i < operatePoints.size(); i++) {
-          selectIndex.push_back(i);
-        }
-      }
-      this->rectRotateState.opPointIndexes = selectIndex;
-
-      this->rectRotateState.startOpPoints.clear();
-      for (auto& index : selectIndex) {
-        this->rectRotateState.startOpPoints.push_back(
-            this->operatePoints[index]->pos());
-      }
+      this->getOperatePoints(rectRotateState.startOpPoints,
+                             rectRotateState.opPointIndexes);
     }
 
     auto newPoints = this->rectRotateState.startOpPoints;
-    MeshMathTool<QPointF>::rotatePoints(angle, newPoints.data(),
+    MeshMathTool<QPointF>::rotatePoints(angle,
+                                        rotationCenter,
+                                        newPoints.data(),
                                         newPoints.size());
     auto formatResult = this->getScenePoints();
     for (int i = 0; i < this->rectRotateState.opPointIndexes.size(); i++) {
@@ -191,6 +168,24 @@ QVariant MeshDeformer::itemChange(QGraphicsItem::GraphicsItemChange change,
 
 bool MeshDeformer::isHitDeformer(const QPointF& point) const {
   return mesh->hitTest(point);
+}
+
+void MeshDeformer::getOperatePoints(QList<QPointF>& resultPoint,
+                                    QList<int>& resultIndexes) const {
+  resultIndexes.clear();
+  resultIndexes = this->getSelectedIndex();
+  if (resultIndexes.empty() || resultIndexes.size() == 1) {
+    resultIndexes.clear();
+    for (int i = 0; i < operatePoints.size(); i++) {
+      resultIndexes.push_back(i);
+    }
+  }
+
+  resultPoint.clear();
+  for (auto& index : resultIndexes) {
+    resultPoint.push_back(
+        this->operatePoints[index]->pos());
+  }
 }
 
 void MeshDeformer::handlePointShouldMove(const QList<QPointF>& newPoints,

@@ -40,12 +40,14 @@ class OperateRectangle : public QGraphicsItem {
   static constexpr int padding = 5;
   QRectF getTransformRectF() const;
 
-  typedef void RectShouldResize(const QRectF& newRect,
+  typedef void RectShouldResize(const QRectF& startRect,
+                                const QRectF& newRect,
                                 bool xFlip,
                                 bool yFlip,
                                 bool isStart,
                                 const QVariant& data);
-  typedef void RectShouldRotate(qreal angle, bool isStart,
+  typedef void RectShouldRotate(const QPointF& rotationCenter, qreal angle,
+                                bool isStart,
                                 const QVariant& data);
 
   struct {

@@ -19,15 +19,19 @@ private:
   OperateRectangle* operateRect;
 
   struct {
-    QRectF startRect;
     QList<QPointF> startOpPoints;
     QList<int> opPointIndexes;
-  } rectMoveState;
+  } rectMoveState, rectRotateState;
 
-  struct {
-    QList<QPointF> startOpPoints;
-    QList<int> opPointIndexes;
-  } rectRotateState;
+  /**
+   * depend on selected point, if select point is empty or only has one
+   * it will assign all points
+   * @param resultPoint assign result point
+   * @param resultIndexes assign result indexes
+   */
+  void getOperatePoints(QList<QPointF>& resultPoint,
+                        QList<int>& resultIndexes) const;
+
 
   bool deformerSelect = false;
 
