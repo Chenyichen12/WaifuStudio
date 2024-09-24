@@ -64,7 +64,6 @@ class OperateRectangle : public QGraphicsItem {
 
 public:
   OperateRectangle(QGraphicsItem* parent = nullptr);
-  ~OperateRectangle() override;
   void setRect(const QRectF& rect);
 
   QRectF getRect() const { return rect; }

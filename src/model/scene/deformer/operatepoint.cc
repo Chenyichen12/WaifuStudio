@@ -305,14 +305,6 @@ OperateRectangle::OperateRectangle(QGraphicsItem* parent)
   }
 }
 
-OperateRectangle::~OperateRectangle() {
-  for (auto& op : operatePoints) {
-    delete op;
-  }
-  for (auto& op : operateRotationPoints) {
-    delete op;
-  }
-}
 
 void OperateRectangle::setRect(const QRectF& rect) {
   this->rect = {0, 0, rect.width(), rect.height()};
