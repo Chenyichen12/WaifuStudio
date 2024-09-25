@@ -21,6 +21,8 @@ public:
   SceneController(QObject* parent = nullptr);
 
   QUndoStack* getEditModeUndoStack() const { return editModeUndoStack; }
+  void clearUndo() const;
+
   void setScene(MainStageScene* scene);
   void toggleEditMode();
   bool hasScene() const;

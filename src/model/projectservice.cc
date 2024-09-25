@@ -61,9 +61,6 @@ struct Project : public QObject {
   LayerSelectionModel* selectionModel = nullptr;
   MainStageScene* scene = nullptr;
 
-  Project() {
-  }
-
   void setParentManager() {
     model->setParent(this);
     selectionModel->setModel(model);
@@ -80,6 +77,8 @@ void ProjectService::finizateProject(Project* project) {
 
   // clear undo
   mainUndoStack->clear();
+  sceneController->clearUndo();
+  undoGroup->setActiveStack(mainUndoStack);
 
   // controller
   this->sceneController->setScene(project->scene);

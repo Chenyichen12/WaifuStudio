@@ -9,6 +9,10 @@ SceneController::SceneController(QObject* parent): QObject(parent) {
   this->editModeUndoStack = new QUndoStack(this);
 }
 
+void SceneController::clearUndo() const {
+  editModeUndoStack->clear();
+}
+
 void SceneController::setScene(MainStageScene* scene) {
   this->scene = scene;
   emit stateChanged({});
