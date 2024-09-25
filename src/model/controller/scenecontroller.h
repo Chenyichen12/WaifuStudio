@@ -1,6 +1,8 @@
 #pragma once
 #include <QObject>
 
+class QUndoStack;
+
 namespace WaifuL2d {
 class MainStageScene;
 
@@ -13,9 +15,12 @@ class SceneController : public QObject {
   Q_OBJECT
   MainStageScene* scene = nullptr;
   SceneControllerState state;
+  QUndoStack* editModeUndoStack;
 
 public:
   SceneController(QObject* parent = nullptr);
+
+  QUndoStack* getEditModeUndoStack() const { return editModeUndoStack; }
   void setScene(MainStageScene* scene);
   void toggleEditMode();
   bool hasScene() const;

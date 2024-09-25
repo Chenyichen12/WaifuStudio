@@ -1,15 +1,12 @@
 #include "scenecontroller.h"
-
-#include <qcoreapplication.h>
-
-#include <QMessageBox>
-
 #include "../scene/mainstagescene.h"
 #include "../scene/abstractdeformer.h"
 #include "model/scene/deformer/meshdeformer.h"
+#include <QUndoStack>
 
 namespace WaifuL2d {
 SceneController::SceneController(QObject* parent): QObject(parent) {
+  this->editModeUndoStack = new QUndoStack(this);
 }
 
 void SceneController::setScene(MainStageScene* scene) {

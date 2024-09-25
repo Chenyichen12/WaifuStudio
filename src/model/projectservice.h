@@ -1,8 +1,10 @@
 #pragma once
 #include <QObject>
+class QUndoStack;
 class QStandardItemModel;
 class QItemSelectionModel;
 class QGraphicsScene;
+class QUndoGroup;
 
 namespace WaifuL2d {
 struct Project;
@@ -14,6 +16,9 @@ class ProjectService : public QObject {
 private:
   std::unique_ptr<Project> project = nullptr;
   SceneController* sceneController;
+
+  QUndoStack* mainUndoStack;
+  QUndoGroup* undoGroup;
 
 protected:
   virtual void finizateProject(Project* project);

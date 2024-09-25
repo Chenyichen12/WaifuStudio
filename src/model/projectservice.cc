@@ -3,7 +3,7 @@
 #include <QGraphicsScene>
 #include <QStack>
 #include <QUndoStack>
-
+#include <QUndoGroup>
 #include "controller/scenecontroller.h"
 #include "layerselectionmodel.h"
 #include "model/scene/deformer/meshdeformer.h"
@@ -60,15 +60,14 @@ struct Project : public QObject {
   LayerModel* model = nullptr;
   LayerSelectionModel* selectionModel = nullptr;
   MainStageScene* scene = nullptr;
-  QUndoStack* undoStack;
 
-  Project() { undoStack = new QUndoStack(); }
+  Project() {
+  }
 
   void setParentManager() {
     model->setParent(this);
     selectionModel->setModel(model);
     scene->setParent(this);
-    undoStack->setParent(this);
   }
 };
 
@@ -76,21 +75,29 @@ void ProjectService::finizateProject(Project* project) {
   Q_ASSERT(project->model != nullptr);
   Q_ASSERT(project->selectionModel != nullptr);
   Q_ASSERT(project->scene != nullptr);
-  Q_ASSERT(project->undoStack != nullptr);
 
   project->setParentManager();
+
+  // clear undo
+  mainUndoStack->clear();
+
   // controller
   this->sceneController->setScene(project->scene);
-  connect(project->scene, &MainStageScene::deformerCommand, project->undoStack,
+  connect(project->scene, &MainStageScene::deformerCommand, this,
           [this](std::shared_ptr<DeformerCommand> command) {
             // TODO: some new things can be done here
             auto com = command->createUndoCommand();
-            this->project->undoStack->push(com);
+            this->mainUndoStack->push(com);
           });
 }
 
 ProjectService::ProjectService(QObject* parent) : QObject(parent) {
   this->sceneController = new SceneController(this);
+  undoGroup = new QUndoGroup(this);
+  mainUndoStack = new QUndoStack(undoGroup);
+  undoGroup->addStack(mainUndoStack);
+  undoGroup->addStack(sceneController->getEditModeUndoStack());
+  undoGroup->setActiveStack(mainUndoStack);
 }
 
 ProjectService::~ProjectService() = default;
@@ -170,19 +177,9 @@ void ProjectService::setLayerLock(const QModelIndex& index, bool lock) {
   // TODO: undo command
 }
 
-void ProjectService::undo() {
-  if (project == nullptr) {
-    return;
-  }
-  project->undoStack->undo();
-}
+void ProjectService::undo() { undoGroup->undo(); }
 
-void ProjectService::redo() {
-  if (project == nullptr) {
-    return;
-  }
-  project->undoStack->redo();
-}
+void ProjectService::redo() { undoGroup->redo(); }
 
 void ProjectService::setLayerVisible(const QModelIndex& index, bool visible,
                                      bool isStart) {
@@ -193,7 +190,7 @@ void ProjectService::setLayerVisible(const QModelIndex& index, bool visible,
   auto command =
       new VisibleCommand(project->model, project->scene, index, visible);
   command->setStart(isStart);
-  project->undoStack->push(command);
+  mainUndoStack->push(command);
 }
 
 SceneController* ProjectService::getSceneController() const {
