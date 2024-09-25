@@ -4,6 +4,7 @@
 #include <QStack>
 #include <QUndoStack>
 
+#include "controller/scenecontroller.h"
 #include "layerselectionmodel.h"
 #include "model/scene/deformer/meshdeformer.h"
 #include "parser/psdparser.h"
@@ -14,10 +15,10 @@
 #include "tree/layer.h"
 #include "tree/layermodel.h"
 #include "undo/visiblecommand.h"
-namespace WaifuL2d {
 
+namespace WaifuL2d {
 class PsdLayerSimpleFactory {
- public:
+public:
   static Layer* createLayer(const TreeNode* node,
                             const QHash<int, MeshNode> bitmapCache) {
     switch (node->type) {
@@ -70,8 +71,16 @@ struct Project : public QObject {
     undoStack->setParent(this);
   }
 };
+
 void ProjectService::finizateProject(Project* project) {
+  Q_ASSERT(project->model != nullptr);
+  Q_ASSERT(project->selectionModel != nullptr);
+  Q_ASSERT(project->scene != nullptr);
+  Q_ASSERT(project->undoStack != nullptr);
+
   project->setParentManager();
+  // controller
+  this->sceneController->setScene(project->scene);
   connect(project->scene, &MainStageScene::deformerCommand, project->undoStack,
           [this](std::shared_ptr<DeformerCommand> command) {
             // TODO: some new things can be done here
@@ -79,7 +88,10 @@ void ProjectService::finizateProject(Project* project) {
             this->project->undoStack->push(com);
           });
 }
-ProjectService::ProjectService(QObject* parent) : QObject(parent) {}
+
+ProjectService::ProjectService(QObject* parent) : QObject(parent) {
+  this->sceneController = new SceneController(this);
+}
 
 ProjectService::~ProjectService() = default;
 
@@ -127,6 +139,7 @@ int ProjectService::initProjectFromPsd(const QString& path) {
   emit projectChanged();
   return 0;
 }
+
 QStandardItemModel* ProjectService::getLayerModel() const {
   return project->model;
 }
@@ -183,4 +196,7 @@ void ProjectService::setLayerVisible(const QModelIndex& index, bool visible,
   project->undoStack->push(command);
 }
 
-}  // namespace WaifuL2d
+SceneController* ProjectService::getSceneController() const {
+  return sceneController;
+}
+} // namespace WaifuL2d

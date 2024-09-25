@@ -10,27 +10,25 @@ MainStageTopBar::MainStageTopBar(QWidget* parent) : QWidget(parent) {
   layout->addSpacerItem(new QSpacerItem(10, 10, QSizePolicy::Expanding));
 
   this->editModeBtn = new QPushButton(tr("edit mesh"), this);
-  editModeBtn->setCheckable(true);
-  editModeBtn->setChecked(false);
   layout->addWidget(editModeBtn);
 
   layout->addSpacerItem(new QSpacerItem(10, 10, QSizePolicy::Expanding));
   this->setLayout(layout);
-
-  connect(editModeBtn, &QPushButton::toggled, this, [this](bool isToggled) {
-    if (isToggled) {
-      emit this->enterEditMode();
-    } else {
-      emit this->leaveEditMode();
-    }
-  });
 }
 
-void MainStageTopBar::reset() { this->setEditBtnChecked(false); }
 
-void MainStageTopBar::setEditBtnChecked(bool checked) {
-  blockSignals(true);
-  this->editModeBtn->setChecked(checked);
-  blockSignals(false);
+void MainStageTopBar::setController(WaifuL2d::SceneController* controller) {
+  this->controller = controller;
+  connect(editModeBtn, &QPushButton::clicked, controller,
+          &WaifuL2d::SceneController::toggleEditMode);
+  connect(controller, &WaifuL2d::SceneController::stateChanged, this,
+          &MainStageTopBar::handleControllerStateChanged);
 }
-}  // namespace views
+
+void MainStageTopBar::handleControllerStateChanged(
+    WaifuL2d::SceneControllerState state) {
+  this->editModeBtn->setCheckable(true);
+  this->editModeBtn->setChecked(state.isEdit);
+  this->editModeBtn->setCheckable(false);
+}
+} // namespace views

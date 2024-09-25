@@ -13,7 +13,7 @@
 #include "views/mainstagesidetoolbar.h"
 
 MainWindow::MainWindow(QWidget* parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow) {
+  : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
   setUpMenu();
   this->projectService = new WaifuL2d::ProjectService(this);
@@ -25,6 +25,9 @@ MainWindow::MainWindow(QWidget* parent)
           projectService, &WaifuL2d::ProjectService::setLayerVisible);
   connect(ui->controllerTree, &views::LayerTreeView::shouldSetLock,
           projectService, &WaifuL2d::ProjectService::setLayerLock);
+  // set controller to topbar
+  auto sceneController = projectService->getSceneController();
+  ui->MainStageTopBar->setController(sceneController);
 }
 
 void MainWindow::handleProjectChanged() {

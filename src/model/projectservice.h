@@ -3,18 +3,22 @@
 class QStandardItemModel;
 class QItemSelectionModel;
 class QGraphicsScene;
-namespace WaifuL2d {
 
+namespace WaifuL2d {
 struct Project;
+class SceneController;
+
 class ProjectService : public QObject {
   Q_OBJECT
- private:
-  std::unique_ptr<Project> project;
 
- protected:
+private:
+  std::unique_ptr<Project> project = nullptr;
+  SceneController* sceneController;
+
+protected:
   virtual void finizateProject(Project* project);
 
- public:
+public:
   ProjectService(QObject* parent = nullptr);
   ~ProjectService() override;
 
@@ -26,16 +30,17 @@ class ProjectService : public QObject {
   QStandardItemModel* getLayerModel() const;
   QItemSelectionModel* getLayerSelectionModel() const;
   QGraphicsScene* getScene() const;
+  SceneController* getSceneController() const;
 
   void initGL();
 
- public slots:
+public slots:
   void setLayerVisible(const QModelIndex& index, bool visible, bool isStart);
   void setLayerLock(const QModelIndex& index, bool lock);
 
   void undo();
   void redo();
- signals:
+signals:
   void projectChanged();
 };
-}  // namespace WaifuL2d
+} // namespace WaifuL2d
