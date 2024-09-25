@@ -3,12 +3,15 @@
 #include <QGraphicsView>
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
+
 namespace views {
 class MainGlViewPort;
 class MainStageSideToolBar;
+
 class MainGlGraphicsView : public QGraphicsView {
   Q_OBJECT
- private:
+
+private:
   MainGlViewPort* glViewport;
   QRectF sceneRubberRect;
   MainStageSideToolBar* toolBar;
@@ -16,40 +19,37 @@ class MainGlGraphicsView : public QGraphicsView {
   bool isMousePressed = false;
   bool isMousePressAndMove = false;
 
- public:
+public:
   explicit MainGlGraphicsView(QWidget* parent = nullptr);
   void makeCurrent();
   void doneCurrent();
 
-  /**
-   * @return sidebar instance of the MainStage
-   */
-  MainStageSideToolBar* getToolBar() const;
- signals:
+signals:
   void rubberSelected(QRectF rubberRect);
   void mouseSelectClick(QPointF scenePoint, bool isMultiple = false);
 
- protected:
-  void resizeEvent(QResizeEvent* event) override;
+protected:
   void keyPressEvent(QKeyEvent* event) override;
   void mousePressEvent(QMouseEvent* event) override;
   void mouseMoveEvent(QMouseEvent* event) override;
   void mouseReleaseEvent(QMouseEvent* event) override;
   void keyReleaseEvent(QKeyEvent* event) override;
   void wheelEvent(QWheelEvent* event) override;
- protected slots:
+
+protected slots:
   void handleRubberChanged(QRect rubberBandRect, QPointF fromScenePoint,
                            QPointF toScenePoint);
 };
 
 class MainGlViewPort : public QOpenGLWidget, protected QOpenGLFunctions {
   Q_OBJECT
- public:
+
+public:
   explicit MainGlViewPort(QWidget* parent = nullptr);
- signals:
+signals:
   void glHasInit();
 
- protected:
+protected:
   void initializeGL() override;
 };
-}  // namespace views
+} // namespace views

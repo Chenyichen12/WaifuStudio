@@ -4,38 +4,41 @@
 class QPushButton;
 
 namespace views {
+class TopBarIconBtn : public QWidget {
+  Q_OBJECT
+  QImage icon;
+  bool selected;
+
+protected:
+  void paintEvent(QPaintEvent* event) override;
+  void mousePressEvent(QMouseEvent* event) override;
+  void mouseReleaseEvent(QMouseEvent* event) override;
+
+public:
+  TopBarIconBtn(QWidget* parent = nullptr);
+  void setIcon(const QString& iconPath);
+  void setSelect(bool selected);
+signals:
+  void clicked();
+};
+
+
 class MainStageTopBar : public QWidget {
   Q_OBJECT
 
 private:
-  QPushButton* editModeBtn;
+  TopBarIconBtn* editModeBtn;
   // init when service init. it shouldn't be nullptr
-  WaifuL2d::SceneController* controller;
 
 public:
   MainStageTopBar(QWidget* parent = nullptr);
   /**
-   * reset the first state
-   */
-  void reset();
-
-  /**
-   * set the check state of the edit button
-   * will block the signals of edit mode
-   * @param checked
-   */
-  // void setEditBtnChecked(bool checked);
-
-  /**
    * call it when service init set controller to scene controller
    * @param controller 
    */
-  void setController(WaifuL2d::SceneController* controller);
+  void setController(const WaifuL2d::SceneController* controller);
 
 public slots:
   void handleControllerStateChanged(WaifuL2d::SceneControllerState state);
-signals:
-  void enterEditMode();
-  void leaveEditMode();
 };
 } // namespace views

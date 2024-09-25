@@ -3,7 +3,7 @@
 #include <QOpenGLFunctions>
 
 #include "QDragMoveEvent"
-#include "mainstagesidetoolbar.h"
+
 views::MainGlViewPort::MainGlViewPort(QWidget* parent) : QOpenGLWidget(parent) {
   auto format = QSurfaceFormat();
   format.setDepthBufferSize(32);
@@ -15,6 +15,7 @@ views::MainGlViewPort::MainGlViewPort(QWidget* parent) : QOpenGLWidget(parent) {
 #endif
   setFormat(format);
 }
+
 void views::MainGlViewPort::initializeGL() {
   QOpenGLWidget::initializeGL();
   initializeOpenGLFunctions();
@@ -22,7 +23,7 @@ void views::MainGlViewPort::initializeGL() {
 }
 
 views::MainGlGraphicsView::MainGlGraphicsView(QWidget* parent)
-    : QGraphicsView(parent) {
+  : QGraphicsView(parent) {
   this->setDragMode(DragMode::NoDrag);
   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -33,14 +34,8 @@ views::MainGlGraphicsView::MainGlGraphicsView(QWidget* parent)
           &MainGlGraphicsView::handleRubberChanged);
   this->glViewport = new MainGlViewPort(this);
   this->setViewport(glViewport);
-
-  this->toolBar = new MainStageSideToolBar(this);
 }
 
-void views::MainGlGraphicsView::resizeEvent(QResizeEvent* event) {
-  QGraphicsView::resizeEvent(event);
-  toolBar->setPositionFromRect(this->viewport()->rect());
-}
 
 void views::MainGlGraphicsView::keyPressEvent(QKeyEvent* event) {
   if (!event->isAutoRepeat()) {
@@ -84,6 +79,7 @@ void views::MainGlGraphicsView::keyReleaseEvent(QKeyEvent* event) {
   }
   QGraphicsView::keyReleaseEvent(event);
 }
+
 void views::MainGlGraphicsView::wheelEvent(QWheelEvent* event) {
   int angle = event->angleDelta().y();
   double factor = angle > 0 ? 1.1 : 0.9;
@@ -103,7 +99,3 @@ void views::MainGlGraphicsView::handleRubberChanged(QRect rubberBandRect,
 void views::MainGlGraphicsView::makeCurrent() { glViewport->makeCurrent(); }
 
 void views::MainGlGraphicsView::doneCurrent() { glViewport->doneCurrent(); }
-
-views::MainStageSideToolBar* views::MainGlGraphicsView::getToolBar() const {
-  return this->toolBar;
-}

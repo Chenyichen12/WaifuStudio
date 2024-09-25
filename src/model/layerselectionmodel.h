@@ -4,18 +4,21 @@
 
 #pragma once
 #include <QItemSelectionModel>
+
 namespace WaifuL2d {
 class LayerModel;
 class MainStageScene;
+
 class LayerSelectionModel : public QItemSelectionModel {
- private:
+private:
   LayerModel* model;
   MainStageScene* scene;
 
- public:
+public:
   LayerSelectionModel(LayerModel* model, MainStageScene* scene);
- public slots:
+
+public slots:
   void select(const QItemSelection& selection,
               QItemSelectionModel::SelectionFlags command) override;
 };
-}  // namespace WaifuL2d
+} // namespace WaifuL2d

@@ -1,38 +1,44 @@
 #pragma once
 #include <QDebug>
 #include <QGraphicsScene>
+
 namespace WaifuL2d {
 class RenderGroup;
 class DeformerCommand;
 class AbstractDeformer;
 class RootDeformer;
+
 class MainStageScene : public QGraphicsScene {
   Q_OBJECT
- private:
+
+private:
   RenderGroup* renderGroup = nullptr;
   QGraphicsRectItem* backGroundItem;
   RootDeformer* rootDeformer;
+
   struct {
     bool pressed = false;
     QPointF startPos;
     QPointF lastPos;
+
     void clear() {
       pressed = false;
       startPos = QPointF();
       lastPos = QPointF();
     }
+
     bool isMoved() const {
       auto delta = lastPos - startPos;
       return delta.manhattanLength() > 20;
     }
   } mouseState;
 
- protected:
+protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
   void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
 
- public:
+public:
   explicit MainStageScene(QObject* parent = nullptr);
 
   void initGL();
@@ -44,8 +50,9 @@ class MainStageScene : public QGraphicsScene {
   void selectDeformersById(const QList<int>& id);
   AbstractDeformer* findDeformerById(int id);
   void emitDeformerCommand(std::shared_ptr<DeformerCommand> command);
- signals:
+  QList<AbstractDeformer*> getSelectedDeformers() const;
+signals:
   void deformerCommand(std::shared_ptr<DeformerCommand> command);
   void shouldSelectDeformers(QList<int> deformers);
 };
-}  // namespace WaifuL2d
+} // namespace WaifuL2d

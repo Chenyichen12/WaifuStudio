@@ -22,6 +22,7 @@ public:
 
 signals:
   void stateChanged(SceneControllerState state);
+  void warning(QString message);
 };
 }
 

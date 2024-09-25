@@ -6,19 +6,25 @@
 
 #include "abstractdeformer.h"
 #include "mesh/rendergroup.h"
-namespace WaifuL2d {
 
+namespace WaifuL2d {
 class RootDeformer : public AbstractDeformer {
- public:
+public:
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
-             QWidget* widget = nullptr) override {}
+             QWidget* widget = nullptr) override {
+  }
+
   QRectF boundingRect() const override { return QRectF(); }
   QList<QPointF> getScenePoints() const override { return QList<QPointF>(); }
-  void setScenePoints(const QList<QPointF>& points) override {}
+
+  void setScenePoints(const QList<QPointF>& points) override {
+  }
+
   QPointF scenePointToLocal(const QPointF& point) override { return point; }
   int type() const override { return RootType; }
 
   typedef std::function<bool(AbstractDeformer*)> callBack;
+
   void forEachDown(const callBack& call) const {
     auto callStack = QStack<AbstractDeformer*>();
     for (const auto& deformer : deformerChildren) {
@@ -64,12 +70,14 @@ void MainStageScene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
   mouseState.startPos = event->screenPos();
   mouseState.lastPos = event->screenPos();
 }
+
 void MainStageScene::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
   QGraphicsScene::mouseMoveEvent(event);
   if (mouseState.pressed) {
     mouseState.lastPos = event->screenPos();
   }
 }
+
 void MainStageScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
   QGraphicsScene::mouseReleaseEvent(event);
   if (event->isAccepted()) {
@@ -121,16 +129,30 @@ void MainStageScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 
   emit shouldSelectDeformers(readySelectLayers);
 }
+
 MainStageScene::~MainStageScene() = default;
+
 void MainStageScene::selectDeformersById(const QList<int>& id) {
   rootDeformer->forEachDown([&id](AbstractDeformer* d) {
     d->setDeformerSelect(id.contains(d->getBindId()));
     return false;
   });
 }
+
 void MainStageScene::emitDeformerCommand(
     std::shared_ptr<DeformerCommand> command) {
   emit deformerCommand(command);
+}
+
+QList<AbstractDeformer*> MainStageScene::getSelectedDeformers() const {
+  QList<AbstractDeformer*> result;
+  rootDeformer->forEachDown([&result](AbstractDeformer* d) {
+    if (d->isDeformerSelected()) {
+      result.append(d);
+    }
+    return false;
+  });
+  return result;
 }
 
 void MainStageScene::addDeformer(WaifuL2d::AbstractDeformer* deformer,
@@ -161,10 +183,11 @@ AbstractDeformer* MainStageScene::findDeformerById(int id) {
   });
   return result;
 }
+
 void MainStageScene::setDeformerVisible(int id, bool visible) {
   auto deformer = findDeformerById(id);
   if (deformer) {
     deformer->setVisible(visible);
   }
 }
-}  // namespace WaifuL2d
+} // namespace WaifuL2d

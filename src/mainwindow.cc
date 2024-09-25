@@ -10,7 +10,6 @@
 #include "QFileDialog"
 #include "model/projectservice.h"
 #include "ui/ui_mainwindow.h"
-#include "views/mainstagesidetoolbar.h"
 
 MainWindow::MainWindow(QWidget* parent)
   : QMainWindow(parent), ui(new Ui::MainWindow) {
