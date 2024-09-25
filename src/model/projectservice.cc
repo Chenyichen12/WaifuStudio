@@ -1,6 +1,5 @@
 #include "projectservice.h"
 
-#include <QGraphicsScene>
 #include <QStack>
 #include <QUndoStack>
 #include <QUndoGroup>

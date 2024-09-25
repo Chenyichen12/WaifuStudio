@@ -11,8 +11,14 @@ struct SceneControllerState {
   bool isEdit = false;
 };
 
+/**
+ * To control scene event like enter edit event change tool event and so on.
+ * the ui should call scene api through this controller
+ */
 class SceneController : public QObject {
   Q_OBJECT
+
+  // the current scene
   MainStageScene* scene = nullptr;
   SceneControllerState state;
   QUndoStack* editModeUndoStack;
@@ -20,11 +26,29 @@ class SceneController : public QObject {
 public:
   SceneController(QObject* parent = nullptr);
 
+  /**
+   * the edit undo stack is different from main undoStack
+   * in the edit mode. it will record the edit deformer action
+   * @return the edit mode undoStack
+   */
   QUndoStack* getEditModeUndoStack() const { return editModeUndoStack; }
   void clearUndo() const;
 
+  /**
+   * won't take the ownership of scene
+   * make sure call it before call other function
+   * @param scene the current scene
+   */
   void setScene(MainStageScene* scene);
+
+  /**
+   * handle the event when ui toggle the edit btn
+   */
   void toggleEditMode();
+
+  /**
+   * @return has current scene
+   */
   bool hasScene() const;
 
 signals:

@@ -35,15 +35,30 @@ private:
 
   bool deformerSelect = false;
 
+  /**
+   * will call the scene emit deformer command to refresh the new points
+   * @param newPoints point position
+   * @param isStart if is start drag
+   */
   void handlePointShouldMove(const QList<QPointF>& newPoints, bool isStart);
+  /**
+   * the mesh deformer has a rect of selection points
+   * update it if selection points have changed
+   */
   void upDateOperateRect();
-
-  QList<int> getSelectedIndex() const;
 
 public:
   explicit MeshDeformer(Mesh* mesh, QGraphicsItem* parent = nullptr);
 
+  /**
+   * @return selected point position
+   */
   QList<QPointF> getScenePoints() const override;
+  /**
+   * @return selected points index
+   */
+  QList<int> getSelectedIndex() const;
+
   void setScenePoints(const QList<QPointF>& points) override;
   QPointF scenePointToLocal(const QPointF& point) override;
   int type() const override { return MeshDeformerType; }
