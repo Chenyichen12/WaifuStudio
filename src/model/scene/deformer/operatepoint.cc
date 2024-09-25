@@ -160,6 +160,7 @@ void OperateRectangle::handleRotateMove(int which, const QPointF& where,
 void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
                                            bool isStart) {
   if (isStart) {
+    startRectRecord.isFitRadio = false;
     startRectRecord.startRect = rect;
     startRectRecord.startRect.moveTopLeft(this->pos());
   }
@@ -186,33 +187,65 @@ void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
     return;
   }
 
+  auto targetPoint = where;
+
+  auto isFourEdgePoint = (which == 0 || which == 2 || which == 6 || which == 8);
+  if (startRectRecord.isFitRadio && isFourEdgePoint) {
+    auto radio = startRect.width() / startRect.height();
+    auto relativePoint = QPointF();
+    switch (which) {
+      case 0:
+        relativePoint = startRect.bottomRight();
+        break;
+      case 2:
+        relativePoint = startRect.bottomLeft();
+        break;
+      case 6:
+        relativePoint = startRect.topRight();
+        break;
+      case 8:
+        relativePoint = startRect.topLeft();
+        break;
+      default:
+        Q_ASSERT(false);
+        break;
+    }
+
+    auto width = targetPoint.x() - relativePoint.x();
+    if (which == 2 || which == 6) {
+      width = -width;
+    }
+    auto newHeight = width / radio;
+    targetPoint.setY(relativePoint.y() + newHeight);
+  }
+
   switch (which) {
     case 0:
     case 3:
     case 6: {
-      if (where.x() > startRect.right()) {
+      if (targetPoint.x() > startRect.right()) {
         isXFlip = true;
         newRect.setX(startRect.right());
       } else {
         isXFlip = false;
-        newRect.setX(where.x());
+        newRect.setX(targetPoint.x());
       }
 
-      newRect.setWidth(qAbs(where.x() - startRect.right()));
+      newRect.setWidth(qAbs(targetPoint.x() - startRect.right()));
       break;
     }
     case 2:
     case 5:
     case 8: {
-      if (where.x() < startRect.left()) {
+      if (targetPoint.x() < startRect.left()) {
         isXFlip = true;
-        newRect.setX(where.x());
+        newRect.setX(targetPoint.x());
       } else {
         isXFlip = false;
         newRect.setX(startRect.left());
       }
 
-      newRect.setWidth(qAbs(where.x() - startRect.left()));
+      newRect.setWidth(qAbs(targetPoint.x() - startRect.left()));
       break;
     }
     default: {
@@ -224,28 +257,28 @@ void OperateRectangle::handleRectPointMove(int which, const QPointF& where,
     case 0:
     case 1:
     case 2: {
-      if (where.y() > startRect.bottom()) {
+      if (targetPoint.y() > startRect.bottom()) {
         isYFlip = true;
         newRect.setY(startRect.bottom());
       } else {
         isYFlip = false;
-        newRect.setY(where.y());
+        newRect.setY(targetPoint.y());
       }
 
-      newRect.setHeight(qAbs(where.y() - startRect.bottom()));
+      newRect.setHeight(qAbs(targetPoint.y() - startRect.bottom()));
       break;
     }
     case 6:
     case 7:
     case 8: {
-      if (where.y() < startRect.top()) {
+      if (targetPoint.y() < startRect.top()) {
         isYFlip = true;
-        newRect.setY(where.y());
+        newRect.setY(targetPoint.y());
       } else {
         isYFlip = false;
         newRect.setY(startRect.top());
       }
-      newRect.setHeight(qAbs(where.y() - startRect.top()));
+      newRect.setHeight(qAbs(targetPoint.y() - startRect.top()));
       break;
     }
     default: {
@@ -280,13 +313,28 @@ qreal OperateRectangle::getViewPortScale() const {
   return scale;
 }
 
+void OperateRectangle::keyPressEvent(QKeyEvent* event) {
+  QGraphicsItem::keyPressEvent(event);
+  startRectRecord.isFitRadio = true;
+}
+
+void OperateRectangle::keyReleaseEvent(QKeyEvent* event) {
+  QGraphicsItem::keyReleaseEvent(event);
+  startRectRecord.isFitRadio = false;
+}
+
+
 OperateRectangle::OperateRectangle(QGraphicsItem* parent)
   : QGraphicsItem(parent) {
+  setFlag(ItemIsFocusable, true);
   for (int i = 0; i < 9; i++) {
     auto point = new OperateRectPoint(this);
     point->data = i;
     point->pointShouldMove = [this](const QPointF& point, bool isStart,
                                     const QVariant& pointData) {
+      if (isStart) {
+        this->grabKeyboard();
+      }
       this->handleRectPointMove(pointData.toInt(), point, isStart);
     };
     point->setRole(i);

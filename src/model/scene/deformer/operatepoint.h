@@ -52,6 +52,7 @@ class OperateRectangle : public QGraphicsItem {
 
   struct {
     QRectF startRect;
+    bool isFitRadio = false;
   } startRectRecord;
 
   struct {
@@ -61,6 +62,10 @@ class OperateRectangle : public QGraphicsItem {
   void handleRotateMove(int which, const QPointF& where, bool isStart);
   void handleRectPointMove(int which, const QPointF& where, bool isStart);
   qreal getViewPortScale() const;
+
+protected:
+  void keyPressEvent(QKeyEvent* event) override;
+  void keyReleaseEvent(QKeyEvent* event) override;
 
 public:
   OperateRectangle(QGraphicsItem* parent = nullptr);
