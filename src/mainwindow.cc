@@ -27,6 +27,7 @@ MainWindow::MainWindow(QWidget* parent)
   // set controller to topbar
   auto sceneController = projectService->getSceneController();
   ui->MainStageTopBar->setController(sceneController);
+  ui->toolWidget->setController(sceneController);
 }
 
 void MainWindow::handleProjectChanged() {

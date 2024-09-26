@@ -5,10 +5,17 @@
 namespace views {
 void SceneToolBar::handleControllerStateChanged(
     const WaifuL2d::SceneControllerState& state) {
-  // if (state.isEdit == false) {
-  // this->setVisible(false);
-  // return;
-  // }
+  if (!state.isEdit) {
+    this->setVisible(false);
+    return;
+  } else {
+    this->setVisible(true);
+  }
+
+  auto toolIndex = static_cast<int>(state.editTool);
+  for (int i = 0; i < 2; i++) {
+    toolBtn[i]->setSelect(i == toolIndex);
+  }
 }
 
 SceneToolBar::SceneToolBar(QWidget* parent) : QWidget(parent) {
@@ -21,8 +28,9 @@ SceneToolBar::SceneToolBar(QWidget* parent) : QWidget(parent) {
   toolBtn[1]->setSelect(false);
 
   for (auto btn : toolBtn) {
-    btn->setFixedSize(30, 30);
+    btn->setFixedSize(20, 20);
     btn->setContentsMargins(0, 0, 0, 0);
+    btn->setIconLength(15);
   }
 
   auto layout = new FlowLayout(this);

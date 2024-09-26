@@ -15,6 +15,7 @@ protected:
 public:
   IconButton(QWidget* parent = nullptr);
   void setIcon(const QString& iconPath);
+  void setIconLength(int length);
   void setSelect(bool selected);
 signals:
   void clicked();

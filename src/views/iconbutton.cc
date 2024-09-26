@@ -6,14 +6,16 @@ namespace views {
 void IconButton::paintEvent(QPaintEvent* event) {
   auto painter = QPainter(this);
   if (this->selected) {
-    painter.setBrush(Qt::gray);
+    painter.setBrush(QColor("#A2C3E8"));
   } else {
     painter.setBrush(Qt::white);
   }
 
   painter.drawRect(this->rect());
   auto center = rect().center();
-  QRect imageRect(center.x() - 10, center.y() - 10, 20, 20);
+  auto height = icon.height();
+  QRect imageRect(center.x() - height / 2, center.y() - height / 2, height,
+                  height);
   painter.drawImage(imageRect, icon);
 }
 
@@ -37,6 +39,11 @@ IconButton::IconButton(QWidget* parent) : QWidget(parent) {
 void IconButton::setIcon(const QString& iconPath) {
   icon = QImage(iconPath);
   icon = icon.scaledToHeight(20, Qt::SmoothTransformation);
+  update();
+}
+
+void IconButton::setIconLength(int length) {
+  icon = icon.scaledToHeight(length, Qt::SmoothTransformation);
   update();
 }
 

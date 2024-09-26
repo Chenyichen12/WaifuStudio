@@ -7,8 +7,15 @@ namespace WaifuL2d {
 class MainStageScene;
 
 
+enum EditToolType {
+  Cursor = 0,
+  AddPen = 1,
+  RemovePen = 2,
+};
+
 struct SceneControllerState {
   bool isEdit = false;
+  EditToolType editTool = Cursor;
 };
 
 /**
