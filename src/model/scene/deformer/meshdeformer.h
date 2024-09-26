@@ -58,6 +58,7 @@ public:
    * @return selected points index
    */
   QList<int> getSelectedIndex() const;
+  QList<unsigned int> getMeshIncident() const;
 
   void setScenePoints(const QList<QPointF>& points) override;
   QPointF scenePointToLocal(const QPointF& point) override;

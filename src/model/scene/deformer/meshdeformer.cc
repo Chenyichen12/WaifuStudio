@@ -209,4 +209,8 @@ QList<int> MeshDeformer::getSelectedIndex() const {
   }
   return result;
 }
+
+QList<unsigned int> MeshDeformer::getMeshIncident() const {
+  return mesh->getIncident();
+}
 } // namespace WaifuL2d

@@ -6,6 +6,7 @@ class QUndoStack;
 namespace WaifuL2d {
 class MainStageScene;
 
+class MeshEditor;
 
 enum EditToolType {
   Cursor = 0,
@@ -16,6 +17,7 @@ enum EditToolType {
 struct SceneControllerState {
   bool isEdit = false;
   EditToolType editTool = Cursor;
+  MeshEditor* editor = nullptr;
 };
 
 /**
@@ -59,8 +61,8 @@ public:
   bool hasScene() const;
 
 signals:
-  void stateChanged(SceneControllerState state);
-  void warning(QString message);
+  void stateChanged(const SceneControllerState& state);
+  void warning(const QString& message);
 };
 }
 

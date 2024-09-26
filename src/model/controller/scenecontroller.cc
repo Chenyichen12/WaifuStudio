@@ -2,6 +2,7 @@
 #include "../scene/mainstagescene.h"
 #include "../scene/abstractdeformer.h"
 #include "model/scene/deformer/meshdeformer.h"
+#include "../scene/deformer/mesheditor.h"
 #include <QUndoStack>
 
 namespace WaifuL2d {
@@ -34,8 +35,18 @@ void SceneController::toggleEditMode() {
       emit warning("Please select a mesh deformer first.");
       return;
     }
+
+    state.editor =
+        new MeshEditor(editDeformer->getScenePoints(),
+                       editDeformer->getMeshIncident());
+    scene->addItem(state.editor);
+    state.editor->setZValue(3);
+
+    // may need to emit some signal to tell edit mode
   } else {
-    qDebug() << "edit state off";
+    Q_ASSERT(state.editor != nullptr);
+    delete state.editor;
+    state.editor = nullptr;
   }
 
   this->state.isEdit = !this->state.isEdit;
