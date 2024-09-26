@@ -4,30 +4,13 @@
 class QPushButton;
 
 namespace views {
-class TopBarIconBtn : public QWidget {
-  Q_OBJECT
-  QImage icon;
-  bool selected;
-
-protected:
-  void paintEvent(QPaintEvent* event) override;
-  void mousePressEvent(QMouseEvent* event) override;
-  void mouseReleaseEvent(QMouseEvent* event) override;
-
-public:
-  TopBarIconBtn(QWidget* parent = nullptr);
-  void setIcon(const QString& iconPath);
-  void setSelect(bool selected);
-signals:
-  void clicked();
-};
-
+class IconButton;
 
 class MainStageTopBar : public QWidget {
   Q_OBJECT
 
 private:
-  TopBarIconBtn* editModeBtn;
+  IconButton* editModeBtn;
   // init when service init. it shouldn't be nullptr
 
 public:

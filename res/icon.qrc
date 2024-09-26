@@ -8,5 +8,6 @@
         <file>move-arrow.png</file>
         <file>pen.png</file>
         <file>lock.png</file>
+        <file>cursor-default.png</file>
     </qresource>
 </RCC>
