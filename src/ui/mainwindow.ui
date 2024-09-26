@@ -36,7 +36,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QWidget" name="toolWidget" native="true">
+         <widget class="views::SceneToolBar" name="toolWidget" native="true">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -111,6 +111,12 @@
    <class>views::MainStageTopBar</class>
    <extends>QWidget</extends>
    <header>views/mainstagetopbar.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>views::SceneToolBar</class>
+   <extends>QWidget</extends>
+   <header>views/scenetoolbar.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

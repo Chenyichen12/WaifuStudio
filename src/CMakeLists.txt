@@ -29,6 +29,7 @@ target_link_libraries(WaifuStudio
         PhotoshopAPI
         glm::glm
         CDT::CDT
+        FlowLayout
 )
 
 

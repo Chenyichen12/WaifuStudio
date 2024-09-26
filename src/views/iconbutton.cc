@@ -31,6 +31,7 @@ void IconButton::mouseReleaseEvent(QMouseEvent* event) {
 IconButton::IconButton(QWidget* parent) : QWidget(parent) {
   this->selected = false;
   setMinimumWidth(30);
+  setMinimumHeight(30);
 }
 
 void IconButton::setIcon(const QString& iconPath) {

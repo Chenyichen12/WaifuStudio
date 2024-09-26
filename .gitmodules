@@ -1,3 +1,6 @@
 [submodule "vendor/PhotoshopAPI"]
 	path = vendor/PhotoshopAPI
 	url = https://github.com/Chenyichen12/PhotoshopAPI
+[submodule "vendor/FlowLayout"]
+	path = vendor/FlowLayout
+	url = https://github.com/Chenyichen12/FlowLayout
