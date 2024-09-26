@@ -1,17 +1,112 @@
 #include "mesheditor.h"
-#include "operatepoint.h"
+
+#include <QGraphicsSceneMouseEvent>
 #include <QPainter>
+#include <QUndoCommand>
+
+#include "operatepoint.h"
+
+namespace {
+class PenSurface : public QGraphicsRectItem {
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
+    if (this->getExistPoints) {
+      auto points = this->getExistPoints();
+      for (const auto& point : points) {
+        if (point->isHitPoint(event->scenePos())) {
+          event->ignore();
+          return;
+        }
+      }
+    }
+
+    event->accept();
+    if (shouldAddPoint) {
+      shouldAddPoint(event->scenePos());
+    }
+  }
+
+public:
+  std::function<QList<WaifuL2d::OperatePoint*>()> getExistPoints = nullptr;
+  std::function<void(const QPointF&)> shouldAddPoint = nullptr;
+
+  PenSurface(QGraphicsItem* parent = nullptr) : QGraphicsRectItem(parent) {
+  }
+};
+
+class MeshPointMoveCommand : public WaifuL2d::MeshEditorCommand {
+public:
+  struct MoveData {
+    QList<QPointF> oldPoints;
+    QList<QPointF> newPoints;
+    bool isStart;
+  } data;
+
+private:
+  class UndoCommand : public QUndoCommand {
+    MoveData data;
+    WaifuL2d::MeshEditor* editor;
+
+  public:
+    explicit UndoCommand(MoveData data, WaifuL2d::MeshEditor* editor,
+                         QUndoCommand* parent)
+      : QUndoCommand(parent), data(std::move(data)), editor(editor) {
+    }
+
+    void undo() override {
+      editor->setPoints(data.oldPoints);
+    }
+
+    void redo() override {
+      editor->setPoints(data.newPoints);
+    }
+
+    int id() const override { return 100; }
+
+    bool mergeWith(const QUndoCommand* other) override {
+      if (id() != other->id()) {
+        return false;
+      }
+
+      auto otherCommand =
+          static_cast<const MeshPointMoveCommand::UndoCommand*>(other);
+      if (otherCommand->data.isStart) {
+        return false;
+      }
+      return true;
+    }
+  };
+
+  WaifuL2d::MeshEditor* editor;
+
+public:
+  QUndoCommand* createUndoCommand(QUndoCommand* parent) override {
+    return new UndoCommand(data, editor, parent);
+  }
+
+  MeshPointMoveCommand(WaifuL2d::MeshEditor* editor, MoveData data)
+    : data(std::move(data)), editor(editor) {
+  }
+};
+} // namespace
 
 namespace WaifuL2d {
-MeshEditor::MeshEditor(QGraphicsItem* parent): MeshEditor({}, {}, parent) {
+MeshEditor::MeshEditor(QGraphicsItem* parent) : MeshEditor({}, {}, parent) {
 }
 
 void MeshEditor::setHandleRect(const QRectF& rect) {
-  this->handleRect = rect;
+  penSurface->setRect(rect);
   prepareGeometryChange();
 }
 
-QRectF MeshEditor::boundingRect() const { return handleRect; }
+QList<QPointF> MeshEditor::getPoints() const {
+  QList<QPointF> result;
+  for (const auto& p : points) {
+    result.push_back(p->pos());
+  }
+  return result;
+}
+
+QRectF MeshEditor::boundingRect() const { return penSurface->rect(); }
 
 void MeshEditor::paint(QPainter* painter,
                        const QStyleOptionGraphicsItem* option,
@@ -31,6 +126,10 @@ void MeshEditor::paint(QPainter* painter,
   for (const auto& edge : fixedEdges) {
     painter->drawLine(points[edge.v1()]->pos(), points[edge.v2()]->pos());
   }
+}
+
+void MeshEditor::setPoints(const QList<QPointF>& scenePoints) {
+  updatePoints(scenePoints);
 }
 
 OperatePoint* MeshEditor::createPoint(const QPointF& pos) {
@@ -78,10 +177,27 @@ void MeshEditor::updatePoints(const QList<QPointF>& pointPositions) {
   }
 }
 
-void MeshEditor::
-handlePointShouldMove(const QPointF& pos, bool isStart, const QVariant& data) {
+void MeshEditor::handlePointShouldMove(const QPointF& pos, bool isStart,
+                                       const QVariant& data) {
   auto index = data.toInt();
-  qDebug() << pos;
+  auto oldPoints = getPoints();
+  auto newPoints = oldPoints;
+  newPoints[index] = pos;
+
+  auto command = std::make_shared<MeshPointMoveCommand>(
+      this, std::move(MeshPointMoveCommand::MoveData{
+          oldPoints, newPoints, isStart
+      }));
+  emit editorCommand(command);
+}
+
+void MeshEditor::handleShouldAddPoint(const QPointF& pos) {
+  auto points = this->getPoints();
+  points.push_back(pos);
+
+  qDebug() << "add point at" << pos;
+  // TODO: add undo command
+  //  updatePoints(points);
 }
 
 MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
@@ -99,5 +215,15 @@ MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
     fixedEdges.insert(e3);
   }
   this->allEdges = fixedEdges;
+
+  auto pen = new PenSurface(this);
+  pen->shouldAddPoint = [this](const auto& point) {
+    this->handleShouldAddPoint(point);
+  };
+  pen->getExistPoints = [this]() {
+    return this->points;
+  };
+  pen->setVisible(true);
+  penSurface = pen;
 }
-}
+} // namespace WaifuL2d

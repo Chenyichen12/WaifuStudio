@@ -9,10 +9,12 @@
 #include "parser/psdparser.h"
 #include "scene/deformercommand.h"
 #include "scene/mainstagescene.h"
+#include "scene/deformer/mesheditor.h"
 #include "scene/mesh/mesh.h"
 #include "scene/mesh/rendergroup.h"
 #include "tree/layer.h"
 #include "tree/layermodel.h"
+#include "undo/lockcommand.h"
 #include "undo/visiblecommand.h"
 
 namespace WaifuL2d {
@@ -96,6 +98,18 @@ ProjectService::ProjectService(QObject* parent) : QObject(parent) {
   undoGroup->addStack(mainUndoStack);
   undoGroup->addStack(sceneController->getEditModeUndoStack());
   undoGroup->setActiveStack(mainUndoStack);
+
+  // change the undo stack when enter into the edit mode
+  // may move to another function but lambda is more clear now
+  connect(sceneController, &SceneController::stateChanged, this,
+          [this](const SceneControllerState& state) {
+            if (state.isEdit) {
+              this->undoGroup->setActiveStack(
+                  this->sceneController->getEditModeUndoStack());
+            } else {
+              this->undoGroup->setActiveStack(this->mainUndoStack);
+            }
+          });
 }
 
 ProjectService::~ProjectService() = default;
@@ -170,9 +184,10 @@ void ProjectService::setLayerLock(const QModelIndex& index, bool lock) {
   if (layer == nullptr) {
     return;
   }
-  layer->setLocked(lock);
 
-  // TODO: undo command
+  LockCommand* command = new LockCommand(project->model, layer->getId());
+  command->setShouldLock(lock);
+  mainUndoStack->push(command);
 }
 
 void ProjectService::undo() { undoGroup->undo(); }

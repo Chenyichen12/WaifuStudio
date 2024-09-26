@@ -37,6 +37,34 @@ void OperatePoint::setRadius(int r) {
   this->setRect(-r, -r, 2 * r, 2 * r);
 }
 
+bool OperatePoint::isHitPoint(const QPointF& point) const {
+  qreal scale = 1;
+  if (this->scene() && !this->scene()->views().empty()) {
+    scale = this->scene()->views().first()->transform().m11();
+  }
+  auto actualR = radius / scale;
+  auto hitLength = this->pos() - point;
+  return actualR * actualR >=
+         hitLength.x() * hitLength.x() + hitLength.y() * hitLength.y();
+}
+
+bool OperatePoint::isHitPoint(const QPointF& p,
+                              const QWidget* whereEvent) const {
+  qreal scale = 1;
+  const auto& views = this->scene()->views();
+  auto it = std::find_if(views.begin(), views.end(),
+                         [whereEvent](const QGraphicsView* view) {
+                           return whereEvent == view->viewport();
+                         });
+  if (it != views.end()) {
+    scale = (*it)->transform().m11();
+  }
+  auto actualR = radius / scale;
+  auto hitLength = this->pos() - p;
+  return actualR * actualR >=
+         hitLength.x() * hitLength.x() + hitLength.y() * hitLength.y();
+}
+
 QVariant OperatePoint::itemChange(QGraphicsItem::GraphicsItemChange change,
                                   const QVariant& value) {
   if (change == QGraphicsItem::ItemSelectedHasChanged) {
@@ -323,7 +351,6 @@ void OperateRectangle::keyReleaseEvent(QKeyEvent* event) {
   startRectRecord.isFitRadio = false;
 }
 
-
 OperateRectangle::OperateRectangle(QGraphicsItem* parent)
   : QGraphicsItem(parent) {
   setFlag(ItemIsFocusable, true);
@@ -352,7 +379,6 @@ OperateRectangle::OperateRectangle(QGraphicsItem* parent)
     operateRotationPoints[i] = point;
   }
 }
-
 
 void OperateRectangle::setRect(const QRectF& rect) {
   this->rect = {0, 0, rect.width(), rect.height()};

@@ -85,6 +85,8 @@ public:
    */
   void emitDeformerCommand(std::shared_ptr<DeformerCommand> command);
   QList<AbstractDeformer*> getSelectedDeformers() const;
+
+  QRectF getProjectRect() const;
 signals:
   /**
    * when the deformer should call the undo command, it will be emitted to the project to add undo command

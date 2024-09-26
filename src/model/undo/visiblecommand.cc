@@ -3,13 +3,15 @@
 #include "model/scene/mainstagescene.h"
 #include "model/tree/layer.h"
 #include "model/tree/layermodel.h"
+
 namespace WaifuL2d {
 VisibleCommand::VisibleCommand(LayerModel* layerModel, MainStageScene* scene,
                                const QModelIndex& index, bool visible)
-    : layerModel(layerModel),
-      scene(scene),
-      indexes({index}),
-      visibles({visible}) {}
+  : layerModel(layerModel),
+    scene(scene),
+    indexes({index}),
+    visibles({visible}) {
+}
 
 void VisibleCommand::setStart(bool start) { this->isStart = start; }
 
@@ -28,7 +30,6 @@ void VisibleCommand::undo() {
 }
 
 void VisibleCommand::redo() {
-  qDebug() << indexes.size();
   for (int i = 0; i < indexes.size(); i++) {
     auto layer = layerModel->layerFromIndex(indexes[i]);
     if (layer == nullptr) {
@@ -60,5 +61,4 @@ bool VisibleCommand::mergeWith(const QUndoCommand* command) {
   }
   return true;
 }
-
-}  // namespace WaifuL2d
+} // namespace WaifuL2d

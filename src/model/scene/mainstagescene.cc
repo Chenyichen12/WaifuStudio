@@ -155,6 +155,10 @@ QList<AbstractDeformer*> MainStageScene::getSelectedDeformers() const {
   return result;
 }
 
+QRectF MainStageScene::getProjectRect() const {
+  return renderGroup->boundingRect();
+}
+
 void MainStageScene::addDeformer(WaifuL2d::AbstractDeformer* deformer,
                                  WaifuL2d::AbstractDeformer* parent) {
   if (parent == nullptr) {

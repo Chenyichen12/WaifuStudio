@@ -27,6 +27,9 @@ public:
   void setRadius(int r);
   int getRadius() const { return radius; }
 
+  bool isHitPoint(const QPointF& point) const;
+  bool isHitPoint(const QPointF& point, const QWidget* whereEvent) const;
+
   QVariant data;
 
   std::function<PointSelectedChange> pointSelectedChange = nullptr;

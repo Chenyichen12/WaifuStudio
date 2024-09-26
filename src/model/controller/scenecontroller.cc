@@ -41,8 +41,12 @@ void SceneController::toggleEditMode() {
                        editDeformer->getMeshIncident());
     scene->addItem(state.editor);
     state.editor->setZValue(3);
-
-    // may need to emit some signal to tell edit mode
+    state.editor->setHandleRect(scene->getProjectRect());
+    connect(state.editor, &MeshEditor::editorCommand, this,
+            [this](const std::shared_ptr<MeshEditorCommand>& command) {
+              auto undoCommand = command->createUndoCommand();
+              this->editModeUndoStack->push(undoCommand);
+            });
   } else {
     Q_ASSERT(state.editor != nullptr);
     delete state.editor;
