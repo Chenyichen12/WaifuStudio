@@ -87,6 +87,46 @@ public:
     : data(std::move(data)), editor(editor) {
   }
 };
+
+class MeshPointAddCommand : public WaifuL2d::MeshEditorCommand {
+public:
+  struct AddData {
+    QPointF pos;
+    int addIndex;
+  } data;
+
+  WaifuL2d::MeshEditor* editor;
+
+private:
+  class UndoCommand : public QUndoCommand {
+    AddData data;
+    WaifuL2d::MeshEditor* editor;
+
+  public:
+    UndoCommand(const AddData& data, WaifuL2d::MeshEditor* editor,
+                QUndoCommand* parent)
+      : QUndoCommand(parent), data(data), editor(editor) {
+    }
+
+    void redo() override {
+      editor->addPoint(data.pos);
+    }
+
+    void undo() override {
+      editor->removePoint(data.addIndex);
+    }
+  };
+
+public:
+  QUndoCommand* createUndoCommand(QUndoCommand* parent) override {
+    return new UndoCommand(data, editor, parent);
+  }
+
+  explicit MeshPointAddCommand(WaifuL2d::MeshEditor* editor,
+                               const AddData& data)
+    : data(data), editor(editor) {
+  }
+};
 } // namespace
 
 namespace WaifuL2d {
@@ -179,11 +219,10 @@ void MeshEditor::handlePointShouldMove(const QPointF& pos, bool isStart,
 }
 
 void MeshEditor::handleShouldAddPoint(const QPointF& pos) {
-  auto points = this->getPoints();
-  points.push_back(pos);
-
-  qDebug() << "add point at" << pos;
-  // TODO: add undo command
+  auto addData = MeshPointAddCommand::AddData{
+      pos, static_cast<int>(points.size())};
+  auto command = std::make_shared<MeshPointAddCommand>(this, addData);
+  emit editorCommand(command);
 }
 
 MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
