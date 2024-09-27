@@ -116,6 +116,20 @@ public:
 
   void selectPoints(const QList<int>& indexes);
 
+  /**
+   * update the cdt
+   * call it when do cdt calculation and update the fixed edge
+   */
+  void upDateCDT();
+
+  /**
+   * editor structure
+   * @return 
+   */
+  CDT::EdgeUSet getFixedEdges() const;
+  CDT::EdgeUSet getAllEdges() const;
+
+  void setEdges(const CDT::EdgeUSet& fixedEdges, const CDT::EdgeUSet& allEdges);
 signals:
   void editorCommand(std::shared_ptr<MeshEditorCommand> command);
 };

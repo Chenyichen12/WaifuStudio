@@ -45,6 +45,16 @@ public:
     QList<QPointF> oldPoints;
     QList<QPointF> newPoints;
     bool isStart;
+
+    /**
+     * for this undo command, it will call update cdt
+     * after update the cdt, the fixed edge and all edge may be changed
+     * So it is necessary to record the undo command old edge information
+     * the following command is the same
+     * the move command may not need it. But it seems work well here. keep it until it performs bad
+     */
+    CDT::EdgeUSet oldFixedEdge = {};
+    CDT::EdgeUSet oldAllEdge = {};
   } data;
 
 private:
@@ -56,14 +66,20 @@ private:
     explicit UndoCommand(MoveData data, WaifuL2d::MeshEditor* editor,
                          QUndoCommand* parent)
       : QUndoCommand(parent), data(std::move(data)), editor(editor) {
+      if (this->data.isStart) {
+        this->data.oldFixedEdge = editor->getFixedEdges();
+        this->data.oldAllEdge = editor->getAllEdges();
+      }
     }
 
     void undo() override {
       editor->updatePointsPos(data.oldPoints);
+      editor->setEdges(data.oldFixedEdge, data.oldAllEdge);
     }
 
     void redo() override {
       editor->updatePointsPos(data.newPoints);
+      editor->upDateCDT();
     }
 
     int id() const override { return 100; }
@@ -100,6 +116,8 @@ public:
     QPointF pos;
     int addIndex;
     std::optional<int> connectIndex;
+    CDT::EdgeUSet oldFixedEdge = {};
+    CDT::EdgeUSet oldAllEdge = {};
   } data;
 
   WaifuL2d::MeshEditor* editor;
@@ -113,6 +131,8 @@ private:
     UndoCommand(const AddData& data, WaifuL2d::MeshEditor* editor,
                 QUndoCommand* parent)
       : QUndoCommand(parent), data(data), editor(editor) {
+      this->data.oldFixedEdge = editor->getFixedEdges();
+      this->data.oldAllEdge = editor->getAllEdges();
     }
 
     void redo() override {
@@ -121,10 +141,13 @@ private:
         editor->connectFixEdge(data.addIndex, data.connectIndex.value());
       }
       editor->selectPoints({data.addIndex});
+      editor->upDateCDT();
     }
 
     void undo() override {
       editor->removePoint(data.addIndex);
+      // restore it
+      editor->setEdges(data.oldFixedEdge, data.oldAllEdge);
     }
   };
 
@@ -145,6 +168,8 @@ public:
   struct ConnectData {
     int index1;
     int index2;
+    CDT::EdgeUSet oldFixedEdge = {};
+    CDT::EdgeUSet oldAllEdge = {};
   } data;
 
   WaifuL2d::MeshEditor* editor;
@@ -158,14 +183,18 @@ private:
     UndoCommand(const ConnectData& data, WaifuL2d::MeshEditor* editor,
                 QUndoCommand* parent)
       : QUndoCommand(parent), data(data), editor(editor) {
+      this->data.oldFixedEdge = editor->getFixedEdges();
+      this->data.oldAllEdge = editor->getAllEdges();
     }
 
     void redo() override {
       editor->connectFixEdge(data.index1, data.index2);
+      editor->upDateCDT();
     }
 
     void undo() override {
       editor->disconnectFixEdge(data.index1, data.index2);
+      editor->setEdges(data.oldFixedEdge, data.oldAllEdge);
     }
   };
 
@@ -206,7 +235,7 @@ void MeshEditor::paint(QPainter* painter,
                        QWidget* widget) {
   auto pen = QPen();
   pen.setWidth(1 / painter->transform().m11());
-  pen.setColor(Qt::gray);
+  pen.setColor(Qt::white);
 
   painter->setPen(pen);
   for (const auto& edge : allEdges) {
@@ -232,6 +261,24 @@ void MeshEditor::selectPoints(const QList<int>& indexes) {
   for (int i = 0; i < points.size(); i++) {
     points[i]->setSelected(indexes.contains(i));
   }
+  update();
+}
+
+void MeshEditor::upDateCDT() {
+  const auto& cdt = calculateCDT();
+  this->fixedEdges = cdt.fixedEdges;
+  this->allEdges = CDT::extractEdgesFromTriangles(cdt.triangles);
+  this->update();
+}
+
+CDT::EdgeUSet MeshEditor::getFixedEdges() const { return fixedEdges; }
+
+CDT::EdgeUSet MeshEditor::getAllEdges() const { return allEdges; }
+
+void MeshEditor::setEdges(const CDT::EdgeUSet& fixedEdges,
+                          const CDT::EdgeUSet& allEdges) {
+  this->fixedEdges = fixedEdges;
+  this->allEdges = allEdges;
   update();
 }
 
@@ -317,6 +364,16 @@ void MeshEditor::handleShouldAddPoint(const QPointF& pos) {
 }
 
 void MeshEditor::handleShouldConnect(int index1, int index2) {
+  if (index1 == index2) {
+    return;
+  }
+
+  auto edge = CDT::Edge{static_cast<unsigned int>(index1),
+                        static_cast<unsigned int>(index2)};
+  if (fixedEdges.contains(edge)) {
+    return;
+  }
+
   auto command = std::make_shared<FixedEdgeConnectCommand>(
       this, FixedEdgeConnectCommand::ConnectData{index1, index2});
   emit editorCommand(command);
@@ -389,9 +446,6 @@ MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
     this->selectPoints({index});
 
     if (index1.has_value()) {
-      if (index1.value() == index) {
-        return;
-      }
       this->handleShouldConnect(index1.value(), index);
     }
   };
@@ -437,6 +491,7 @@ void MeshEditor::removePoint(int index) {
   }
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 void MeshEditor::removePoints(const QList<int>& indexes) {
   for (auto index : indexes) {
     Q_ASSERT(index >= 0 && index < points.size());
