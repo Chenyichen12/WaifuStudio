@@ -15,6 +15,6 @@ private slots:
 
 public:
   explicit SceneToolBar(QWidget* parent = nullptr);
-  void setController(const WaifuL2d::SceneController* controller);
+  void setController(WaifuL2d::SceneController* controller);
 };
 }

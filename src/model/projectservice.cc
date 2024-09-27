@@ -9,7 +9,6 @@
 #include "parser/psdparser.h"
 #include "scene/deformercommand.h"
 #include "scene/mainstagescene.h"
-#include "scene/deformer/mesheditor.h"
 #include "scene/mesh/mesh.h"
 #include "scene/mesh/rendergroup.h"
 #include "tree/layer.h"

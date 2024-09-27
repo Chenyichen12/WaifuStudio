@@ -14,10 +14,17 @@ enum EditToolType {
   RemovePen = 2,
 };
 
+class SceneController;
+
 struct SceneControllerState {
+  friend SceneController;
+
+private:
+  MeshEditor* editor = nullptr;
+
+public:
   bool isEdit = false;
   EditToolType editTool = Cursor;
-  MeshEditor* editor = nullptr;
 };
 
 /**
@@ -59,6 +66,13 @@ public:
    * @return has current scene
    */
   bool hasScene() const;
+
+  /**
+   * change the edit tool of the scene
+   * make sure to call it when state.isEdit is true
+   * @param type tool type
+   */
+  void setEditTool(EditToolType type);
 
 signals:
   void stateChanged(const SceneControllerState& state);

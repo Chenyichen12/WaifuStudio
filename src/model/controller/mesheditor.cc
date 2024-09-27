@@ -4,7 +4,7 @@
 #include <QPainter>
 #include <QUndoCommand>
 
-#include "operatepoint.h"
+#include "model/scene/deformer/operatepoint.h"
 
 namespace {
 class PenSurface : public QGraphicsRectItem {
@@ -53,11 +53,11 @@ private:
     }
 
     void undo() override {
-      editor->setPoints(data.oldPoints);
+      editor->updatePointsPos(data.oldPoints);
     }
 
     void redo() override {
-      editor->setPoints(data.newPoints);
+      editor->updatePointsPos(data.newPoints);
     }
 
     int id() const override { return 100; }
@@ -94,7 +94,9 @@ MeshEditor::MeshEditor(QGraphicsItem* parent) : MeshEditor({}, {}, parent) {
 }
 
 void MeshEditor::setHandleRect(const QRectF& rect) {
-  penSurface->setRect(rect);
+  for (auto& surface : toolSurface) {
+    surface->setRect(rect);
+  }
   prepareGeometryChange();
 }
 
@@ -106,7 +108,7 @@ QList<QPointF> MeshEditor::getPoints() const {
   return result;
 }
 
-QRectF MeshEditor::boundingRect() const { return penSurface->rect(); }
+QRectF MeshEditor::boundingRect() const { return toolSurface[0]->rect(); }
 
 void MeshEditor::paint(QPainter* painter,
                        const QStyleOptionGraphicsItem* option,
@@ -129,7 +131,25 @@ void MeshEditor::paint(QPainter* painter,
 }
 
 void MeshEditor::setPoints(const QList<QPointF>& scenePoints) {
-  updatePoints(scenePoints);
+  // updatePoints(scenePoints);
+  if (scenePoints.size() == points.size()) {
+    updatePointsPos(scenePoints);
+  }
+}
+
+void MeshEditor::setEditTool(EditToolType type) {
+  auto index = static_cast<int>(type);
+  for (int i = 0; i < toolSurface.size(); i++) {
+    toolSurface[i]->setVisible(i == index);
+  }
+  update();
+}
+
+void MeshEditor::addPoint(const QPointF& point) {
+  auto* operatePoint = createPoint(point);
+  points.push_back(operatePoint);
+  operatePoint->data = points.size() - 1;
+  update();
 }
 
 OperatePoint* MeshEditor::createPoint(const QPointF& pos) {
@@ -143,39 +163,6 @@ OperatePoint* MeshEditor::createPoint(const QPointF& pos) {
   return point;
 }
 
-void MeshEditor::updatePoints(const QList<QPointF>& pointPositions) {
-  if (points.size() == pointPositions.size()) {
-    for (int i = 0; i < pointPositions.size(); i++) {
-      points[i]->setPos(pointPositions[i]);
-    }
-    return;
-  }
-
-  if (points.size() < pointPositions.size()) {
-    for (size_t i = 0; i < points.size(); i++) {
-      points[i]->setPos(pointPositions[i]);
-    }
-
-    for (size_t i = points.size(); i < pointPositions.size(); i++) {
-      auto* point = createPoint(pointPositions[i]);
-      points.push_back(point);
-      point->data = i;
-    }
-    return;
-  }
-
-  if (points.size() > pointPositions.size()) {
-    for (size_t i = 0; i < pointPositions.size(); i++) {
-      points[i]->setPos(pointPositions[i]);
-    }
-
-    for (size_t i = pointPositions.size(); i < points.size(); i++) {
-      delete points[i];
-    }
-    points.resize(pointPositions.size());
-    return;
-  }
-}
 
 void MeshEditor::handlePointShouldMove(const QPointF& pos, bool isStart,
                                        const QVariant& data) {
@@ -197,14 +184,16 @@ void MeshEditor::handleShouldAddPoint(const QPointF& pos) {
 
   qDebug() << "add point at" << pos;
   // TODO: add undo command
-  //  updatePoints(points);
 }
 
 MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
                        const QList<unsigned int>& initIncident,
                        QGraphicsItem* parent)
   : QGraphicsObject(parent) {
-  updatePoints(initPoints);
+  for (const auto& point : initPoints) {
+    addPoint(point);
+  }
+
   for (int i = 0; i < initIncident.size(); i += 3) {
     CDT::Edge e1 = {initIncident[i], initIncident[i + 1]};
     CDT::Edge e2 = {initIncident[i + 1], initIncident[i + 2]};
@@ -224,6 +213,35 @@ MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
     return this->points;
   };
   pen->setVisible(true);
-  penSurface = pen;
+
+  toolSurface[0] = new QGraphicsRectItem(this);
+  toolSurface[1] = pen;
+  toolSurface[2] = new QGraphicsRectItem(this);
+
+  setEditTool(EditToolType::Cursor);
+}
+
+void MeshEditor::removePoint(int index) {
+  Q_ASSERT(index >= 0 && index < points.size());
+  auto point = points[index];
+  points.removeAt(index);
+  delete point;
+  for (int i = index; i < points.size(); i++) {
+    points[i]->data = i;
+  }
+}
+
+void MeshEditor::removePoints(const QList<int>& indexes) {
+  for (auto index : indexes) {
+    Q_ASSERT(index >= 0 && index < points.size());
+  }
+  // TODO: remove points
+}
+
+void MeshEditor::updatePointsPos(const QList<QPointF>& newPoints) {
+  Q_ASSERT(newPoints.size() == points.size());
+  for (size_t i = 0; i < newPoints.size(); i++) {
+    points[i]->setPos(newPoints[i]);
+  }
 }
 } // namespace WaifuL2d

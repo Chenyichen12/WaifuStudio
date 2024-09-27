@@ -40,8 +40,14 @@ SceneToolBar::SceneToolBar(QWidget* parent) : QWidget(parent) {
   setLayout(layout);
 }
 
-void SceneToolBar::setController(const WaifuL2d::SceneController* controller) {
+void SceneToolBar::setController(WaifuL2d::SceneController* controller) {
   connect(controller, &WaifuL2d::SceneController::stateChanged, this,
           &SceneToolBar::handleControllerStateChanged);
+  connect(toolBtn[0], &IconButton::clicked, controller, [controller]() {
+    controller->setEditTool(WaifuL2d::EditToolType::Cursor);
+  });
+  connect(toolBtn[1], &IconButton::clicked, controller, [controller]() {
+    controller->setEditTool(WaifuL2d::EditToolType::AddPen);
+  });
 }
 }
