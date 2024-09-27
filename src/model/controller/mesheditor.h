@@ -28,7 +28,6 @@ class MeshEditor : public QGraphicsObject {
   // this is the transparent area for editor to handle event, like add point
   // you can set it to invisible to disable the event handler
   std::array<QGraphicsRectItem*, 3> toolSurface;
-  // QGraphicsRectItem* penSurface;
 
   CDT::EdgeUSet fixedEdges;
   CDT::EdgeUSet allEdges;
@@ -42,9 +41,12 @@ class MeshEditor : public QGraphicsObject {
 
   void handleShouldConnect(int index1, int index2);
 
+  void handleShouldRemovePoints(const QList<int>& indexes);
+
 protected:
   CDT::Triangulation<double> calculateCDT() const;
   QList<OperatePoint*> getSelectedPoint() const;
+  void keyPressEvent(QKeyEvent* event) override;
 
 public:
   MeshEditor(const QList<QPointF>& initPoints,
@@ -92,12 +94,6 @@ public:
    * @param index 
    */
   void removePoint(int index);
-  /**
-   * to solve some problem when point out of range
-   * delete multiple points should call this function
-   * @param indexes 
-   */
-  void removePoints(const QList<int>& indexes);
 
   /**
    * make sure the points size is equal to the new points size

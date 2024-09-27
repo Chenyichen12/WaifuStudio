@@ -1,10 +1,13 @@
 #include "mesheditor.h"
 
 #include <QGraphicsSceneMouseEvent>
+#include <QKeyEvent>
 #include <QPainter>
 #include <QUndoCommand>
+#include <QtCore>
 
 #include "model/scene/deformer/operatepoint.h"
+#include "model/scene/mesh/mesh.h"
 
 namespace {
 class PenSurface : public QGraphicsRectItem {
@@ -207,6 +210,64 @@ public:
     : data(data), editor(editor) {
   }
 };
+
+class RemovePointCommand : public WaifuL2d::MeshEditorCommand {
+public:
+  struct RemoveData {
+    QList<int> indexes;
+    CDT::EdgeUSet oldFixedEdge = {};
+    CDT::EdgeUSet oldAllEdge = {};
+    QList<QPointF> pos = {};
+  } data;
+
+  WaifuL2d::MeshEditor* editor;
+
+private:
+  class UndoCommand : public QUndoCommand {
+    WaifuL2d::MeshEditor* editor;
+    RemoveData data;
+
+  public:
+    UndoCommand(const RemoveData& d, WaifuL2d::MeshEditor* editor,
+                QUndoCommand* parent): QUndoCommand(parent), editor(editor) {
+      this->data = d;
+      data.oldFixedEdge = editor->getFixedEdges();
+      data.oldAllEdge = editor->getAllEdges();
+      std::ranges::sort(data.indexes, std::greater<>());
+      const auto& points = editor->getPoints();
+      data.pos.clear();
+      for (const auto& index : data.indexes) {
+        data.pos.append(points[index]);
+      }
+    }
+
+    void redo() override {
+      // delete by greater
+      for (const auto& index : data.indexes) {
+        editor->removePoint(index);
+      }
+      editor->upDateCDT();
+    }
+
+    void undo() override {
+      // add by smaller
+
+      for (int i = data.indexes.size() - 1; i >= 0; i--) {
+        editor->addPoint(data.pos[i], data.indexes[i]);
+      }
+      editor->setEdges(data.oldFixedEdge, data.oldAllEdge);
+    }
+  };
+
+public:
+  QUndoCommand* createUndoCommand(QUndoCommand* parent) override {
+    return new UndoCommand(data, editor, parent);
+  }
+
+  RemovePointCommand(WaifuL2d::MeshEditor* editor, RemoveData data)
+    : data(std::move(data)), editor(editor) {
+  }
+};
 } // namespace
 
 namespace WaifuL2d {
@@ -229,6 +290,7 @@ QList<QPointF> MeshEditor::getPoints() const {
 }
 
 QRectF MeshEditor::boundingRect() const { return toolSurface[0]->rect(); }
+
 
 void MeshEditor::paint(QPainter* painter,
                        const QStyleOptionGraphicsItem* option,
@@ -323,6 +385,14 @@ void MeshEditor::disconnectFixEdge(unsigned int index1, unsigned int index2) {
   update();
 }
 
+void MeshEditor::handleShouldRemovePoints(const QList<int>& indexes) {
+  auto command =
+      std::make_shared<RemovePointCommand>(this, RemovePointCommand::RemoveData{
+                                               indexes
+                                           });
+  emit editorCommand(command);
+}
+
 
 OperatePoint* MeshEditor::createPoint(const QPointF& pos) {
   auto* point = new OperatePoint(this);
@@ -414,6 +484,20 @@ QList<OperatePoint*> MeshEditor::getSelectedPoint() const {
   return result;
 }
 
+void MeshEditor::keyPressEvent(QKeyEvent* event) {
+  QGraphicsObject::keyPressEvent(event);
+  if (event->key() != Qt::Key_Delete) {
+    return;
+  }
+  auto select = getSelectedPoint();
+
+  QList<int> indexes;
+  for (const auto& p : select) {
+    indexes.push_back(p->data.toInt());
+  }
+  handleShouldRemovePoints(indexes);
+}
+
 MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
                        const QList<unsigned int>& initIncident,
                        QGraphicsItem* parent)
@@ -463,25 +547,35 @@ MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
   toolSurface[2]->setZValue(1);
 
   setEditTool(EditToolType::Cursor);
+
+  setFlag(ItemIsFocusable);
 }
 
 void MeshEditor::removePoint(int index) {
   Q_ASSERT(index >= 0 && index < points.size());
 
-  for (auto edge = fixedEdges.begin(); edge != fixedEdges.end();) {
-    if (edge->v1() == index || edge->v2() == index) {
-      edge = fixedEdges.erase(edge);
-    } else {
-      ++edge;
+  CDT::EdgeUSet newFixedEdges;
+  CDT::EdgeUSet newAllEdges;
+
+  for (const auto& edge : fixedEdges) {
+    if (edge.v1() == index || edge.v2() == index) {
+      continue;
     }
+    auto v1 = edge.v1() > index ? edge.v1() - 1 : edge.v1();
+    auto v2 = edge.v2() > index ? edge.v2() - 1 : edge.v2();
+    newFixedEdges.insert({v1, v2});
   }
-  for (auto edge = allEdges.begin(); edge != allEdges.end();) {
-    if (edge->v1() == index || edge->v2() == index) {
-      edge = allEdges.erase(edge);
-    } else {
-      ++edge;
+  for (const auto& edge : allEdges) {
+    if (edge.v1() == index || edge.v2() == index) {
+      continue;
     }
+    auto v1 = edge.v1() > index ? edge.v1() - 1 : edge.v1();
+    auto v2 = edge.v2() > index ? edge.v2() - 1 : edge.v2();
+    newAllEdges.insert({v1, v2});
   }
+
+  this->fixedEdges = newFixedEdges;
+  this->allEdges = newAllEdges;
 
   auto point = points[index];
   points.removeAt(index);
@@ -491,13 +585,6 @@ void MeshEditor::removePoint(int index) {
   }
 }
 
-// ReSharper disable once CppMemberFunctionMayBeConst
-void MeshEditor::removePoints(const QList<int>& indexes) {
-  for (auto index : indexes) {
-    Q_ASSERT(index >= 0 && index < points.size());
-  }
-  // TODO: remove points
-}
 
 void MeshEditor::updatePointsPos(const QList<QPointF>& newPoints) {
   Q_ASSERT(newPoints.size() == points.size());
