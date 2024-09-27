@@ -11,9 +11,14 @@ class PenSurface : public QGraphicsRectItem {
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
     if (this->getExistPoints) {
       auto points = this->getExistPoints();
-      for (const auto& point : points) {
-        if (point->isHitPoint(event->scenePos())) {
-          event->ignore();
+      for (int i = 0; i < points.size(); i++) {
+        if (points[i]->isHitPoint(event->scenePos())) {
+          if (this->penHitPoint) {
+            this->penHitPoint(i);
+            event->accept();
+          } else {
+            event->ignore();
+          }
           return;
         }
       }
@@ -28,6 +33,7 @@ class PenSurface : public QGraphicsRectItem {
 public:
   std::function<QList<WaifuL2d::OperatePoint*>()> getExistPoints = nullptr;
   std::function<void(const QPointF&)> shouldAddPoint = nullptr;
+  std::function<void(int index)> penHitPoint = nullptr;
 
   PenSurface(QGraphicsItem* parent = nullptr) : QGraphicsRectItem(parent) {
   }
@@ -93,6 +99,7 @@ public:
   struct AddData {
     QPointF pos;
     int addIndex;
+    std::optional<int> connectIndex;
   } data;
 
   WaifuL2d::MeshEditor* editor;
@@ -109,7 +116,11 @@ private:
     }
 
     void redo() override {
-      editor->addPoint(data.pos);
+      editor->addPoint(data.pos, data.addIndex);
+      if (data.connectIndex.has_value()) {
+        editor->connectFixEdge(data.addIndex, data.connectIndex.value());
+      }
+      editor->selectPoints({data.addIndex});
     }
 
     void undo() override {
@@ -124,6 +135,46 @@ public:
 
   explicit MeshPointAddCommand(WaifuL2d::MeshEditor* editor,
                                const AddData& data)
+    : data(data), editor(editor) {
+  }
+};
+
+
+class FixedEdgeConnectCommand : public WaifuL2d::MeshEditorCommand {
+public:
+  struct ConnectData {
+    int index1;
+    int index2;
+  } data;
+
+  WaifuL2d::MeshEditor* editor;
+
+private:
+  class UndoCommand : public QUndoCommand {
+    ConnectData data;
+    WaifuL2d::MeshEditor* editor;
+
+  public:
+    UndoCommand(const ConnectData& data, WaifuL2d::MeshEditor* editor,
+                QUndoCommand* parent)
+      : QUndoCommand(parent), data(data), editor(editor) {
+    }
+
+    void redo() override {
+      editor->connectFixEdge(data.index1, data.index2);
+    }
+
+    void undo() override {
+      editor->disconnectFixEdge(data.index1, data.index2);
+    }
+  };
+
+public:
+  QUndoCommand* createUndoCommand(QUndoCommand* parent) override {
+    return new UndoCommand(data, editor, parent);
+  }
+
+  FixedEdgeConnectCommand(WaifuL2d::MeshEditor* editor, const ConnectData& data)
     : data(data), editor(editor) {
   }
 };
@@ -171,11 +222,19 @@ void MeshEditor::paint(QPainter* painter,
 }
 
 void MeshEditor::setPoints(const QList<QPointF>& scenePoints) {
-  // updatePoints(scenePoints);
   if (scenePoints.size() == points.size()) {
     updatePointsPos(scenePoints);
   }
+  //TODO: not complete
 }
+
+void MeshEditor::selectPoints(const QList<int>& indexes) {
+  for (int i = 0; i < points.size(); i++) {
+    points[i]->setSelected(indexes.contains(i));
+  }
+  update();
+}
+
 
 void MeshEditor::setEditTool(EditToolType type) {
   auto index = static_cast<int>(type);
@@ -191,6 +250,32 @@ void MeshEditor::addPoint(const QPointF& point) {
   operatePoint->data = points.size() - 1;
   update();
 }
+
+void MeshEditor::addPoint(const QPointF& point, int index) {
+  auto* operatePoint = createPoint(point);
+  points.insert(index, operatePoint);
+  for (int i = index; i < points.size(); i++) {
+    points[i]->data = i;
+  }
+  update();
+}
+
+void MeshEditor::connectFixEdge(unsigned int index1, unsigned int index2) {
+  Q_ASSERT(index1 < points.size());
+  Q_ASSERT(index2 < points.size());
+  fixedEdges.insert({index1, index2});
+  allEdges.insert({index1, index2});
+  update();
+}
+
+void MeshEditor::disconnectFixEdge(unsigned int index1, unsigned int index2) {
+  Q_ASSERT(index1 < points.size());
+  Q_ASSERT(index2 < points.size());
+  fixedEdges.erase({index1, index2});
+  allEdges.erase({index1, index2});
+  update();
+}
+
 
 OperatePoint* MeshEditor::createPoint(const QPointF& pos) {
   auto* point = new OperatePoint(this);
@@ -219,10 +304,57 @@ void MeshEditor::handlePointShouldMove(const QPointF& pos, bool isStart,
 }
 
 void MeshEditor::handleShouldAddPoint(const QPointF& pos) {
+  auto selectPoint = getSelectedPoint();
+  std::optional<int> connectIndex;
+  if (selectPoint.size() == 1) {
+    connectIndex = selectPoint[0]->data.toInt();
+  }
   auto addData = MeshPointAddCommand::AddData{
-      pos, static_cast<int>(points.size())};
+      pos, static_cast<int>(points.size()), connectIndex};
+
   auto command = std::make_shared<MeshPointAddCommand>(this, addData);
   emit editorCommand(command);
+}
+
+void MeshEditor::handleShouldConnect(int index1, int index2) {
+  auto command = std::make_shared<FixedEdgeConnectCommand>(
+      this, FixedEdgeConnectCommand::ConnectData{index1, index2});
+  emit editorCommand(command);
+}
+
+CDT::Triangulation<double> MeshEditor::calculateCDT() const {
+  CDT::Triangulation<double> cdt;
+  std::vector<CDT::V2d<double>> editPoint;
+  for (const auto& p : this->points) {
+    editPoint.push_back({p->pos().x(), p->pos().y()});
+  }
+  cdt.insertVertices(editPoint);
+  CDT::EdgeVec vec;
+  for (const auto& p : fixedEdges) {
+    vec.push_back(p);
+  }
+  // may throw the not allowable error
+  // the cdt will auto resolve the error
+  // and make the mesh allowable
+  try {
+    cdt.insertEdges(vec);
+  } catch (...) {
+    // TODO: remind error
+    qDebug() << "cdt error";
+  }
+
+  cdt.eraseOuterTriangles();
+  return cdt;
+}
+
+QList<OperatePoint*> MeshEditor::getSelectedPoint() const {
+  QList<OperatePoint*> result;
+  for (int i = 0; i < points.size(); i++) {
+    if (points[i]->isSelected()) {
+      result.push_back(points[i]);
+    }
+  }
+  return result;
 }
 
 MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
@@ -248,20 +380,55 @@ MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
   pen->shouldAddPoint = [this](const auto& point) {
     this->handleShouldAddPoint(point);
   };
+  pen->penHitPoint = [this](int index) {
+    std::optional<int> index1;
+    auto selectPoints = this->getSelectedPoint();
+    if (selectPoints.size() == 1) {
+      index1 = selectPoints[0]->data.toInt();
+    }
+    this->selectPoints({index});
+
+    if (index1.has_value()) {
+      if (index1.value() == index) {
+        return;
+      }
+      this->handleShouldConnect(index1.value(), index);
+    }
+  };
   pen->getExistPoints = [this]() {
     return this->points;
   };
-  pen->setVisible(true);
 
   toolSurface[0] = new QGraphicsRectItem(this);
+  toolSurface[0]->setZValue(1);
+
   toolSurface[1] = pen;
+  toolSurface[1]->setZValue(1);
+
   toolSurface[2] = new QGraphicsRectItem(this);
+  toolSurface[2]->setZValue(1);
 
   setEditTool(EditToolType::Cursor);
 }
 
 void MeshEditor::removePoint(int index) {
   Q_ASSERT(index >= 0 && index < points.size());
+
+  for (auto edge = fixedEdges.begin(); edge != fixedEdges.end();) {
+    if (edge->v1() == index || edge->v2() == index) {
+      edge = fixedEdges.erase(edge);
+    } else {
+      ++edge;
+    }
+  }
+  for (auto edge = allEdges.begin(); edge != allEdges.end();) {
+    if (edge->v1() == index || edge->v2() == index) {
+      edge = allEdges.erase(edge);
+    } else {
+      ++edge;
+    }
+  }
+
   auto point = points[index];
   points.removeAt(index);
   delete point;

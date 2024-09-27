@@ -34,19 +34,17 @@ class MeshEditor : public QGraphicsObject {
   CDT::EdgeUSet allEdges;
 
   OperatePoint* createPoint(const QPointF& pos);
-  /**
-   * update the points member
-   * will add or delete points, auto manage the memory, auto set data of the
-   * operate point but the index will fit the pointPositions param should call
-   * it after point changed
-   * @param pointPositions point positions
-   */
-  // void updatePoints(const QList<QPointF>& pointPositions);
 
   void handlePointShouldMove(const QPointF& pos, bool isStart,
                              const QVariant& data);
 
   void handleShouldAddPoint(const QPointF& pos);
+
+  void handleShouldConnect(int index1, int index2);
+
+protected:
+  CDT::Triangulation<double> calculateCDT() const;
+  QList<OperatePoint*> getSelectedPoint() const;
 
 public:
   MeshEditor(const QList<QPointF>& initPoints,
@@ -70,10 +68,27 @@ public:
    */
   void addPoint(const QPointF& point);
 
+  void addPoint(const QPointF& point, int index);
+
+  /**
+   * add fixed Edge to the editor
+   * will always success expect the index out of range
+   * @param index1 
+   * @param index2 
+   */
+  void connectFixEdge(unsigned int index1, unsigned int index2);
+  /**
+   * remove the fixed edge of the editor
+   * @param index1 
+   * @param index2 
+   */
+  void disconnectFixEdge(unsigned int index1, unsigned int index2);
+
   /**
    * remove the point at the index
    * will always success expect the index out of range
    * just like erase(index)
+   * will auto delete the edge of the point
    * @param index 
    */
   void removePoint(int index);
@@ -85,6 +100,13 @@ public:
   void removePoints(const QList<int>& indexes);
 
   /**
+   * make sure the points size is equal to the new points size
+   * just change the position of the points and update cdt
+   * won't add or remove
+   * @param points 
+   */
+  void updatePointsPos(const QList<QPointF>& points);
+  /**
    * this is a dangerous function
    * through the new points size to auto decide delete or add or update points
    * But it not makes sure to success
@@ -92,7 +114,8 @@ public:
    */
   void setPoints(const QList<QPointF>& points);
 
-  void updatePointsPos(const QList<QPointF>& points);
+  void selectPoints(const QList<int>& indexes);
+
 signals:
   void editorCommand(std::shared_ptr<MeshEditorCommand> command);
 };
