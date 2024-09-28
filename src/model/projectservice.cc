@@ -13,6 +13,7 @@
 #include "scene/mesh/rendergroup.h"
 #include "tree/layer.h"
 #include "tree/layermodel.h"
+#include "undo/editfinishcommand.h"
 #include "undo/lockcommand.h"
 #include "undo/visiblecommand.h"
 
@@ -108,6 +109,11 @@ ProjectService::ProjectService(QObject* parent) : QObject(parent) {
             } else {
               this->undoGroup->setActiveStack(this->mainUndoStack);
             }
+          });
+
+  connect(sceneController, &SceneController::editFinishCommand, this,
+          [this](std::shared_ptr<EditFinishCommandWrapper> w) {
+            this->mainUndoStack->push(w->createCommand());
           });
 }
 

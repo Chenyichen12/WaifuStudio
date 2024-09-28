@@ -17,20 +17,9 @@ MeshDeformer::MeshDeformer(WaifuL2d::Mesh* mesh, QGraphicsItem* parent)
   : AbstractDeformer(parent), mesh(mesh) {
   const auto& pointList = mesh->getPos();
   for (int i = 0; i < pointList.size(); i++) {
-    OperatePoint* op = new OperatePoint(this);
+    auto op = createPoint(pointList[i]);
     op->data = i;
     operatePoints.push_back(op);
-    op->setPos(pointList[i]);
-    op->pointShouldMove = [this](const QPointF& point, bool isStart,
-                                 const QVariant& data) {
-      QList<QPointF> newPoints = this->getScenePoints();
-      auto index = data.toInt();
-      newPoints[index] = point;
-      this->handlePointShouldMove(newPoints, isStart);
-    };
-    op->pointSelectedChange = [this](bool isSelected, const QVariant& data) {
-      this->upDateOperateRect();
-    };
   }
   operateRect = new OperateRectangle(this);
   operateRect->setRect(MeshDeformer::boundingRect());
@@ -91,6 +80,22 @@ void MeshDeformer::upDateOperateRect() {
     operateRect->setRect(bound);
     update();
   }
+}
+
+OperatePoint* MeshDeformer::createPoint(const QPointF& pos) {
+  OperatePoint* op = new OperatePoint(this);
+  op->setPos(pos);
+  op->pointShouldMove = [this](const QPointF& point, bool isStart,
+                               const QVariant& data) {
+    QList<QPointF> newPoints = this->getScenePoints();
+    auto index = data.toInt();
+    newPoints[index] = point;
+    this->handlePointShouldMove(newPoints, isStart);
+  };
+  op->pointSelectedChange = [this](bool isSelected, const QVariant& data) {
+    this->upDateOperateRect();
+  };
+  return op;
 }
 
 QList<QPointF> MeshDeformer::getScenePoints() const { return mesh->getPos(); }
@@ -170,20 +175,51 @@ bool MeshDeformer::isHitDeformer(const QPointF& point) const {
   return mesh->hitTest(point);
 }
 
-void MeshDeformer::handleShouldChangeMeshStruct(const QList<QPointF>& points,
-                                                const QList<unsigned int>& incident) {
-  QList<MeshVertex> vertices;
-  for (const auto& p : points) {
-    auto uv = mesh->uvAtPoint(p);
-    vertices.append({{p.x(), p.y()}, {uv.x(), uv.y()}});
-    qDebug() << uv;
-  }
+void MeshDeformer::fitMesh() {
+  do {
+    auto meshPoints = mesh->getPos();
+    if (meshPoints.size() == operatePoints.size()) {
+      // just update pos
+      for (size_t i = 0; i < meshPoints.size(); i++) {
+        operatePoints[i]->setPos(meshPoints[i]);
+      }
+      break;
+    }
 
-  
-  //TODO: make undo command
-  mesh->applyStruct(vertices, incident);
-  update();
+    if (meshPoints.size() > operatePoints.size()) {
+      // add points
+      for (size_t i = 0; i < operatePoints.size(); i++) {
+        operatePoints[i]->setPos(meshPoints[i]);
+      } 
+
+      for (size_t i = operatePoints.size(); i < meshPoints.size(); i++) {
+        auto op = createPoint(meshPoints[i]);
+        op->data = i;
+        operatePoints.push_back(op);
+      }
+      break;
+    }
+
+    if (meshPoints.size() < operatePoints.size()) {
+      // delete points
+
+      for (size_t i = meshPoints.size(); i < operatePoints.size(); i++) {
+        delete operatePoints[i];
+      }
+      operatePoints.resize(meshPoints.size());
+
+      for (size_t i = 0; i < operatePoints.size(); i++) {
+        operatePoints[i]->setPos(meshPoints[i]);
+      }
+      break;
+    }
+  } while (false);
+
+  upDateOperateRect();
+  // refresh the visible
+  setDeformerSelect(isDeformerSelected());
 }
+
 
 void MeshDeformer::getOperatePoints(QList<QPointF>& resultPoint,
                                     QList<int>& resultIndexes) const {

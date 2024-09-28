@@ -7,6 +7,7 @@ namespace WaifuL2d {
 class MainStageScene;
 class MeshDeformer;
 class MeshEditor;
+class EditFinishCommandWrapper;
 
 enum EditToolType {
   Cursor = 0,
@@ -78,6 +79,7 @@ public:
 signals:
   void stateChanged(const SceneControllerState& state);
   void warning(const QString& message);
+  void editFinishCommand(std::shared_ptr<EditFinishCommandWrapper> command);
 };
 }
 

@@ -2,6 +2,7 @@
 #include "model/scene/mainstagescene.h"
 #include "model/scene/abstractdeformer.h"
 #include "model/scene/deformer/meshdeformer.h"
+#include "model/undo/editfinishcommand.h"
 #include "mesheditor.h"
 #include <QUndoStack>
 
@@ -61,11 +62,12 @@ void SceneController::toggleEditMode() {
       return;
     }
 
-    //TODO: add to the edit deformer
-
     const auto& result = state.editor->getResult();
-    state.editDeformer->handleShouldChangeMeshStruct(
-        result.points, result.incident);
+
+    auto finishCommand = std::make_shared<EditFinishCommandWrapper>();
+    finishCommand->setTarget(scene, state.editDeformer);
+    finishCommand->setData(result.points, result.incident);
+    emit editFinishCommand(finishCommand);
 
     delete state.editor;
     clearUndo(); // clean the undo stack when every edit off

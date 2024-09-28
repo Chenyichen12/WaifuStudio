@@ -46,9 +46,11 @@ private:
    */
   void upDateOperateRect();
 
+  OperatePoint* createPoint(const QPointF& pos);
+
 public:
   explicit MeshDeformer(Mesh* mesh, QGraphicsItem* parent = nullptr);
-
+  Mesh* getMesh() const { return mesh; };
   /**
    * @return selected point position
    */
@@ -70,14 +72,9 @@ public:
   bool isHitDeformer(const QPointF& point) const override;
 
   /**
-   * change the mesh struct
-   * call it after finish the edit mode
-   * will push the undo command to main undo stack
-   * @param points 
-   * @param incident 
+   * call it after mesh has changed otherwise will crash
    */
-  void handleShouldChangeMeshStruct(const QList<QPointF>& points,
-                                    const QList<unsigned int>& incident);
+  void fitMesh();
 
 protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

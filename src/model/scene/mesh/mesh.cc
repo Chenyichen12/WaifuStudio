@@ -19,6 +19,7 @@ Mesh::Mesh(const QList<MeshVertex>& vertices,
   this->tex = new QOpenGLTexture(QOpenGLTexture::Target2D);
 }
 
+
 void Mesh::init(QOpenGLFunctions* f) {
   vao->create();
   vao->bind();
@@ -83,17 +84,16 @@ void Mesh::setZValue(qreal z) {
   }
 }
 
-void Mesh::applyStruct(const QList<MeshVertex>& ver,
-                       const QList<unsigned int>& inc) {
+void Mesh::setMeshStruct(const QList<MeshVertex>& ver,
+                         const QList<unsigned int>& incidents) {
   this->vertices = ver;
-  this->incident = inc;
-
+  this->incident = incidents;
   vbo->bind();
   vbo->allocate(vertices.data(), vertices.size() * sizeof(MeshVertex));
-
   ibo->bind();
-  ibo->allocate(incident.data(), incident.size() * sizeof(unsigned int));
+  ibo->allocate(incidents.data(), incident.size() * sizeof(unsigned int));
 }
+
 
 void Mesh::render(QOpenGLFunctions* f, QOpenGLShaderProgram* program) {
   if (!visible) {
@@ -116,6 +116,8 @@ QList<QPointF> Mesh::getPos() {
   }
   return pos;
 }
+
+QList<MeshVertex> Mesh::getVertices() const { return this->vertices; }
 
 QList<unsigned int> Mesh::getIncident() const { return this->incident; }
 

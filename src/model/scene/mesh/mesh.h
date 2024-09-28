@@ -48,6 +48,8 @@ public:
   void render(QOpenGLFunctions* f, QOpenGLShaderProgram* program);
   void setTexture(const QImage& image);
   QList<QPointF> getPos();
+
+  QList<MeshVertex> getVertices() const;
   QList<unsigned int> getIncident() const;
   /**
    * get the uv position at any position by its own points
@@ -63,14 +65,8 @@ public:
   bool hitTest(const QPointF& pos);
   void setZValue(qreal z);
 
-  /**
-   * change the vertices and incident
-   * make sure to call it after init opengl
-   * @param vertices 
-   * @param incident 
-   */
-  void applyStruct(const QList<MeshVertex>& vertices,
-                   const QList<unsigned int>& incident);
+  void setMeshStruct(const QList<MeshVertex>& vertices,
+                     const QList<unsigned int>& incidents);
   ~Mesh();
 };
 } // namespace WaifuL2d
