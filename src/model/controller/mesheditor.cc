@@ -11,6 +11,9 @@
 #include "model/scene/meshmathtool.hpp"
 
 namespace {
+/**
+ * pen surface. when press will remind to add point
+ */
 class PenSurface : public QGraphicsRectItem {
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
     if (this->getExistPoints) {
@@ -43,6 +46,10 @@ public:
   }
 };
 
+
+/** ---------- COMMAND CLASS ------------
+ * every mesh edit should abstract to a command and push to the undo stack to the controller
+ */
 class MeshPointMoveCommand : public WaifuL2d::MeshEditorCommand {
 public:
   struct MoveData {
@@ -344,6 +351,26 @@ void MeshEditor::setEdges(const CDT::EdgeUSet& fixedEdges,
   this->fixedEdges = fixedEdges;
   this->allEdges = allEdges;
   update();
+}
+
+bool MeshEditor::isValidMesh() const {
+  if (points.empty()) {
+    return false;
+  }
+  const auto& cdt = calculateCDT();
+  std::unordered_set<unsigned int> triIndex;
+
+  for (const auto& triangle : cdt.triangles) {
+    const auto& v = triangle.vertices;
+    triIndex.insert(v[0]);
+    triIndex.insert(v[1]);
+    triIndex.insert(v[2]);
+  }
+  if (triIndex.size() != points.size()) {
+    return false;
+  }
+
+  return true;
 }
 
 void MeshEditor::setEditTool(EditToolType type) {

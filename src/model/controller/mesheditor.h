@@ -64,14 +64,26 @@ public:
              const QList<unsigned int>& initIncident,
              QGraphicsItem* parent = nullptr);
   MeshEditor(QGraphicsItem* parent = nullptr);
-  void setHandleRect(const QRectF& rect);
-  QList<QPointF> getPoints() const;
+
+
   QRectF boundingRect() const override;
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget) override;
 
 
   void setEditTool(EditToolType type);
+
+  /**
+   * get the scene points of the editor
+   * @return 
+   */
+  QList<QPointF> getPoints() const;
+  /**
+   * set the size of the editor
+   * will not handle event out of the rect
+   * @param rect handle area
+   */
+  void setHandleRect(const QRectF& rect);
 
   /**
    * the operation will always success.
@@ -137,6 +149,8 @@ public:
   CDT::EdgeUSet getAllEdges() const;
 
   void setEdges(const CDT::EdgeUSet& fixedEdges, const CDT::EdgeUSet& allEdges);
+
+  bool isValidMesh() const;
 signals:
   void editorCommand(std::shared_ptr<MeshEditorCommand> command);
 };
