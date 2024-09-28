@@ -151,6 +151,18 @@ public:
   void setEdges(const CDT::EdgeUSet& fixedEdges, const CDT::EdgeUSet& allEdges);
 
   bool isValidMesh() const;
+
+  struct MeshResult {
+    QList<QPointF> points;
+    QList<unsigned int> incident;
+  };
+
+  /**
+   * make sure call isValid check
+   * @return 
+   */
+  MeshResult getResult() const;
+
 signals:
   void editorCommand(std::shared_ptr<MeshEditorCommand> command);
 };

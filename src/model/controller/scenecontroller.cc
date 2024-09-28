@@ -40,6 +40,7 @@ void SceneController::toggleEditMode() {
     state.editor =
         new MeshEditor(editDeformer->getScenePoints(),
                        editDeformer->getMeshIncident());
+    state.editDeformer = editDeformer;
     // push owner to scene
     scene->addItem(state.editor);
     state.editor->setZValue(3);
@@ -53,7 +54,19 @@ void SceneController::toggleEditMode() {
             });
   } else {
     Q_ASSERT(state.editor != nullptr);
+    Q_ASSERT(state.editDeformer != nullptr);
     // delete it when edit off
+    if (!state.editor->isValidMesh()) {
+      emit warning("Mesh is not complete");
+      return;
+    }
+
+    //TODO: add to the edit deformer
+
+    const auto& result = state.editor->getResult();
+    state.editDeformer->handleShouldChangeMeshStruct(
+        result.points, result.incident);
+
     delete state.editor;
     clearUndo(); // clean the undo stack when every edit off
     state.editor = nullptr;

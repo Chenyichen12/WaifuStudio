@@ -83,6 +83,18 @@ void Mesh::setZValue(qreal z) {
   }
 }
 
+void Mesh::applyStruct(const QList<MeshVertex>& ver,
+                       const QList<unsigned int>& inc) {
+  this->vertices = ver;
+  this->incident = inc;
+
+  vbo->bind();
+  vbo->allocate(vertices.data(), vertices.size() * sizeof(MeshVertex));
+
+  ibo->bind();
+  ibo->allocate(incident.data(), incident.size() * sizeof(unsigned int));
+}
+
 void Mesh::render(QOpenGLFunctions* f, QOpenGLShaderProgram* program) {
   if (!visible) {
     return;
@@ -106,6 +118,39 @@ QList<QPointF> Mesh::getPos() {
 }
 
 QList<unsigned int> Mesh::getIncident() const { return this->incident; }
+
+QPointF Mesh::uvAtPoint(const QPointF& pos) const {
+  // in triangle
+  MeshVertex result = {{pos.x(), pos.y()}};
+
+  for (int i = 0; i < incident.size(); i += 3) {
+    auto p1 = this->vertices[incident[i]];
+    auto p2 = this->vertices[incident[i + 1]];
+    auto p3 = this->vertices[incident[i + 2]];
+    if (MeshMathTool<MeshVertex>::isInTriangle(result, p1, p2, p3)) {
+      auto cor =
+          MeshMathTool<MeshVertex>::barycentricCoordinates(result, p1, p2, p3);
+      auto uv = MeshMathTool<MeshVertex>::fromBarycentricCoordinates(cor, p1,
+        p2, p3);
+      return {uv.first, uv.second};
+    }
+  }
+
+  auto boundIndex = MeshMathTool<MeshVertex>::boundPointIndex(vertices.data(),
+    vertices.size());
+
+  auto topV = vertices[boundIndex[2]];
+  auto bottomV = vertices[boundIndex[3]];
+  qreal vRa = (bottomV.v() - topV.v()) / (bottomV.y() - topV.y());
+  auto resultV = bottomV.v() - (bottomV.y() - pos.y()) * vRa;
+
+  auto leftV = vertices[boundIndex[0]];
+  auto rightV = vertices[boundIndex[1]];
+  qreal uRa = (rightV.u() - leftV.u()) / (rightV.x() - leftV.x());
+  auto resultU = rightV.u() - (rightV.x() - pos.x()) * uRa;
+
+  return {resultU, resultV};
+}
 
 Mesh::~Mesh() {
   delete vao;

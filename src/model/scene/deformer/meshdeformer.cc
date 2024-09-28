@@ -170,6 +170,21 @@ bool MeshDeformer::isHitDeformer(const QPointF& point) const {
   return mesh->hitTest(point);
 }
 
+void MeshDeformer::handleShouldChangeMeshStruct(const QList<QPointF>& points,
+                                                const QList<unsigned int>& incident) {
+  QList<MeshVertex> vertices;
+  for (const auto& p : points) {
+    auto uv = mesh->uvAtPoint(p);
+    vertices.append({{p.x(), p.y()}, {uv.x(), uv.y()}});
+    qDebug() << uv;
+  }
+
+  
+  //TODO: make undo command
+  mesh->applyStruct(vertices, incident);
+  update();
+}
+
 void MeshDeformer::getOperatePoints(QList<QPointF>& resultPoint,
                                     QList<int>& resultIndexes) const {
   resultIndexes.clear();

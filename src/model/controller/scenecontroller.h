@@ -5,7 +5,7 @@ class QUndoStack;
 
 namespace WaifuL2d {
 class MainStageScene;
-
+class MeshDeformer;
 class MeshEditor;
 
 enum EditToolType {
@@ -21,6 +21,7 @@ struct SceneControllerState {
 
 private:
   MeshEditor* editor = nullptr;
+  MeshDeformer* editDeformer = nullptr;
 
 public:
   bool isEdit = false;

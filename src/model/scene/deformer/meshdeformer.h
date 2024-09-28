@@ -32,7 +32,6 @@ private:
   void getOperatePoints(QList<QPointF>& resultPoint,
                         QList<int>& resultIndexes) const;
 
-
   bool deformerSelect = false;
 
   /**
@@ -69,6 +68,16 @@ public:
   void setDeformerSelect(bool select) override;
   bool isDeformerSelected() const override { return deformerSelect; }
   bool isHitDeformer(const QPointF& point) const override;
+
+  /**
+   * change the mesh struct
+   * call it after finish the edit mode
+   * will push the undo command to main undo stack
+   * @param points 
+   * @param incident 
+   */
+  void handleShouldChangeMeshStruct(const QList<QPointF>& points,
+                                    const QList<unsigned int>& incident);
 
 protected:
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

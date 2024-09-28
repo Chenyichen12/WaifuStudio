@@ -114,7 +114,7 @@ ProjectService::ProjectService(QObject* parent) : QObject(parent) {
 ProjectService::~ProjectService() = default;
 
 int ProjectService::initProjectFromPsd(const QString& path) {
-  auto parser = PsdParser(path.toStdString());
+  auto parser = PsdParser(path.toStdWString());
   parser.parse();
   if (!parser.getResult()->success) {
     return -1;

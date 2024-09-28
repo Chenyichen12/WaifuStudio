@@ -4,7 +4,8 @@
 
 #include "LayeredFile/LayeredFile.h"
 namespace WaifuL2d {
-PsdParser::PsdParser(const std::string& path) : path(path) {}
+PsdParser::PsdParser(const std::wstring& path) : path(path) {
+}
 ParseResult* PsdParser::getResult() { return result.get(); }
 
 // rgba

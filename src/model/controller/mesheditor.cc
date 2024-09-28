@@ -373,6 +373,18 @@ bool MeshEditor::isValidMesh() const {
   return true;
 }
 
+MeshEditor::MeshResult MeshEditor::getResult() const {
+  const auto& cdt = calculateCDT();
+  QList<unsigned int> incident;
+  for (const auto& tri : cdt.triangles) {
+    incident.append(tri.vertices[0]);
+    incident.append(tri.vertices[1]);
+    incident.append(tri.vertices[2]);
+  }
+
+  return {std::move(getPoints()), std::move(incident)};
+}
+
 void MeshEditor::setEditTool(EditToolType type) {
   auto index = static_cast<int>(type);
   for (int i = 0; i < toolSurface.size(); i++) {

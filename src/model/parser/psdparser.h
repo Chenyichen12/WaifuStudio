@@ -3,11 +3,11 @@
 namespace WaifuL2d {
 class PsdParser : public IParser {
  private:
-  std::string path;
+  std::wstring path;
   std::unique_ptr<ParseResult> result;
 
  public:
-  PsdParser(const std::string& path);
+  PsdParser(const std::wstring& path);
   void parse() override;
 
   /**

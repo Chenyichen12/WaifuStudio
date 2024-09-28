@@ -161,6 +161,34 @@ public:
     return QRectF(QPointF(left, top), QPointF(right, bottom));
   }
 
+  static std::array<int, 4> boundPointIndex(const Point* vector, size_t size) {
+    int left = 0;
+    int right = 0;
+    int top = 0;
+    int bottom = 0;
+
+    auto getPoint = [vector](int index) {
+      return deref(vector[index]);
+    };
+    for (size_t i = 0; i < size; i++) {
+      const auto& item = deref(vector[i]);
+      if (item.x() < getPoint(left).x()) {
+        left = i;
+      }
+      if (item.x() > getPoint(right).x()) {
+        right = i;
+      }
+      if (item.y() < getPoint(top).y()) {
+        top = i;
+      }
+      if (item.y() > getPoint(bottom).y()) {
+        bottom = i;
+      }
+    }
+
+    return {left, right, top, bottom};
+  }
+
   static void resizePointInBound(const QRectF& startBound,
                                  const QRectF& resizeBound, Point* vector,
                                  size_t size, bool isXFlip = false,
