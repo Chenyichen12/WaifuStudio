@@ -8,6 +8,7 @@
 
 #include "model/scene/deformer/operatepoint.h"
 #include "model/scene/mesh/mesh.h"
+#include "model/scene/meshmathtool.hpp"
 
 namespace {
 class PenSurface : public QGraphicsRectItem {
@@ -54,7 +55,8 @@ public:
      * after update the cdt, the fixed edge and all edge may be changed
      * So it is necessary to record the undo command old edge information
      * the following command is the same
-     * the move command may not need it. But it seems work well here. keep it until it performs bad
+     * the move command may not need it. But it seems work well here. keep it
+     * until it performs bad
      */
     CDT::EdgeUSet oldFixedEdge = {};
     CDT::EdgeUSet oldAllEdge = {};
@@ -131,9 +133,9 @@ private:
     WaifuL2d::MeshEditor* editor;
 
   public:
-    UndoCommand(const AddData& data, WaifuL2d::MeshEditor* editor,
+    UndoCommand(AddData data, WaifuL2d::MeshEditor* editor,
                 QUndoCommand* parent)
-      : QUndoCommand(parent), data(data), editor(editor) {
+      : QUndoCommand(parent), data(std::move(data)), editor(editor) {
       this->data.oldFixedEdge = editor->getFixedEdges();
       this->data.oldAllEdge = editor->getAllEdges();
     }
@@ -160,11 +162,10 @@ public:
   }
 
   explicit MeshPointAddCommand(WaifuL2d::MeshEditor* editor,
-                               const AddData& data)
-    : data(data), editor(editor) {
+                               AddData data)
+    : data(std::move(data)), editor(editor) {
   }
 };
-
 
 class FixedEdgeConnectCommand : public WaifuL2d::MeshEditorCommand {
 public:
@@ -183,9 +184,9 @@ private:
     WaifuL2d::MeshEditor* editor;
 
   public:
-    UndoCommand(const ConnectData& data, WaifuL2d::MeshEditor* editor,
+    UndoCommand(ConnectData data, WaifuL2d::MeshEditor* editor,
                 QUndoCommand* parent)
-      : QUndoCommand(parent), data(data), editor(editor) {
+      : QUndoCommand(parent), data(std::move(data)), editor(editor) {
       this->data.oldFixedEdge = editor->getFixedEdges();
       this->data.oldAllEdge = editor->getAllEdges();
     }
@@ -206,8 +207,8 @@ public:
     return new UndoCommand(data, editor, parent);
   }
 
-  FixedEdgeConnectCommand(WaifuL2d::MeshEditor* editor, const ConnectData& data)
-    : data(data), editor(editor) {
+  FixedEdgeConnectCommand(WaifuL2d::MeshEditor* editor, ConnectData data)
+    : data(std::move(data)), editor(editor) {
   }
 };
 
@@ -229,7 +230,8 @@ private:
 
   public:
     UndoCommand(const RemoveData& d, WaifuL2d::MeshEditor* editor,
-                QUndoCommand* parent): QUndoCommand(parent), editor(editor) {
+                QUndoCommand* parent)
+      : QUndoCommand(parent), editor(editor) {
       this->data = d;
       data.oldFixedEdge = editor->getFixedEdges();
       data.oldAllEdge = editor->getAllEdges();
@@ -291,7 +293,6 @@ QList<QPointF> MeshEditor::getPoints() const {
 
 QRectF MeshEditor::boundingRect() const { return toolSurface[0]->rect(); }
 
-
 void MeshEditor::paint(QPainter* painter,
                        const QStyleOptionGraphicsItem* option,
                        QWidget* widget) {
@@ -316,13 +317,14 @@ void MeshEditor::setPoints(const QList<QPointF>& scenePoints) {
   if (scenePoints.size() == points.size()) {
     updatePointsPos(scenePoints);
   }
-  //TODO: not complete
+  // TODO: not complete
 }
 
 void MeshEditor::selectPoints(const QList<int>& indexes) {
   for (int i = 0; i < points.size(); i++) {
     points[i]->setSelected(indexes.contains(i));
   }
+  updateOperateRect();
   update();
 }
 
@@ -344,7 +346,6 @@ void MeshEditor::setEdges(const CDT::EdgeUSet& fixedEdges,
   update();
 }
 
-
 void MeshEditor::setEditTool(EditToolType type) {
   auto index = static_cast<int>(type);
   for (int i = 0; i < toolSurface.size(); i++) {
@@ -354,10 +355,7 @@ void MeshEditor::setEditTool(EditToolType type) {
 }
 
 void MeshEditor::addPoint(const QPointF& point) {
-  auto* operatePoint = createPoint(point);
-  points.push_back(operatePoint);
-  operatePoint->data = points.size() - 1;
-  update();
+  addPoint(point, points.size());
 }
 
 void MeshEditor::addPoint(const QPointF& point, int index) {
@@ -386,13 +384,24 @@ void MeshEditor::disconnectFixEdge(unsigned int index1, unsigned int index2) {
 }
 
 void MeshEditor::handleShouldRemovePoints(const QList<int>& indexes) {
-  auto command =
-      std::make_shared<RemovePointCommand>(this, RemovePointCommand::RemoveData{
-                                               indexes
-                                           });
+  auto command = std::make_shared<RemovePointCommand>(
+      this, RemovePointCommand::RemoveData{indexes});
   emit editorCommand(command);
 }
 
+void MeshEditor::updateOperateRect() {
+  auto sPoint = getSelectedPoint();
+  if (sPoint.empty() || sPoint.size() == 1) {
+    operateRect->setVisible(false);
+    return;
+  }
+
+  auto bound = MeshMathTool<OperatePoint*>::calculateBoundRect(sPoint.data(),
+    sPoint.size());
+  operateRect->setRect(bound);
+  operateRect->setVisible(true);
+  update();
+}
 
 OperatePoint* MeshEditor::createPoint(const QPointF& pos) {
   auto* point = new OperatePoint(this);
@@ -402,9 +411,11 @@ OperatePoint* MeshEditor::createPoint(const QPointF& pos) {
                                   const QVariant& data) {
     handlePointShouldMove(pos, isStart, data);
   };
+  point->pointSelectedChange = [this](bool isSelected, const QVariant& data) {
+    this->updateOperateRect();
+  };
   return point;
 }
-
 
 void MeshEditor::handlePointShouldMove(const QPointF& pos, bool isStart,
                                        const QVariant& data) {
@@ -414,9 +425,14 @@ void MeshEditor::handlePointShouldMove(const QPointF& pos, bool isStart,
   newPoints[index] = pos;
 
   auto command = std::make_shared<MeshPointMoveCommand>(
-      this, std::move(MeshPointMoveCommand::MoveData{
-          oldPoints, newPoints, isStart
-      }));
+      this, MeshPointMoveCommand::MoveData{oldPoints, newPoints, isStart});
+  emit editorCommand(command);
+}
+
+void MeshEditor::handlePointShouldMove(const QList<QPointF>& pos,
+                                       bool isStart) {
+  auto command = std::make_shared<MeshPointMoveCommand>(
+      this, MeshPointMoveCommand::MoveData{this->getPoints(), pos, isStart});
   emit editorCommand(command);
 }
 
@@ -505,7 +521,61 @@ MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
   for (const auto& point : initPoints) {
     addPoint(point);
   }
+  operateRect = new OperateRectangle(this);
+  operateRect->rectShouldResize = [this](const QRectF& startRect,
+                                         const QRectF& newRect, bool xFlip,
+                                         bool yFlip, bool isStart,
+                                         const QVariant& data) {
+    if (isStart) {
+      auto selectIndexes = this->getSelectedPoint();
+      auto pList = QList<QPointF>();
+      auto pIndexes = QList<int>();
+      for (const auto& s : selectIndexes) {
+        pList.append(s->pos());
+        pIndexes.append(s->data.toInt());
+      }
+      this->rectMoveData.startOpPoints = pList;
+      this->rectMoveData.pointIndexes = pIndexes;
+    }
 
+    auto newPoints = this->rectMoveData.startOpPoints;
+    MeshMathTool<QPointF>::resizePointInBound(
+        startRect, newRect, newPoints.data(), newPoints.size(), xFlip, yFlip);
+    auto formatResult = this->getPoints();
+    for (int i = 0; i < this->rectMoveData.pointIndexes.size(); i++) {
+      formatResult[this->rectMoveData.pointIndexes[i]] = newPoints[i];
+    }
+
+    handlePointShouldMove(formatResult, isStart);
+  };
+
+  operateRect->rectShouldRotate = [this](const QPointF& rotationCenter,
+                                         qreal angle, bool isStart,
+                                         const QVariant& data) {
+    if (isStart) {
+      auto selectIndexes = this->getSelectedPoint();
+      auto pList = QList<QPointF>();
+      auto pIndexes = QList<int>();
+      for (const auto& s : selectIndexes) {
+        pList.append(s->pos());
+        pIndexes.append(s->data.toInt());
+      }
+      this->rectMoveData.startOpPoints = pList;
+      this->rectMoveData.pointIndexes = pIndexes;
+    }
+
+    auto newPoints = this->rectMoveData.startOpPoints;
+    MeshMathTool<QPointF>::rotatePoints(angle, rotationCenter, newPoints.data(),
+                                        newPoints.size());
+    auto formatResult = this->getPoints();
+    for (int i = 0; i < this->rectMoveData.pointIndexes.size(); i++) {
+      formatResult[this->rectMoveData.pointIndexes[i]] = newPoints[i];
+    }
+
+    handlePointShouldMove(formatResult, isStart);
+  };
+
+  operateRect->setVisible(false);
   for (int i = 0; i < initIncident.size(); i += 3) {
     CDT::Edge e1 = {initIncident[i], initIncident[i + 1]};
     CDT::Edge e2 = {initIncident[i + 1], initIncident[i + 2]};
@@ -533,9 +603,7 @@ MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
       this->handleShouldConnect(index1.value(), index);
     }
   };
-  pen->getExistPoints = [this]() {
-    return this->points;
-  };
+  pen->getExistPoints = [this]() { return this->points; };
 
   toolSurface[0] = new QGraphicsRectItem(this);
   toolSurface[0]->setZValue(1);
@@ -583,13 +651,15 @@ void MeshEditor::removePoint(int index) {
   for (int i = index; i < points.size(); i++) {
     points[i]->data = i;
   }
-}
 
+  updateOperateRect();
+}
 
 void MeshEditor::updatePointsPos(const QList<QPointF>& newPoints) {
   Q_ASSERT(newPoints.size() == points.size());
   for (size_t i = 0; i < newPoints.size(); i++) {
     points[i]->setPos(newPoints[i]);
   }
+  updateOperateRect();
 }
 } // namespace WaifuL2d

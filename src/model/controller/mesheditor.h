@@ -8,10 +8,12 @@ class QUndoCommand;
 
 namespace WaifuL2d {
 class OperatePoint;
+class OperateRectangle;
 
 class MeshEditorCommand {
 public:
   virtual QUndoCommand* createUndoCommand(QUndoCommand* parent = nullptr) = 0;
+  virtual ~MeshEditorCommand() = default;
 };
 
 /**
@@ -24,6 +26,14 @@ class MeshEditor : public QGraphicsObject {
   Q_OBJECT
 
   QList<OperatePoint*> points;
+  OperateRectangle* operateRect;
+
+  struct {
+    QList<QPointF> startOpPoints;
+    QList<int> pointIndexes;
+  } rectMoveData;
+
+  void updateOperateRect();
 
   // this is the transparent area for editor to handle event, like add point
   // you can set it to invisible to disable the event handler
@@ -36,6 +46,7 @@ class MeshEditor : public QGraphicsObject {
 
   void handlePointShouldMove(const QPointF& pos, bool isStart,
                              const QVariant& data);
+  void handlePointShouldMove(const QList<QPointF>& pos, bool isStart);
 
   void handleShouldAddPoint(const QPointF& pos);
 
