@@ -1,6 +1,6 @@
 ```shell
 git submodule update --init --recursive
-cmake --preset=base
+cmake --preset=base # change preset
 ```
 
 
