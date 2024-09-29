@@ -21,7 +21,6 @@ target_include_directories(WaifuStudio PUBLIC include)
 target_include_directories(WaifuStudio PRIVATE ../src)
 target_include_directories(WaifuStudio PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-qt_finalize_target(WaifuStudio)
 
 target_link_libraries(WaifuStudio
         Qt6::Core Qt6::Widgets Qt6::Gui

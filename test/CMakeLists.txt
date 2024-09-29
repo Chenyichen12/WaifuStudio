@@ -21,7 +21,7 @@ target_include_directories(Test PRIVATE ../src)
 
 qt_add_resources(QRC ../res/icon.qrc ../res/shader.qrc)
 
-add_executable(UiTest
+qt_add_executable(UiTest
 uitest_main.cc
 ${QRC}
 )
