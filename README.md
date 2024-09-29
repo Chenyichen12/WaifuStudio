@@ -1,10 +1,16 @@
+### WaifuStudio
+
+一个Live2D编辑器，使用Qt6框架制作
+
+现已完成基本的网格编辑，开始变形器的制作
+
 ```shell
 git submodule update --init --recursive
 cmake --preset=base # change preset
 ```
 
 
-example user preset
+CMakeUserPresets示例
 ```json
 {
  "version": 3,
