@@ -27,6 +27,15 @@ MainWindow::MainWindow(QWidget* parent)
   auto sceneController = projectService->getSceneController();
   ui->MainStageTopBar->setController(sceneController);
   ui->toolWidget->setController(sceneController);
+
+  // when enter edit
+  // the controller tree should set disable
+  // may move to new function, but it is clear for now
+  connect(sceneController, &WaifuL2d::SceneController::editModeChange,
+          ui->controllerTree,
+          [this](bool isEdit) {
+            this->ui->controllerTree->setEnabled(!isEdit);
+          });
 }
 
 void MainWindow::handleProjectChanged() {

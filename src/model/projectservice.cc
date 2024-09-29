@@ -89,6 +89,24 @@ void ProjectService::finizateProject(Project* project) {
             auto com = command->createUndoCommand();
             this->mainUndoStack->push(com);
           });
+
+  connect(sceneController, &SceneController::editModeChange,
+          project->selectionModel, [this](bool isEdit) {
+            if (isEdit) {
+              this->project->selectionModel->clear();
+            }
+
+            this->project->selectionModel->setEnable(!isEdit);
+          });
+  connect(sceneController, &SceneController::editFinishCommand, project,
+          [this](std::shared_ptr<EditFinishCommandWrapper> w) {
+            this->mainUndoStack->push(w->createCommand());
+            auto id = w->getTargetDeformer()->getBindId();
+
+            // may not enable after edit, set enable first
+            this->project->selectionModel->setEnable(true);
+            this->project->selectionModel->selectById({id});
+          });
 }
 
 ProjectService::ProjectService(QObject* parent) : QObject(parent) {
@@ -101,19 +119,14 @@ ProjectService::ProjectService(QObject* parent) : QObject(parent) {
 
   // change the undo stack when enter into the edit mode
   // may move to another function but lambda is more clear now
-  connect(sceneController, &SceneController::stateChanged, this,
-          [this](const SceneControllerState& state) {
-            if (state.isEdit) {
+  connect(sceneController, &SceneController::editModeChange, this,
+          [this](bool isEdit) {
+            if (isEdit) {
               this->undoGroup->setActiveStack(
                   this->sceneController->getEditModeUndoStack());
             } else {
               this->undoGroup->setActiveStack(this->mainUndoStack);
             }
-          });
-
-  connect(sceneController, &SceneController::editFinishCommand, this,
-          [this](std::shared_ptr<EditFinishCommandWrapper> w) {
-            this->mainUndoStack->push(w->createCommand());
           });
 }
 

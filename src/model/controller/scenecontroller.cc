@@ -9,6 +9,10 @@
 namespace WaifuL2d {
 SceneController::SceneController(QObject* parent): QObject(parent) {
   this->editModeUndoStack = new QUndoStack(this);
+  connect(this, &SceneController::stateChanged, this,
+          [this](const SceneControllerState& s) {
+            emit this->editModeChange(s.isEdit);
+          });
 }
 
 void SceneController::clearUndo() const {

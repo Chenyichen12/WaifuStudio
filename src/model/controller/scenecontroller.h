@@ -85,6 +85,12 @@ signals:
   void stateChanged(const SceneControllerState& state);
   void warning(const QString& message);
   void editFinishCommand(std::shared_ptr<EditFinishCommandWrapper> command);
+
+  /**
+   * same as state change. isEdit == state.isEdit
+   * @param isEdit 
+   */
+  void editModeChange(bool isEdit);
 };
 }
 

@@ -14,8 +14,15 @@ private:
   LayerModel* model;
   MainStageScene* scene;
 
+  bool enabled;
+
 public:
   LayerSelectionModel(LayerModel* model, MainStageScene* scene);
+
+  void selectById(const QList<int>& id);
+
+
+  void setEnable(bool enabled);
 
 public slots:
   void select(const QItemSelection& selection,

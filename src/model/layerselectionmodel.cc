@@ -12,20 +12,27 @@ LayerSelectionModel::LayerSelectionModel(WaifuL2d::LayerModel *model,
                                          MainStageScene *scene)
     : QItemSelectionModel(model), model(model), scene(scene) {
   connect(scene, &MainStageScene::shouldSelectDeformers, this,
-          [this](const QList<int> &ids) {
-            QItemSelection selection;
-            for (auto id : ids) {
-              auto layer = this->model->layerFromId(id);
-              if (layer) {
-                selection.select(layer->index(), layer->index());
-              }
-            }
-            this->select(selection, QItemSelectionModel::ClearAndSelect);
-          });
+          &LayerSelectionModel::selectById);
 }
+
+void LayerSelectionModel::selectById(const QList<int>& ids) {
+  QItemSelection selection;
+  for (auto id : ids) {
+    auto layer = this->model->layerFromId(id);
+    if (layer) {
+      selection.select(layer->index(), layer->index());
+    }
+  }
+  this->select(selection, QItemSelectionModel::ClearAndSelect);
+}
+
+void LayerSelectionModel::setEnable(bool enabled) { this->enabled = enabled; }
 
 void LayerSelectionModel::select(const QItemSelection &selection,
                                  QItemSelectionModel::SelectionFlags command) {
+  if (!this->enabled) {
+    return;
+  }
   QList<int> ids;
   for (auto &index : selection.indexes()) {
     auto layer = model->layerFromIndex(index);

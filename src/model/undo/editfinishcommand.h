@@ -33,5 +33,6 @@ public:
   void setTarget(MainStageScene* scene, MeshDeformer* deformer);
   void setData(const QList<QPointF>& changePoints,
                const QList<unsigned int>& incident);
+  const MeshDeformer* getTargetDeformer() const { return deformer_; };
 };
 }
