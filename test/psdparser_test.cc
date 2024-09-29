@@ -1,7 +1,7 @@
 //
 // Created by chen_yichen on 2024/7/30.
 //
-#include "psdparser.h"
+#include "model/parser/psdparser.h"
 
 #include <QLabel>
 #include <QHBoxLayout>
@@ -12,11 +12,11 @@ TEST(psdparser, testparse) {
   std::filesystem::path pathObj(s);
   std::filesystem::path resPath =
       pathObj.parent_path() / "test_res" / "colorexample.psd";
-  auto resString = QString::fromStdString(resPath.string());
-  auto p = new Parser::PsdParser(resString);
-  p->Parse();
+  auto p = new WaifuL2d::PsdParser(resPath.wstring());
+  p->parse();
 
-  auto psTree = p->extractPsTree();
-  ASSERT_EQ(psTree->itemChild(psTree->invisibleRootItem()).size(), 4);
+  auto psTree = p->getResult();
+
+  ASSERT_EQ(psTree->root->children.size(),4);
   delete p;
 }
