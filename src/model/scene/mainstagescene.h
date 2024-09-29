@@ -87,6 +87,12 @@ public:
   QList<AbstractDeformer*> getSelectedDeformers() const;
 
   QRectF getProjectRect() const;
+
+  /**
+   * simply set Transparent of the deformer
+   * set nullptr to clear focus
+   */
+  void focusDeformer(AbstractDeformer* deformer);
 signals:
   /**
    * when the deformer should call the undo command, it will be emitted to the project to add undo command

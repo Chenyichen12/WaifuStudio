@@ -94,6 +94,13 @@ void Mesh::setMeshStruct(const QList<MeshVertex>& ver,
   ibo->allocate(incidents.data(), incident.size() * sizeof(unsigned int));
 }
 
+void Mesh::setOpacity(qreal op) {
+  this->opacity = op;
+  if (container) {
+    container->update();
+  }
+}
+
 
 void Mesh::render(QOpenGLFunctions* f, QOpenGLShaderProgram* program) {
   if (!visible) {
@@ -102,6 +109,7 @@ void Mesh::render(QOpenGLFunctions* f, QOpenGLShaderProgram* program) {
   vao->bind();
   tex->bind(0);
   program->setUniformValue("ourTexture", 0);
+  program->setUniformValue("alpha", static_cast<GLfloat>(opacity));
   f->glDrawElements(GL_TRIANGLES, incident.size(), GL_UNSIGNED_INT, nullptr);
   tex->release();
   vao->release();

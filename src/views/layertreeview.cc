@@ -102,10 +102,13 @@ QRect views::ItemStyleDelegate::getVisibleBtnRect(const QRect& relative) const {
 }
 
 views::LayerTreeView::LayerTreeView(QWidget* parent) : QTreeView(parent) {
-  this->setDragEnabled(true);
-  this->setAcceptDrops(true);
-  this->setDropIndicatorShown(true);
-  this->setDefaultDropAction(Qt::MoveAction);
+  // enable drag
+  // TODO: the drag must remind the model, it will do a lot of works. For now, I should disable it.
+
+  // this->setDragEnabled(true);
+  // this->setAcceptDrops(true);
+  // this->setDropIndicatorShown(true);
+  // this->setDefaultDropAction(Qt::MoveAction);
   this->setEditTriggers(EditTrigger::NoEditTriggers);
   this->setHeaderHidden(true);
   this->setSelectionMode(SelectionMode::ContiguousSelection);

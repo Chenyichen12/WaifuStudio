@@ -41,6 +41,7 @@ class Mesh {
   RenderGroup* container = nullptr;
 
   qreal zValue = 0;
+  qreal opacity = 1;
 
 public:
   Mesh(const QList<MeshVertex>& vertices, const QList<unsigned int>& incident);
@@ -67,6 +68,8 @@ public:
 
   void setMeshStruct(const QList<MeshVertex>& vertices,
                      const QList<unsigned int>& incidents);
+
+  void setOpacity(qreal opacity);
   ~Mesh();
 };
 } // namespace WaifuL2d

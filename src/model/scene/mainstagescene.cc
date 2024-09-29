@@ -159,6 +159,27 @@ QRectF MainStageScene::getProjectRect() const {
   return renderGroup->boundingRect();
 }
 
+void MainStageScene::focusDeformer(AbstractDeformer* deformer) {
+  // need a controller, But now it seems no need
+  if (deformer == nullptr) {
+    this->rootDeformer->forEachDown([](AbstractDeformer* target) {
+      target->setOpacity(1);
+      return false;
+    });
+    update();
+    return;
+  }
+
+  this->rootDeformer->forEachDown(
+      [deformer](AbstractDeformer* target) {
+        if (target != deformer) {
+          target->setOpacity(0.2);
+        }
+        return false;
+      });
+  update();
+}
+
 void MainStageScene::addDeformer(WaifuL2d::AbstractDeformer* deformer,
                                  WaifuL2d::AbstractDeformer* parent) {
   if (parent == nullptr) {

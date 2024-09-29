@@ -46,10 +46,16 @@ void SceneController::toggleEditMode() {
         new MeshEditor(editDeformer->getScenePoints(),
                        editDeformer->getMeshIncident());
     state.editDeformer = editDeformer;
+    state.originZValue = editDeformer->zValue();
+
     // push owner to scene
     scene->addItem(state.editor);
     state.editor->setZValue(3);
     state.editor->setHandleRect(scene->getProjectRect());
+
+    scene->focusDeformer(state.editDeformer);
+    // may big enough
+    state.editDeformer->setZValue(1000);
     // the editor may push changes to the undo stack
     // may be moved to another function, but it is clear for now
     connect(state.editor, &MeshEditor::editorCommand, this,
@@ -73,6 +79,8 @@ void SceneController::toggleEditMode() {
     finishCommand->setData(result.points, result.incident);
     emit editFinishCommand(finishCommand);
 
+    scene->focusDeformer(nullptr);
+    state.editDeformer->setZValue(state.originZValue);
     delete state.editor;
     clearUndo(); // clean the undo stack when every edit off
     state.editor = nullptr;

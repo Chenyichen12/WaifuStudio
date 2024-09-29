@@ -23,6 +23,7 @@ struct SceneControllerState {
 private:
   MeshEditor* editor = nullptr;
   MeshDeformer* editDeformer = nullptr;
+  qreal originZValue = 0;
 
 public:
   bool isEdit = false;

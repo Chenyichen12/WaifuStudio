@@ -168,6 +168,10 @@ QVariant MeshDeformer::itemChange(QGraphicsItem::GraphicsItemChange change,
   if (change == QGraphicsItem::ItemZValueChange) {
     this->mesh->setZValue(value.toDouble());
   }
+
+  if (change == ItemOpacityChange) {
+    this->mesh->setOpacity(value.toReal());
+  }
   return QGraphicsItem::itemChange(change, value);
 }
 
