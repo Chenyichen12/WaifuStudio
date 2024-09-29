@@ -91,4 +91,10 @@ void SceneController::setEditTool(EditToolType type) {
   state.editor->setEditTool(type);
   emit stateChanged(state);
 }
+
+void SceneController::initGL() const {
+  if (scene) {
+    scene->initGL();
+  }
+}
 }

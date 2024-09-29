@@ -174,12 +174,6 @@ QItemSelectionModel* ProjectService::getLayerSelectionModel() const {
 
 QGraphicsScene* ProjectService::getScene() const { return project->scene; }
 
-void ProjectService::initGL() {
-  if (project == nullptr) {
-    return;
-  }
-  project->scene->initGL();
-}
 
 void ProjectService::setLayerLock(const QModelIndex& index, bool lock) {
   if (project == nullptr) {

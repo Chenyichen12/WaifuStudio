@@ -76,6 +76,11 @@ public:
    */
   void setEditTool(EditToolType type);
 
+  /**
+   * init scene gl
+   * call it before set scene for graphics view
+   */
+  void initGL() const;
 signals:
   void stateChanged(const SceneControllerState& state);
   void warning(const QString& message);

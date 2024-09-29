@@ -37,8 +37,6 @@ public:
   QGraphicsScene* getScene() const;
   SceneController* getSceneController() const;
 
-  void initGL();
-
 public slots:
   void setLayerVisible(const QModelIndex& index, bool visible, bool isStart);
   void setLayerLock(const QModelIndex& index, bool lock);

@@ -3,7 +3,6 @@
 //
 #include "mainwindow.h"
 
-#include <QItemSelectionModel>
 #include <QMessageBox>
 #include <QStandardItemModel>
 
@@ -37,7 +36,7 @@ void MainWindow::handleProjectChanged() {
 
   ui->MainStageGraphicsView->setScene(projectService->getScene());
   ui->MainStageGraphicsView->makeCurrent();
-  projectService->initGL();
+  projectService->getSceneController()->initGL();
   ui->MainStageGraphicsView->doneCurrent();
 }
 
