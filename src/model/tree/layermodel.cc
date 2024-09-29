@@ -1,7 +1,7 @@
 #include "layermodel.h"
 
 #include <QItemSelectionModel>
-#include <QSTack>
+#include <QStack>
 
 #include "layer.h"
 namespace WaifuL2d {

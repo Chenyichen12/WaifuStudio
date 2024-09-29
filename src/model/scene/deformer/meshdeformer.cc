@@ -198,7 +198,7 @@ void MeshDeformer::fitMesh() {
 
       for (size_t i = operatePoints.size(); i < meshPoints.size(); i++) {
         auto op = createPoint(meshPoints[i]);
-        op->data = i;
+        op->data = static_cast<int>(i);
         operatePoints.push_back(op);
       }
       break;

@@ -110,6 +110,7 @@ void ProjectService::finizateProject(Project* project) {
 }
 
 ProjectService::ProjectService(QObject* parent) : QObject(parent) {
+  this->project = nullptr;
   this->sceneController = new SceneController(this);
   undoGroup = new QUndoGroup(this);
   mainUndoStack = new QUndoStack(undoGroup);
@@ -130,7 +131,7 @@ ProjectService::ProjectService(QObject* parent) : QObject(parent) {
           });
 }
 
-ProjectService::~ProjectService() = default;
+ProjectService::~ProjectService(){};
 
 int ProjectService::initProjectFromPsd(const QString& path) {
   auto parser = PsdParser(path.toStdWString());

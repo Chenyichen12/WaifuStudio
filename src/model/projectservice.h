@@ -13,18 +13,18 @@ class SceneController;
 class ProjectService : public QObject {
   Q_OBJECT
 
-private:
-  std::unique_ptr<Project> project = nullptr;
+ private:
+  std::unique_ptr<Project> project; // will be nullptr if no project
   SceneController* sceneController;
 
   QUndoStack* mainUndoStack;
   QUndoGroup* undoGroup;
 
-protected:
+ protected:
   virtual void finizateProject(Project* project);
 
-public:
-  ProjectService(QObject* parent = nullptr);
+ public:
+  explicit ProjectService(QObject* parent = nullptr);
   ~ProjectService() override;
 
   /**
@@ -37,13 +37,13 @@ public:
   QGraphicsScene* getScene() const;
   SceneController* getSceneController() const;
 
-public slots:
+ public slots:
   void setLayerVisible(const QModelIndex& index, bool visible, bool isStart);
   void setLayerLock(const QModelIndex& index, bool lock);
 
   void undo();
   void redo();
-signals:
+ signals:
   void projectChanged();
 };
-} // namespace WaifuL2d
+}  // namespace WaifuL2d
