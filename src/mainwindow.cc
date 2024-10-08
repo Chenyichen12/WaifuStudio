@@ -11,7 +11,7 @@
 #include "ui/ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget* parent)
-  : QMainWindow(parent), ui(new Ui::MainWindow) {
+    : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
   setUpMenu();
   this->projectService = new WaifuL2d::ProjectService(this);
@@ -32,10 +32,13 @@ MainWindow::MainWindow(QWidget* parent)
   // the controller tree should set disable
   // may move to new function, but it is clear for now
   connect(sceneController, &WaifuL2d::SceneController::editModeChange,
-          ui->controllerTree,
-          [this](bool isEdit) {
+          ui->controllerTree, [this](bool isEdit) {
             this->ui->controllerTree->setEnabled(!isEdit);
           });
+}
+
+void MainWindow::closeEvent(QCloseEvent* event) {
+  QMainWindow::closeEvent(event);
 }
 
 void MainWindow::handleProjectChanged() {

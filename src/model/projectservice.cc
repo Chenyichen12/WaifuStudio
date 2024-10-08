@@ -1,8 +1,9 @@
 #include "projectservice.h"
 
 #include <QStack>
-#include <QUndoStack>
 #include <QUndoGroup>
+#include <QUndoStack>
+
 #include "controller/scenecontroller.h"
 #include "layerselectionmodel.h"
 #include "model/scene/deformer/meshdeformer.h"
@@ -17,9 +18,10 @@
 #include "undo/lockcommand.h"
 #include "undo/visiblecommand.h"
 
+
 namespace WaifuL2d {
 class PsdLayerSimpleFactory {
-public:
+ public:
   static Layer* createLayer(const TreeNode* node,
                             const QHash<int, MeshNode> bitmapCache) {
     switch (node->type) {
@@ -56,18 +58,11 @@ public:
     }
   }
 };
-
-struct Project : public QObject {
-  LayerModel* model = nullptr;
-  LayerSelectionModel* selectionModel = nullptr;
-  MainStageScene* scene = nullptr;
-
-  void setParentManager() {
-    model->setParent(this);
-    selectionModel->setModel(model);
-    scene->setParent(this);
-  }
-};
+void Project::setParentManager() {
+  model->setParent(this);
+  selectionModel->setModel(model);
+  scene->setParent(this);
+}
 
 void ProjectService::finizateProject(Project* project) {
   Q_ASSERT(project->model != nullptr);
@@ -131,7 +126,7 @@ ProjectService::ProjectService(QObject* parent) : QObject(parent) {
           });
 }
 
-ProjectService::~ProjectService(){};
+ProjectService::~ProjectService() {};
 
 int ProjectService::initProjectFromPsd(const QString& path) {
   auto parser = PsdParser(path.toStdWString());
@@ -188,7 +183,6 @@ QItemSelectionModel* ProjectService::getLayerSelectionModel() const {
 
 QGraphicsScene* ProjectService::getScene() const { return project->scene; }
 
-
 void ProjectService::setLayerLock(const QModelIndex& index, bool lock) {
   if (project == nullptr) {
     return;
@@ -222,4 +216,4 @@ void ProjectService::setLayerVisible(const QModelIndex& index, bool visible,
 SceneController* ProjectService::getSceneController() const {
   return sceneController;
 }
-} // namespace WaifuL2d
+}  // namespace WaifuL2d

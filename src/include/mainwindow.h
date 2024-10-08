@@ -12,15 +12,24 @@ QT_END_NAMESPACE
 namespace WaifuL2d {
 class ProjectService;
 }
+#ifdef QT_DEBUG
+class MainWindowTest;
+#endif
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
+#ifdef QT_DEBUG
+  friend MainWindowTest;
+#endif
+
  private:
   void setUpMenu();
   WaifuL2d::ProjectService *projectService;
  protected slots:
   void handleProjectChanged();
 
+ protected:
+  void closeEvent(QCloseEvent *event) override;
  public:
   explicit MainWindow(QWidget *parent = nullptr);
   ~MainWindow() override;

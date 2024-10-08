@@ -7,14 +7,30 @@ class QGraphicsScene;
 class QUndoGroup;
 
 namespace WaifuL2d {
-struct Project;
+class LayerModel;
+class LayerSelectionModel;
+class MainStageScene;
+struct Project : public QObject {
+  LayerModel* model = nullptr;
+  LayerSelectionModel* selectionModel = nullptr;
+  MainStageScene* scene = nullptr;
+
+  void setParentManager();
+};
+
 class SceneController;
 
-class ProjectService : public QObject {
-  Q_OBJECT
+#ifdef QT_DEBUG
+class ProjectServiceTest;
+#endif
 
+class ProjectService : public QObject {
+#ifdef QT_DEBUG
+  friend ProjectServiceTest;
+#endif
+  Q_OBJECT
  private:
-  std::unique_ptr<Project> project; // will be nullptr if no project
+  std::unique_ptr<Project> project;  // will be nullptr if no project
   SceneController* sceneController;
 
   QUndoStack* mainUndoStack;
