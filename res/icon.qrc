@@ -7,6 +7,8 @@
         <file>rotation.png</file>
         <file>move-arrow.png</file>
         <file>pen.png</file>
+        <file>pen-remove.png</file>
+        <file>pen-add.png</file>
         <file>lock.png</file>
         <file>cursor-default.png</file>
     </qresource>

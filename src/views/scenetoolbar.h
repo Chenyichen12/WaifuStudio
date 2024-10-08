@@ -7,7 +7,7 @@ class IconButton;
 
 class SceneToolBar : public QWidget {
   Q_OBJECT
-  std::array<IconButton*, 2> toolBtn;
+  std::array<IconButton*, 3> toolBtn;
 
 private slots:
   void handleControllerStateChanged(

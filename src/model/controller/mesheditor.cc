@@ -7,7 +7,6 @@
 #include <QtCore>
 
 #include "model/scene/deformer/operatepoint.h"
-#include "model/scene/mesh/mesh.h"
 #include "model/scene/meshmathtool.hpp"
 
 namespace {
@@ -37,21 +36,47 @@ class PenSurface : public QGraphicsRectItem {
     }
   }
 
-public:
+ public:
   std::function<QList<WaifuL2d::OperatePoint*>()> getExistPoints = nullptr;
   std::function<void(const QPointF&)> shouldAddPoint = nullptr;
   std::function<void(int index)> penHitPoint = nullptr;
 
-  PenSurface(QGraphicsItem* parent = nullptr) : QGraphicsRectItem(parent) {
-  }
+  explicit PenSurface(QGraphicsItem* parent = nullptr)
+      : QGraphicsRectItem(parent) {}
 };
 
+class RemoveSurface : public QGraphicsRectItem {
+ protected:
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
+    if (this->getExistPoints) {
+      auto points = this->getExistPoints();
+      for (int i = 0; i < points.size(); i++) {
+        if (points[i]->isHitPoint(event->scenePos())) {
+          if (this->pointShouldRemove) {
+            this->pointShouldRemove(i);
+            event->accept();
+          } else {
+            event->ignore();
+          }
+          return;
+        }
+      }
+    }
+  }
+
+ public:
+  std::function<QList<WaifuL2d::OperatePoint*>()> getExistPoints = nullptr;
+  std::function<void(int index)> pointShouldRemove = nullptr;
+  explicit RemoveSurface(QGraphicsItem* parent = nullptr)
+      : QGraphicsRectItem(parent) {}
+};
 
 /** ---------- COMMAND CLASS ------------
- * every mesh edit should abstract to a command and push to the undo stack to the controller
+ * every mesh edit should abstract to a command and push to the undo stack to
+ * the controller
  */
 class MeshPointMoveCommand : public WaifuL2d::MeshEditorCommand {
-public:
+ public:
   struct MoveData {
     QList<QPointF> oldPoints;
     QList<QPointF> newPoints;
@@ -69,15 +94,15 @@ public:
     CDT::EdgeUSet oldAllEdge = {};
   } data;
 
-private:
+ private:
   class UndoCommand : public QUndoCommand {
     MoveData data;
     WaifuL2d::MeshEditor* editor;
 
-  public:
+   public:
     explicit UndoCommand(MoveData data, WaifuL2d::MeshEditor* editor,
                          QUndoCommand* parent)
-      : QUndoCommand(parent), data(std::move(data)), editor(editor) {
+        : QUndoCommand(parent), data(std::move(data)), editor(editor) {
       if (this->data.isStart) {
         this->data.oldFixedEdge = editor->getFixedEdges();
         this->data.oldAllEdge = editor->getAllEdges();
@@ -112,18 +137,17 @@ private:
 
   WaifuL2d::MeshEditor* editor;
 
-public:
+ public:
   QUndoCommand* createUndoCommand(QUndoCommand* parent) override {
     return new UndoCommand(data, editor, parent);
   }
 
   MeshPointMoveCommand(WaifuL2d::MeshEditor* editor, MoveData data)
-    : data(std::move(data)), editor(editor) {
-  }
+      : data(std::move(data)), editor(editor) {}
 };
 
 class MeshPointAddCommand : public WaifuL2d::MeshEditorCommand {
-public:
+ public:
   struct AddData {
     QPointF pos;
     int addIndex;
@@ -134,15 +158,15 @@ public:
 
   WaifuL2d::MeshEditor* editor;
 
-private:
+ private:
   class UndoCommand : public QUndoCommand {
     AddData data;
     WaifuL2d::MeshEditor* editor;
 
-  public:
+   public:
     UndoCommand(AddData data, WaifuL2d::MeshEditor* editor,
                 QUndoCommand* parent)
-      : QUndoCommand(parent), data(std::move(data)), editor(editor) {
+        : QUndoCommand(parent), data(std::move(data)), editor(editor) {
       this->data.oldFixedEdge = editor->getFixedEdges();
       this->data.oldAllEdge = editor->getAllEdges();
     }
@@ -163,19 +187,17 @@ private:
     }
   };
 
-public:
+ public:
   QUndoCommand* createUndoCommand(QUndoCommand* parent) override {
     return new UndoCommand(data, editor, parent);
   }
 
-  explicit MeshPointAddCommand(WaifuL2d::MeshEditor* editor,
-                               AddData data)
-    : data(std::move(data)), editor(editor) {
-  }
+  explicit MeshPointAddCommand(WaifuL2d::MeshEditor* editor, AddData data)
+      : data(std::move(data)), editor(editor) {}
 };
 
 class FixedEdgeConnectCommand : public WaifuL2d::MeshEditorCommand {
-public:
+ public:
   struct ConnectData {
     int index1;
     int index2;
@@ -185,15 +207,15 @@ public:
 
   WaifuL2d::MeshEditor* editor;
 
-private:
+ private:
   class UndoCommand : public QUndoCommand {
     ConnectData data;
     WaifuL2d::MeshEditor* editor;
 
-  public:
+   public:
     UndoCommand(ConnectData data, WaifuL2d::MeshEditor* editor,
                 QUndoCommand* parent)
-      : QUndoCommand(parent), data(std::move(data)), editor(editor) {
+        : QUndoCommand(parent), data(std::move(data)), editor(editor) {
       this->data.oldFixedEdge = editor->getFixedEdges();
       this->data.oldAllEdge = editor->getAllEdges();
     }
@@ -209,18 +231,17 @@ private:
     }
   };
 
-public:
+ public:
   QUndoCommand* createUndoCommand(QUndoCommand* parent) override {
     return new UndoCommand(data, editor, parent);
   }
 
   FixedEdgeConnectCommand(WaifuL2d::MeshEditor* editor, ConnectData data)
-    : data(std::move(data)), editor(editor) {
-  }
+      : data(std::move(data)), editor(editor) {}
 };
 
 class RemovePointCommand : public WaifuL2d::MeshEditorCommand {
-public:
+ public:
   struct RemoveData {
     QList<int> indexes;
     CDT::EdgeUSet oldFixedEdge = {};
@@ -230,15 +251,15 @@ public:
 
   WaifuL2d::MeshEditor* editor;
 
-private:
+ private:
   class UndoCommand : public QUndoCommand {
     WaifuL2d::MeshEditor* editor;
     RemoveData data;
 
-  public:
+   public:
     UndoCommand(const RemoveData& d, WaifuL2d::MeshEditor* editor,
                 QUndoCommand* parent)
-      : QUndoCommand(parent), editor(editor) {
+        : QUndoCommand(parent), editor(editor) {
       this->data = d;
       data.oldFixedEdge = editor->getFixedEdges();
       data.oldAllEdge = editor->getAllEdges();
@@ -268,20 +289,18 @@ private:
     }
   };
 
-public:
+ public:
   QUndoCommand* createUndoCommand(QUndoCommand* parent) override {
     return new UndoCommand(data, editor, parent);
   }
 
   RemovePointCommand(WaifuL2d::MeshEditor* editor, RemoveData data)
-    : data(std::move(data)), editor(editor) {
-  }
+      : data(std::move(data)), editor(editor) {}
 };
-} // namespace
+}  // namespace
 
 namespace WaifuL2d {
-MeshEditor::MeshEditor(QGraphicsItem* parent) : MeshEditor({}, {}, parent) {
-}
+MeshEditor::MeshEditor(QGraphicsItem* parent) : MeshEditor({}, {}, parent) {}
 
 void MeshEditor::setHandleRect(const QRectF& rect) {
   for (auto& surface : toolSurface) {
@@ -436,7 +455,7 @@ void MeshEditor::updateOperateRect() {
   }
 
   auto bound = MeshMathTool<OperatePoint*>::calculateBoundRect(sPoint.data(),
-    sPoint.size());
+                                                               sPoint.size());
   operateRect->setRect(bound);
   operateRect->setVisible(true);
   update();
@@ -556,7 +575,7 @@ void MeshEditor::keyPressEvent(QKeyEvent* event) {
 MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
                        const QList<unsigned int>& initIncident,
                        QGraphicsItem* parent)
-  : QGraphicsObject(parent) {
+    : QGraphicsObject(parent) {
   for (const auto& point : initPoints) {
     addPoint(point);
   }
@@ -644,13 +663,19 @@ MeshEditor::MeshEditor(const QList<QPointF>& initPoints,
   };
   pen->getExistPoints = [this]() { return this->points; };
 
+  auto removePen = new RemoveSurface(this);
+  removePen->getExistPoints = [this]() { return this->points; };
+  removePen->pointShouldRemove = [this](int index) {
+    this->handleShouldRemovePoints({index});
+  };
+
   toolSurface[0] = new QGraphicsRectItem(this);
   toolSurface[0]->setZValue(1);
 
   toolSurface[1] = pen;
   toolSurface[1]->setZValue(1);
 
-  toolSurface[2] = new QGraphicsRectItem(this);
+  toolSurface[2] = removePen;
   toolSurface[2]->setZValue(1);
 
   setEditTool(EditToolType::Cursor);
@@ -701,4 +726,4 @@ void MeshEditor::updatePointsPos(const QList<QPointF>& newPoints) {
   }
   updateOperateRect();
 }
-} // namespace WaifuL2d
+}  // namespace WaifuL2d
