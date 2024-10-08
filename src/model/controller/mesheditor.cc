@@ -47,21 +47,25 @@ class PenSurface : public QGraphicsRectItem {
 
 class RemoveSurface : public QGraphicsRectItem {
  protected:
-  void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
-    if (this->getExistPoints) {
-      auto points = this->getExistPoints();
-      for (int i = 0; i < points.size(); i++) {
-        if (points[i]->isHitPoint(event->scenePos())) {
-          if (this->pointShouldRemove) {
-            this->pointShouldRemove(i);
-            event->accept();
-          } else {
-            event->ignore();
-          }
-          return;
-        }
+  std::optional<qsizetype> isHitPoint(const QPointF& test) {
+    if (!this->getExistPoints) {
+      return std::nullopt;
+    }
+    auto points = getExistPoints();
+    for (qsizetype i = 0; i < points.size(); i++) {
+      if (points[i]->isHitPoint(test)) {
+        return i;
       }
     }
+    return std::nullopt;
+  }
+
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override {
+    auto hit = isHitPoint(event->scenePos());
+    if (hit.has_value() && pointShouldRemove) {
+      pointShouldRemove(hit.value());
+    }
+    event->accept();
   }
 
  public:
