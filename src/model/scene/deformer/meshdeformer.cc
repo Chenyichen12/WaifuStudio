@@ -110,7 +110,7 @@ void MeshDeformer::setScenePoints(const QList<QPointF>& points) {
   update();
 }
 
-QPointF MeshDeformer::scenePointToLocal(const QPointF& point) {
+QPointF MeshDeformer::scenePointToLocal(const QPointF& point) const {
   // TODO: maybe need more
   return point;
 }

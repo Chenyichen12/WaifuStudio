@@ -62,7 +62,7 @@ public:
   QList<unsigned int> getMeshIncident() const;
 
   void setScenePoints(const QList<QPointF>& points) override;
-  QPointF scenePointToLocal(const QPointF& point) override;
+  QPointF scenePointToLocal(const QPointF& point) const override;
   int type() const override { return MeshDeformerType; }
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget = nullptr) override;

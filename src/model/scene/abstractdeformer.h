@@ -63,7 +63,7 @@ public:
    * @param point scene points
    * @return local points
    */
-  virtual QPointF scenePointToLocal(const QPointF& point) = 0;
+  virtual QPointF scenePointToLocal(const QPointF& point) const = 0;
 
   /**
    * deformer select is different from graphics item select

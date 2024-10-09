@@ -20,7 +20,7 @@ public:
   void setScenePoints(const QList<QPointF>& points) override {
   }
 
-  QPointF scenePointToLocal(const QPointF& point) override { return point; }
+  QPointF scenePointToLocal(const QPointF& point) const override { return point; }
   int type() const override { return RootType; }
 
   typedef std::function<bool(AbstractDeformer*)> callBack;

@@ -5,6 +5,9 @@ class QStandardItemModel;
 class QItemSelectionModel;
 class QGraphicsScene;
 class QUndoGroup;
+#ifdef QT_DEBUG
+class ProjectServiceTest;
+#endif
 
 namespace WaifuL2d {
 class LayerModel;
@@ -20,15 +23,11 @@ struct Project : public QObject {
 
 class SceneController;
 
-#ifdef QT_DEBUG
-class ProjectServiceTest;
-#endif
-
 class ProjectService : public QObject {
+  Q_OBJECT
 #ifdef QT_DEBUG
   friend ProjectServiceTest;
 #endif
-  Q_OBJECT
  private:
   std::unique_ptr<Project> project;  // will be nullptr if no project
   SceneController* sceneController;
