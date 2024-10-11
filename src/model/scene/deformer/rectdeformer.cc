@@ -1,6 +1,10 @@
 #include "rectdeformer.h"
-#include "model/scene/meshmathtool.hpp"
+
 #include <QPainter>
+
+#include "model/scene/deformercommand.h"
+#include "model/scene/mainstagescene.h"
+#include "model/scene/meshmathtool.hpp"
 
 namespace {
 class RectOperterPoint : public WaifuL2d::OperatePoint {
@@ -36,12 +40,20 @@ RectDeformer::RectDeformer(const QRectF& initRect, unsigned int row,
     auto x = initRect.x() + width * static_cast<int>(i % column_);
     auto y = initRect.y() + height * static_cast<int>(i / column_);
     auto point = createOperatePoint(QPointF(x, y));
+    point->data = i;
     operator_points_.push_back(point);
   }
 }
 
 OperatePoint* RectDeformer::createOperatePoint(const QPointF& p) {
   auto point = new RectOperterPoint(this);
+  point->pointShouldMove = [this](const QPointF& point, bool isStart,
+                                  const QVariant& data) {
+    QList<QPointF> newPoints = this->getScenePoints();
+    auto index = data.toInt();
+    newPoints[index] = point;
+    this->handlePointShouldMove(newPoints, isStart);
+  };
   point->setPos(p);
   return point;
 }
@@ -53,7 +65,11 @@ QList<QPointF> RectDeformer::getScenePoints() const {
   return points;
 }
 void RectDeformer::setScenePoints(const QList<QPointF>& points) {
-  qDebug() << "set positions" << points;
+  Q_ASSERT(points.size() == operator_points_.size());
+  for(int i = 0;  i < points.size(); i++) {
+    operator_points_[i]->setPos(points[i]);
+  }
+  update();
 }
 QPointF RectDeformer::scenePointToLocal(const QPointF& point) const {
   // TODO: it must be implemented
@@ -72,4 +88,16 @@ QRectF RectDeformer::boundingRect() const {
 void RectDeformer::paint(QPainter* painter,
                          const QStyleOptionGraphicsItem* option,
                          QWidget* widget) {}
+
+void RectDeformer::handlePointShouldMove(const QList<QPointF>& newPoints,
+                                         bool isStart) {
+  auto command = std::make_shared<DeformerCommand>();
+  command->info.oldPoints = this->getScenePoints();
+  command->info.newPoints = newPoints;
+
+  command->info.isStart = isStart;
+  command->info.target = this;
+  auto sc = static_cast<MainStageScene*>(scene());
+  sc->emitDeformerCommand(command);
+}
 }  // namespace WaifuL2d

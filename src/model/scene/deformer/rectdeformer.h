@@ -19,7 +19,21 @@ class RectDeformer : public AbstractDeformer {
 
  private:
   QList<OperatePoint*> operator_points_;
+  /**
+   * @brief Create a Operate Point, remember to set the point data index later
+   *
+   * @param p point position
+   * @return OperatePoint* operate point
+   */
   OperatePoint* createOperatePoint(const QPointF& p);
+
+  /**
+   * @brief emit the deformer command
+   * 
+   * @param newPoints new points positions
+   * @param isStart is the start drag
+   */
+  void handlePointShouldMove(const QList<QPointF>& newPoints, bool isStart);
   unsigned int row_;
   unsigned int column_;
 };
