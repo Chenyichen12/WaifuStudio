@@ -66,9 +66,11 @@ QList<QPointF> RectDeformer::getScenePoints() const {
 }
 void RectDeformer::setScenePoints(const QList<QPointF>& points) {
   Q_ASSERT(points.size() == operator_points_.size());
-  for(int i = 0;  i < points.size(); i++) {
+  for (int i = 0; i < points.size(); i++) {
     operator_points_[i]->setPos(points[i]);
   }
+
+  // TODO: set the children positions
   update();
 }
 QPointF RectDeformer::scenePointToLocal(const QPointF& point) const {
@@ -76,9 +78,14 @@ QPointF RectDeformer::scenePointToLocal(const QPointF& point) const {
   return point;
 }
 void RectDeformer::setDeformerSelect(bool select) {
-  qDebug() << "set select" << select;
+  // TODO: set the deformer select
+  //  deformer_select_ = select;
+  //  for (auto& op : operator_points_) {
+  //    op->setVisible(deformer_select_);
+  //  }
+  //  update();
 }
-bool RectDeformer::isDeformerSelected() const { return true; }
+bool RectDeformer::isDeformerSelected() const { return deformer_select_; }
 QRectF RectDeformer::boundingRect() const {
   const auto& pos = getScenePoints();
   auto bound =
@@ -87,7 +94,31 @@ QRectF RectDeformer::boundingRect() const {
 }
 void RectDeformer::paint(QPainter* painter,
                          const QStyleOptionGraphicsItem* option,
-                         QWidget* widget) {}
+                         QWidget* widget) {
+  Q_UNUSED(option)
+  Q_UNUSED(widget)
+  auto lineWidth = 1 / painter->transform().m11();
+  painter->setPen(QPen(Qt::black, lineWidth));
+  for (int i = 0; i < row_; i++) {
+    for (int j = 0; j < column_ - 1; j++) {
+      auto index = i * column_ + j;
+      auto nextIndex = index + 1;
+      auto p1 = operator_points_[index]->scenePos();
+      auto p2 = operator_points_[nextIndex]->scenePos();
+      painter->drawLine(p1, p2);
+    }
+  }
+
+  for (int i = 0; i < column_; i++) {
+    for (int j = 0; j < row_ - 1; j++) {
+      auto index = j * column_ + i;
+      auto nextIndex = (j + 1) * column_ + i;
+      auto p1 = operator_points_[index]->scenePos();
+      auto p2 = operator_points_[nextIndex]->scenePos();
+      painter->drawLine(p1, p2);
+    }
+  }
+}
 
 void RectDeformer::handlePointShouldMove(const QList<QPointF>& newPoints,
                                          bool isStart) {

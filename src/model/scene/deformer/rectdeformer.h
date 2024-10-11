@@ -36,6 +36,7 @@ class RectDeformer : public AbstractDeformer {
   void handlePointShouldMove(const QList<QPointF>& newPoints, bool isStart);
   unsigned int row_;
   unsigned int column_;
+  bool deformer_select_ = true;
 };
 
 }  // namespace WaifuL2d
