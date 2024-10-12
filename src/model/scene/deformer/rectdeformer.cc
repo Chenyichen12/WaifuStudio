@@ -43,6 +43,33 @@ RectDeformer::RectDeformer(const QRectF& initRect, unsigned int row,
     point->data = i;
     operator_points_.push_back(point);
   }
+  operate_rect_ = new OperateRectangle(this);
+  operate_rect_->setRect(RectDeformer::boundingRect());
+}
+
+void RectDeformer::updateOperateRect() {
+  auto selectIndex = getSelectedIndex();
+  if (selectIndex.empty() || selectIndex.size() == 1) {
+    operate_rect_->setRect(boundingRect());
+  } else {
+    auto points = QList<QPointF>();
+    for (auto& index : selectIndex) {
+      points.push_back(operator_points_[index]->pos());
+    }
+    auto bound =
+        MeshMathTool<QPointF>::calculateBoundRect(points.data(), points.size());
+    operate_rect_->setRect(bound);
+    update();
+  }
+}
+QList<int> RectDeformer::getSelectedIndex() const {
+  QList<int> result;
+  for (int i = 0; i < operator_points_.size(); i++) {
+    if (operator_points_[i]->isSelected()) {
+      result.push_back(i);
+    }
+  }
+  return result;
 }
 
 OperatePoint* RectDeformer::createOperatePoint(const QPointF& p) {
@@ -53,6 +80,11 @@ OperatePoint* RectDeformer::createOperatePoint(const QPointF& p) {
     auto index = data.toInt();
     newPoints[index] = point;
     this->handlePointShouldMove(newPoints, isStart);
+  };
+  point->pointSelectedChange = [this](bool isSelected, const QVariant& data) {
+    Q_UNUSED(isSelected);
+    Q_UNUSED(data);
+    this->updateOperateRect();
   };
   point->setPos(p);
   return point;
@@ -71,6 +103,7 @@ void RectDeformer::setScenePoints(const QList<QPointF>& points) {
   }
 
   // TODO: set the children positions
+  updateOperateRect();
   update();
 }
 QPointF RectDeformer::scenePointToLocal(const QPointF& point) const {

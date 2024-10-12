@@ -26,6 +26,7 @@ class RectDeformer : public AbstractDeformer {
    * @return OperatePoint* operate point
    */
   OperatePoint* createOperatePoint(const QPointF& p);
+  OperateRectangle* operate_rect_;
 
   /**
    * @brief emit the deformer command
@@ -37,6 +38,8 @@ class RectDeformer : public AbstractDeformer {
   unsigned int row_;
   unsigned int column_;
   bool deformer_select_ = true;
+  QList<int> getSelectedIndex() const;
+  void updateOperateRect();
 };
 
 }  // namespace WaifuL2d
