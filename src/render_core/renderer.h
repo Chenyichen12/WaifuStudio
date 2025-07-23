@@ -3,6 +3,8 @@
 #include "vulkan_driver.h"
 namespace rdc {
 class ModelRenderer {
+  VulkanDriver *_driver = nullptr;
+
 public:
   ModelRenderer(VulkanDriver *driver);
   ~ModelRenderer();
