@@ -13,3 +13,8 @@ set(imgui_source
 add_library(imgui ${imgui_source})
 target_link_libraries(imgui PRIVATE Vulkan::Vulkan glfw)
 target_include_directories(imgui PUBLIC ./imgui PRIVATE glfw/include ${Vulkan_INCLUDE_DIR})
+
+# single head
+add_library(single_head single_head.cpp)
+target_include_directories(single_head PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/VulkanMemoryAllocator/include)
+target_link_libraries(single_head PRIVATE Vulkan::Vulkan)

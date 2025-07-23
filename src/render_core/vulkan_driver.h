@@ -4,6 +4,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
+#include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 namespace rdc {
 struct VulkanDriverConfig {
@@ -28,6 +29,7 @@ class VulkanDriver {
   } _queue_packet;
   VkDevice _device = VK_NULL_HANDLE;
   VkSurfaceKHR _surface = VK_NULL_HANDLE;
+  VmaAllocator _vma_allocator = VK_NULL_HANDLE;
   class SwapchainPacket {
   public:
     VkSwapchainKHR swapchain = VK_NULL_HANDLE;
@@ -48,6 +50,8 @@ class VulkanDriver {
     VkSurfaceCapabilitiesKHR capabilities;
 
   } swapchain_packet;
+  VkCommandPool _command_pool = VK_NULL_HANDLE;
+  
 
   void CreateSwapchain(const VkExtent2D &extent);
 
@@ -74,10 +78,19 @@ public:
   }
 
   inline const VkDevice &GetDevice() const { return _device; }
+  inline const VkCommandPool &GetCommandPool() const { return _command_pool; }
+  inline const VmaAllocator &GetVmaAllocator() const { return _vma_allocator; }
 
   ~VulkanDriver();
 };
 
+class GlobalVulkanDriver {
+  static VulkanDriver *_singleton;
+
+public:
+  static void Init(const VulkanDriverConfig &config);
+  static VulkanDriver *GetInstance();
+};
 } // namespace rdc
 
 #endif // SRC_RENDER_CORE_VULKAN_DRIVER_H_

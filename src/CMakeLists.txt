@@ -16,5 +16,5 @@ add_executable(
     ${waifu_render_core_source}
 )
 
-target_link_libraries(waifu_studio PUBLIC glfw imgui Vulkan::Vulkan)
+target_link_libraries(waifu_studio PUBLIC glfw imgui Vulkan::Vulkan single_head)
 target_include_directories(waifu_studio PUBLIC ${Vulkan_INCLUDE_DIR})

@@ -5,7 +5,6 @@
 #include <vector>
 class AppWindow {
   GLFWwindow *window;
-  rdc::VulkanDriver *driver;
 
   VkResult CreateVulkanSurface(VkInstance instance, VkSurfaceKHR &surface) {
     if (glfwCreateWindowSurface(instance, window, nullptr, &surface) !=
@@ -48,7 +47,7 @@ public:
       config.instance_layers.emplace_back("VK_LAYER_KHRONOS_validation");
     }
 
-    driver = new rdc::VulkanDriver(config);
+    rdc::GlobalVulkanDriver::Init(config);
   }
   void Run() {
     while (!glfwWindowShouldClose(window)) {
@@ -56,7 +55,6 @@ public:
     }
   }
   ~AppWindow() {
-    delete driver;
     glfwDestroyWindow(window);
     glfwTerminate();
   }
@@ -64,7 +62,6 @@ public:
 
 int main() {
   AppWindow window;
-
   window.Run();
   return 0;
 }

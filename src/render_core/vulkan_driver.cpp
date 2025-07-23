@@ -1,5 +1,6 @@
 #include "vulkan_driver.h"
 #include <iostream>
+#include <mutex>
 #include <set>
 
 namespace {
@@ -52,7 +53,7 @@ VulkanDriver::VulkanDriver(const VulkanDriverConfig &config) {
         .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
         .pEngineName = "waifu",
         .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-        .apiVersion = VK_API_VERSION_1_0,
+        .apiVersion = VK_API_VERSION_1_2,
     };
 
     VkDebugUtilsMessengerCreateInfoEXT debug_info = {
@@ -166,6 +167,12 @@ VulkanDriver::VulkanDriver(const VulkanDriverConfig &config) {
 
     std::vector<VkDeviceQueueCreateInfo> queue_infos;
     float queue_priority = 1.0f;
+    VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamic_rendering_features = {
+        .sType =
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES,
+        .pNext = nullptr,
+        .dynamicRendering = VK_TRUE,
+    };
     for (const auto &family_index : unique_queue_families) {
       VkDeviceQueueCreateInfo queue_info = {
           .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -181,10 +188,11 @@ VulkanDriver::VulkanDriver(const VulkanDriverConfig &config) {
     // create logical device
     std::vector<const char *> device_extensions = config.device_extensions;
     AddContainer(device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+    AddContainer(device_extensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
 
     VkDeviceCreateInfo device_info = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext = nullptr,
+        .pNext = &dynamic_rendering_features,
         .queueCreateInfoCount = static_cast<uint32_t>(queue_infos.size()),
         .pQueueCreateInfos = queue_infos.data(),
         .enabledExtensionCount =
@@ -209,9 +217,33 @@ VulkanDriver::VulkanDriver(const VulkanDriverConfig &config) {
 
     // swapchain details
     swapchain_packet.QuerySwapchainSupport(selected_device, _surface);
+    {
+      // vma
+      VmaAllocatorCreateInfo vma_allocator_info = {
+          .physicalDevice = selected_device,
+          .device = _device,
+          .instance = _instance,
+          .vulkanApiVersion = VK_API_VERSION_1_2,
+      };
+      AssertVkResult(vmaCreateAllocator(&vma_allocator_info, &_vma_allocator),
+                     "Failed to create VMA allocator");
+    }
   }
   {
     CreateSwapchain({config.initial_width, config.initial_height});
+  }
+
+  // create command pool
+  {
+    VkCommandPoolCreateInfo command_pool_info = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .queueFamilyIndex = _queue_packet.graphics_queue_family_index,
+    };
+    AssertVkResult(vkCreateCommandPool(_device, &command_pool_info, nullptr,
+                                       &_command_pool),
+                   "Failed to create command pool");
   }
 }
 void VulkanDriver::CreateSwapchain(const VkExtent2D &extent) {
@@ -310,6 +342,7 @@ VulkanDriver::~VulkanDriver() {
         vkGetInstanceProcAddr(_instance, "vkDestroyDebugUtilsMessengerEXT"));
     func(_instance, _debug_messenger, nullptr);
   }
+  vkDestroyCommandPool(_device, _command_pool, nullptr);
   swapchain_packet.Destroy(_device);
   vkDestroySurfaceKHR(_instance, _surface, nullptr);
   vkDestroyDevice(_device, nullptr);
@@ -370,5 +403,16 @@ void VulkanDriver::SwapchainPacket::Destroy(VkDevice device) {
   }
   vkDestroySwapchainKHR(device, swapchain, nullptr);
 }
+
+} // namespace rdc
+
+namespace rdc {
+VulkanDriver *GlobalVulkanDriver::_singleton = nullptr;
+void GlobalVulkanDriver::Init(const VulkanDriverConfig &config) {
+  static std::once_flag init_flag;
+  std::call_once(init_flag, [&]() { _singleton = new VulkanDriver(config); });
+}
+
+VulkanDriver *GlobalVulkanDriver::GetInstance() { return _singleton; }
 
 } // namespace rdc
