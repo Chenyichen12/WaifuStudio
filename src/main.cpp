@@ -1,8 +1,12 @@
 
-#include "render_core/vulkan_driver.h"
+#include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
+
 #include <iostream>
 #include <vector>
+
+#include "render_core/renderer.h"
+#include "render_core/vulkan_driver.h"
 class AppWindow {
   GLFWwindow *window;
 
@@ -15,7 +19,7 @@ class AppWindow {
     return VK_SUCCESS;
   }
 
-public:
+ public:
   AppWindow() {
     if (!glfwInit()) {
       std::abort();
@@ -48,6 +52,14 @@ public:
     }
 
     rdc::GlobalVulkanDriver::Init(config);
+    CPUImage image = CPUImage();
+    image.LoadFromFile("../test/body.png");
+    rdc::Layer2dResource::ImageConfig image_config;
+    image_config.driver = rdc::GlobalVulkanDriver::GetInstance();
+    image_config.image = &image;
+
+    auto render_image = rdc::Layer2dResource::CreateFromImage(image_config);
+
   }
   void Run() {
     while (!glfwWindowShouldClose(window)) {

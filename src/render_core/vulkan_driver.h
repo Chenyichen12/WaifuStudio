@@ -1,16 +1,21 @@
 #ifndef SRC_RENDER_CORE_VULKAN_DRIVER_H_
 #define SRC_RENDER_CORE_VULKAN_DRIVER_H_
 
-#include "../tools.hpp"
+#include <vk_mem_alloc.h>
+#include <vulkan/vulkan.h>
+
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <unordered_map>
 #include <vector>
-#include <vk_mem_alloc.h>
-#include <vulkan/vulkan.h>
+
+#include "../tools.hpp"
 
 namespace rdc {
+
+void AssertVkResult(const VkResult &result);
+void AssertVkResult(const VkResult &result, const char *message);
 struct VulkanDriverConfig {
   std::vector<const char *> instance_extensions;
   std::vector<const char *> instance_layers;
@@ -35,7 +40,7 @@ class VulkanDriver {
   VkSurfaceKHR _surface = VK_NULL_HANDLE;
   VmaAllocator _vma_allocator = VK_NULL_HANDLE;
   class SwapchainPacket {
-  public:
+   public:
     VkSwapchainKHR swapchain = VK_NULL_HANDLE;
     VkFormat image_format = VK_FORMAT_UNDEFINED;
     VkExtent2D extent = {0, 0};
@@ -58,7 +63,7 @@ class VulkanDriver {
 
   void CreateSwapchain(const VkExtent2D &extent);
 
-public:
+ public:
   static std::unique_ptr<VulkanDriver> Create() { return nullptr; }
   VulkanDriver(const VulkanDriverConfig &config);
 
@@ -79,10 +84,28 @@ public:
   inline const VkQueue &GetPresentQueue() const {
     return _queue_packet.present_queue;
   }
+  inline const uint32_t &GetGraphicsQueueFamilyIndex() const {
+    return _queue_packet.graphics_queue_family_index;
+  }
+  inline const uint32_t &GetPresentQueueFamilyIndex() const {
+    return _queue_packet.present_queue_family_index;
+  }
 
   inline const VkDevice &GetDevice() const { return _device; }
   inline const VkCommandPool &GetCommandPool() const { return _command_pool; }
   inline const VmaAllocator &GetVmaAllocator() const { return _vma_allocator; }
+
+  // helpers
+  VkSampler HCreateSimpleSampler() const;
+  VkCommandBuffer HBeginOneTimeCommandBuffer() const;
+  void HEndOneTimeCommandBuffer(const VkCommandBuffer &command_buffer,
+                                const VkQueue &submit_queue) const;
+
+  bool HTransitionImageLayout(VkImage image, VkImageLayout old_layout,
+                              VkImageLayout new_layout, VkImageMemoryBarrier& barrier) const;
+  void HCreateBuffer(uint32_t size, VkBufferUsageFlags usage,
+                     VmaMemoryUsage vma_flags, VkBuffer &buffer,
+                     VmaAllocation &allocation) const;
 
   ~VulkanDriver();
 };
@@ -90,7 +113,7 @@ public:
 class GlobalVulkanDriver {
   static VulkanDriver *_singleton;
 
-public:
+ public:
   static void Init(const VulkanDriverConfig &config);
   static VulkanDriver *GetInstance();
 };
@@ -98,10 +121,10 @@ public:
 class IRenderResource {
   friend class RenderResourceManager;
 
-protected:
+ protected:
   uint32_t _id;
 
-public:
+ public:
   uint32_t GetId() const { return _id; }
   virtual ~IRenderResource() = default;
 };
@@ -112,10 +135,12 @@ class ImageRenderResource : public IRenderResource {
   VkImageView _image_view = VK_NULL_HANDLE;
   VulkanDriver *_driver = nullptr;
 
-public:
+ public:
   ImageRenderResource(VkImage image, VmaAllocation allocation,
                       VkImageView image_view, VulkanDriver *driver)
-      : _image(image), _allocation(allocation), _image_view(image_view),
+      : _image(image),
+        _allocation(allocation),
+        _image_view(image_view),
         _driver(driver) {}
   ~ImageRenderResource() {
     vkDestroyImageView(_driver->GetDevice(), _image_view, nullptr);
@@ -127,8 +152,9 @@ class RenderResourceManager {
   std::unordered_map<uint32_t, std::unique_ptr<IRenderResource>> _resources;
   IdAllocator _id_allocator;
 
-public:
-  template <typename T, typename... Args> T *CreateResource(Args &&...args) {
+ public:
+  template <typename T, typename... Args>
+  T *CreateResource(Args &&...args) {
     auto resource = std::make_unique<T>(std::forward<Args>(args)...);
     resource->_id = _id_allocator.AllocateId();
     T *ptr = resource.get();
@@ -137,6 +163,6 @@ public:
   }
 };
 
-} // namespace rdc
+}  // namespace rdc
 
-#endif // SRC_RENDER_CORE_VULKAN_DRIVER_H_
+#endif  // SRC_RENDER_CORE_VULKAN_DRIVER_H_

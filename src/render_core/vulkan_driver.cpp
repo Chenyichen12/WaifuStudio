@@ -1,28 +1,15 @@
 #include "vulkan_driver.h"
+
 #include <iostream>
 #include <mutex>
 #include <set>
 
 namespace {
-void AssertVkResult(const VkResult &result) {
-  if (result != VK_SUCCESS) {
-    // throw std::runtime_error("vulkan assert failed");
-    std::cerr << "vulkan assert failed" << "\n";
-    std::abort();
-  }
-}
-void AssertVkResult(const VkResult &result, const char *message) {
-  if (result != VK_SUCCESS) {
-    // throw std::runtime_error(message);
-    std::cerr << message << "\n";
-    std::abort();
-  }
-}
 
 void AddContainer(std::vector<const char *> &container, const char *item) {
   for (const auto &existing_item : container) {
     if (strcmp(existing_item, item) == 0) {
-      return; // Item already exists, do not add again
+      return;  // Item already exists, do not add again
     }
   }
   container.push_back(item);
@@ -40,10 +27,23 @@ DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
   return VK_FALSE;
 };
 
-} // namespace
+}  // namespace
 
 namespace rdc {
-
+void AssertVkResult(const VkResult &result) {
+  if (result != VK_SUCCESS) {
+    // throw std::runtime_error("vulkan assert failed");
+    std::cerr << "vulkan assert failed" << "\n";
+    std::abort();
+  }
+}
+void AssertVkResult(const VkResult &result, const char *message) {
+  if (result != VK_SUCCESS) {
+    // throw std::runtime_error(message);
+    std::cerr << message << "\n";
+    std::abort();
+  }
+}
 VulkanDriver::VulkanDriver(const VulkanDriverConfig &config) {
   {
     VkApplicationInfo app_info = {
@@ -149,7 +149,7 @@ VulkanDriver::VulkanDriver(const VulkanDriverConfig &config) {
       }
       if (graphics_queue_family_index != UINT32_MAX &&
           present_queue_family_index != UINT32_MAX) {
-        break; // Found both graphics and present queue families
+        break;  // Found both graphics and present queue families
       }
     }
 
@@ -168,8 +168,7 @@ VulkanDriver::VulkanDriver(const VulkanDriverConfig &config) {
     std::vector<VkDeviceQueueCreateInfo> queue_infos;
     float queue_priority = 1.0f;
     VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamic_rendering_features = {
-        .sType =
-            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES,
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES,
         .pNext = nullptr,
         .dynamicRendering = VK_TRUE,
     };
@@ -189,6 +188,7 @@ VulkanDriver::VulkanDriver(const VulkanDriverConfig &config) {
     std::vector<const char *> device_extensions = config.device_extensions;
     AddContainer(device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     AddContainer(device_extensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
+    AddContainer(device_extensions, VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME);
 
     VkDeviceCreateInfo device_info = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
@@ -301,10 +301,10 @@ void VulkanDriver::CreateSwapchain(const VkExtent2D &extent) {
                           nullptr);
   swapchain_packet.images.resize(image_count);
   swapchain_packet.image_views.resize(image_count);
-  AssertVkResult(vkGetSwapchainImagesKHR(_device, swapchain_packet.swapchain,
-                                         &image_count,
-                                         swapchain_packet.images.data()),
-                 "Failed to get swapchain images");
+  AssertVkResult(
+      vkGetSwapchainImagesKHR(_device, swapchain_packet.swapchain, &image_count,
+                              swapchain_packet.images.data()),
+      "Failed to get swapchain images");
 
   for (size_t i = 0; i < swapchain_packet.images.size(); ++i) {
     VkImageViewCreateInfo image_view_info = {
@@ -334,6 +334,126 @@ void VulkanDriver::CreateSwapchain(const VkExtent2D &extent) {
                                      &swapchain_packet.image_views[i]),
                    "Failed to create image view for swapchain image");
   }
+}
+
+VkSampler VulkanDriver::HCreateSimpleSampler() const {
+  VkSamplerCreateInfo sampler_info = {
+    .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+    .pNext = nullptr,
+    .flags = 0,
+    .magFilter = VK_FILTER_LINEAR,
+    .minFilter = VK_FILTER_LINEAR,
+    .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+    .addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+    .addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+    .addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+    .mipLodBias = 0.0f,
+    .anisotropyEnable = VK_FALSE,
+    .maxAnisotropy = 1.0f,
+    .compareEnable = VK_FALSE,
+    .compareOp = VK_COMPARE_OP_ALWAYS,
+    .minLod = 0.0f,
+    .maxLod = VK_LOD_CLAMP_NONE,
+    .borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
+  };
+  VkSampler sampler;
+  AssertVkResult(vkCreateSampler(_device, &sampler_info, nullptr, &sampler),
+                 "Failed to create sampler");
+  return sampler;
+}
+VkCommandBuffer VulkanDriver::HBeginOneTimeCommandBuffer() const {
+  VkCommandBufferAllocateInfo alloc_info = {
+      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+      .pNext = nullptr,
+      .commandPool = _command_pool,
+      .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+      .commandBufferCount = 1,
+  };
+  VkCommandBuffer command_buffer;
+  AssertVkResult(
+      vkAllocateCommandBuffers(_device, &alloc_info, &command_buffer),
+      "Failed to allocate command buffer");
+  VkCommandBufferBeginInfo begin_info = {
+      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+      .pNext = nullptr,
+      .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+      .pInheritanceInfo = nullptr,
+  };
+  AssertVkResult(vkBeginCommandBuffer(command_buffer, &begin_info),
+                 "Failed to begin command buffer");
+  return command_buffer;
+}
+void VulkanDriver::HEndOneTimeCommandBuffer(
+    const VkCommandBuffer &command_buffer, const VkQueue &submit_queue) const {
+  // vkEndCommandBuffer(command_buffer);
+  AssertVkResult(vkEndCommandBuffer(command_buffer));
+  const VkSubmitInfo submit_info = {
+      .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+      .commandBufferCount = 1,
+      .pCommandBuffers = &command_buffer,
+  };
+  vkQueueSubmit(submit_queue, 1, &submit_info, VK_NULL_HANDLE);
+  vkQueueWaitIdle(submit_queue);
+  vkFreeCommandBuffers(_device, _command_pool, 1, &command_buffer);
+}
+
+bool VulkanDriver::HTransitionImageLayout(const VkImage image,
+                                          const VkImageLayout old_layout,
+                                          const VkImageLayout new_layout,
+                                          VkImageMemoryBarrier &barrier) const {
+  // Transition image layout
+  barrier = {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+      .pNext = nullptr,
+      .srcAccessMask = 0,
+      .dstAccessMask = 0,
+      .oldLayout = old_layout,
+      .newLayout = new_layout,
+      .srcQueueFamilyIndex = _queue_packet.graphics_queue_family_index,
+      .dstQueueFamilyIndex = _queue_packet.graphics_queue_family_index,
+      .image = image,
+      .subresourceRange =
+          {
+              .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+              .baseMipLevel = 0,
+              .levelCount = 1,
+              .baseArrayLayer = 0,
+              .layerCount = 1,
+          },
+  };
+  if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED &&
+      new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+    barrier.srcAccessMask = 0;
+    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+  } else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
+             new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+  } else {
+    std::cerr << "Unsupported layout transition\n";
+    return false;
+  }
+  return true;
+}
+void VulkanDriver::HCreateBuffer(const uint32_t size,
+                                 const VkBufferUsageFlags usage,
+                                 const VmaMemoryUsage vma_flags,
+                                 VkBuffer &buffer,
+                                 VmaAllocation &allocation) const {
+  VmaAllocationCreateInfo alloc_info = {
+      .usage = vma_flags,
+  };
+  VkBufferCreateInfo buffer_info = {
+      .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+      .pNext = nullptr,
+      .flags = 0,
+      .size = size,
+      .usage = usage,
+      .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+  };
+  AssertVkResult(vmaCreateBuffer(_vma_allocator, &buffer_info, &alloc_info,
+                                 &buffer, &allocation, nullptr),
+                 "Failed to create buffer");
 }
 
 VulkanDriver::~VulkanDriver() {
@@ -378,7 +498,7 @@ VkSurfaceFormatKHR VulkanDriver::SwapchainPacket::ChooseSurfaceFormat() const {
       return format;
     }
   }
-  return formats[0]; // Fallback to the first format
+  return formats[0];  // Fallback to the first format
 }
 
 VkPresentModeKHR VulkanDriver::SwapchainPacket::ChoosePresentMode() const {
@@ -387,12 +507,12 @@ VkPresentModeKHR VulkanDriver::SwapchainPacket::ChoosePresentMode() const {
       return mode;
     }
   }
-  return VK_PRESENT_MODE_FIFO_KHR; // Fallback to the default mode
+  return VK_PRESENT_MODE_FIFO_KHR;  // Fallback to the default mode
 }
 VkExtent2D VulkanDriver::SwapchainPacket::ChooseExtent(uint32_t width,
                                                        uint32_t height) const {
   if (capabilities.currentExtent.width != UINT32_MAX) {
-    return capabilities.currentExtent; // Use the current extent
+    return capabilities.currentExtent;  // Use the current extent
   }
   return {width, height};
 }
@@ -404,7 +524,7 @@ void VulkanDriver::SwapchainPacket::Destroy(VkDevice device) {
   vkDestroySwapchainKHR(device, swapchain, nullptr);
 }
 
-} // namespace rdc
+}  // namespace rdc
 
 namespace rdc {
 VulkanDriver *GlobalVulkanDriver::_singleton = nullptr;
@@ -415,4 +535,4 @@ void GlobalVulkanDriver::Init(const VulkanDriverConfig &config) {
 
 VulkanDriver *GlobalVulkanDriver::GetInstance() { return _singleton; }
 
-} // namespace rdc
+}  // namespace rdc

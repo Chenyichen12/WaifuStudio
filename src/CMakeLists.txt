@@ -19,4 +19,4 @@ add_executable(
 )
 
 target_link_libraries(waifu_studio PUBLIC glfw imgui Vulkan::Vulkan single_head)
-target_include_directories(waifu_studio PUBLIC ${Vulkan_INCLUDE_DIR})
+target_include_directories(waifu_studio PUBLIC ${Vulkan_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})

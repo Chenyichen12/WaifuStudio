@@ -1,3 +1,3 @@
-BaseOnStyle: Google
 IndentWidth: 2
 UseTab: Never
+BasedOnStyle: Google
