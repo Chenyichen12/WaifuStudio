@@ -18,5 +18,7 @@ target_include_directories(imgui PUBLIC ./imgui PRIVATE glfw/include ${Vulkan_IN
 add_library(single_head single_head.cpp)
 target_include_directories(single_head 
 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/VulkanMemoryAllocator/include 
-PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/stb)
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/stb
+PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/glm
+)
 target_link_libraries(single_head PRIVATE Vulkan::Vulkan)
