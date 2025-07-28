@@ -49,6 +49,12 @@ g_glsl_c_output_format_map = {
     "srgb32f": "VK_FORMAT_R32G32B32_SFLOAT",
 }
 
+g_glsl_c_desc_type_map = {
+    "ubo": "VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER",
+    "sampler2D": "VK_DESCRIPTOR_TYPE_SAMPLER",
+
+}
+
 
 class BlockVariable(TypedDict):
     name: str
@@ -291,27 +297,28 @@ class ShaderHeaderGenerator:
         # define struct
         code += self._generate_unifrom_structs()
         for struct in self._structs:
-            code += f"static struct {{\n"
+            code += f"static constexpr struct {{\n"
             code += f"{struct['name']} data;\n"
-            code += f"uint32_t binding = {struct['binding']};\n"
-            code += f"}} {struct['alia']};\n\n"
+            code += f"uint32_t binding;\n"
+            code += f"VkDescriptorType desc_type;\n"
+            code += f"}} {struct['alia']} = {{{{}}, {struct['binding']}, {g_glsl_c_desc_type_map['ubo']}}};\n\n"
 
         for uniform in self._uniforms:
-            code += f"static struct {{\n"
-            code += f"const char* type = \"{uniform['type']}\";\n"
-            code += f"uint32_t binding = {uniform['binding']};\n"
-            code += f"}} {uniform['name']};\n\n"
+            code += f"static constexpr struct {{\n"
+            code += f"const char* type;\n"
+            code += f"uint32_t binding;\n"
+            code += f"VkDescriptorType desc_type;\n"
+            code += f"}} {uniform['name']} = {{\"{uniform['type']}\", {uniform['binding']}, {g_glsl_c_desc_type_map.get(uniform['type'])}}};\n\n"
 
         for output in self._output_val:
-            code += f"static struct {{\n"
-            code += f"const char* type = \"{output['type']}\";\n"
-            code += f"uint32_t location = {output['location']};\n"
-            code += f"VkFormat format = {g_glsl_c_output_format_map.get(output['format'])};\n"
-            code += f"}} {output['name']};\n\n"
+            code += f"static constexpr struct {{\n"
+            code += f"const char* type;\n"
+            code += f"uint32_t location;\n"
+            code += f"VkFormat format;\n"
+            code += f"}} {output['name']} = {{\"{output['type']}\", {output['location']}, {g_glsl_c_output_format_map.get(output['format'])}}};\n\n"
         
         code += self._generate_binary_output()
         code += f"}};\n"
-        # class end
 
         code += f"}}\n"
         # namespce_end

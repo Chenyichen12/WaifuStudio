@@ -3,6 +3,7 @@
 
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 
 #include <cstdint>
 #include <functional>
@@ -101,8 +102,34 @@ class VulkanDriver {
   void HEndOneTimeCommandBuffer(const VkCommandBuffer &command_buffer,
                                 const VkQueue &submit_queue) const;
 
-  bool HTransitionImageLayout(VkImage image, VkImageLayout old_layout,
-                              VkImageLayout new_layout, VkImageMemoryBarrier& barrier) const;
+  enum class TransitionState {
+    kInit2Transfer,
+    kTransfer2Read,
+  };
+  void HTransitionImageLayout(const VkCommandBuffer &cmd, const VkImage &image,
+                              const TransitionState &state,
+                              const VkImageSubresourceRange &range = {
+                                  .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                                  .baseMipLevel = 0,
+                                  .levelCount = 1,
+                                  .baseArrayLayer = 0,
+                                  .layerCount = 1,
+                              });
+
+  void HTransitionImageLayout(const VkCommandBuffer &cmd, const VkImage &image,
+                              const VkAccessFlags src_access,
+                              const VkAccessFlags dst_access,
+                              const VkPipelineStageFlags src_stage,
+                              const VkPipelineStageFlags dst_stage,
+                              const VkImageLayout old_layout,
+                              const VkImageLayout new_layout,
+                              const VkImageSubresourceRange &range = {
+                                  .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                                  .baseMipLevel = 0,
+                                  .levelCount = 1,
+                                  .baseArrayLayer = 0,
+                                  .layerCount = 1,
+                              }) const;
   void HCreateBuffer(uint32_t size, VkBufferUsageFlags usage,
                      VmaMemoryUsage vma_flags, VkBuffer &buffer,
                      VmaAllocation &allocation) const;
@@ -110,19 +137,11 @@ class VulkanDriver {
   ~VulkanDriver();
 };
 
-class GlobalVulkanDriver {
-  static VulkanDriver *_singleton;
-
- public:
-  static void Init(const VulkanDriverConfig &config);
-  static VulkanDriver *GetInstance();
-};
-
 class IRenderResource {
   friend class RenderResourceManager;
 
  protected:
-  uint32_t _id;
+  uint32_t _id = UINT32_MAX;
 
  public:
   uint32_t GetId() const { return _id; }
@@ -161,6 +180,27 @@ class RenderResourceManager {
     _resources[ptr->_id] = std::move(resource);
     return ptr;
   }
+  template <typename T>
+  T *AddResource(std::unique_ptr<T> resource) {
+    resource->_id = _id_allocator.AllocateId();
+    T *ptr = resource.get();
+    _resources[ptr->_id] = std::move(resource);
+    return ptr;
+  }
+  template <typename T>
+  T *AddResource(T *resource) {
+    resource->_id = _id_allocator.AllocateId();
+    T *ptr = resource;
+    _resources[ptr->_id] = std::unique_ptr<T>(resource);
+    return ptr;
+  }
+
+  template <typename T>
+  T *GetResource(uint32_t id) {
+    return static_cast<T *>(_resources[id].get());
+  }
+
+  void ReleaseResource(uint32_t id) { _resources.erase(id); }
 };
 
 }  // namespace rdc

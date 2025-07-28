@@ -9,6 +9,8 @@
 #include "render_core/vulkan_driver.h"
 class AppWindow {
   GLFWwindow *window;
+  rdc::RenderResourceManager* manager;
+  rdc::VulkanDriver* _driver;
 
   VkResult CreateVulkanSurface(VkInstance instance, VkSurfaceKHR &surface) {
     if (glfwCreateWindowSurface(instance, window, nullptr, &surface) !=
@@ -21,6 +23,7 @@ class AppWindow {
 
  public:
   AppWindow() {
+    manager = new rdc::RenderResourceManager();
     if (!glfwInit()) {
       std::abort();
     }
@@ -49,17 +52,21 @@ class AppWindow {
     }
     {
       config.instance_layers.emplace_back("VK_LAYER_KHRONOS_validation");
+      config.instance_layers.emplace_back("VK_LAYER_KHRONOS_shader_object");
     }
 
-    rdc::GlobalVulkanDriver::Init(config);
+    _driver = new rdc::VulkanDriver(config);
     CPUImage image = CPUImage();
     image.LoadFromFile("../test/body.png");
+    if(!image.IsValid()){
+      std::cerr << "Failed to load image\n";
+      std::abort();
+    }
     rdc::Layer2dResource::ImageConfig image_config;
-    image_config.driver = rdc::GlobalVulkanDriver::GetInstance();
-    image_config.image = &image;
+    image_config.pdriver = _driver;
+    image_config.pimage = &image;
 
-    auto render_image = rdc::Layer2dResource::CreateFromImage(image_config);
-
+    auto render_image = manager->AddResource(rdc::Layer2dResource::CreateFromImage(image_config));
   }
   void Run() {
     while (!glfwWindowShouldClose(window)) {
@@ -67,6 +74,9 @@ class AppWindow {
     }
   }
   ~AppWindow() {
+    delete manager;
+    delete _driver;
+
     glfwDestroyWindow(window);
     glfwTerminate();
   }

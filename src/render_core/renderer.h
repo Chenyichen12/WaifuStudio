@@ -30,21 +30,29 @@ class Layer2dResource : public IRenderResource, public NoCopyable {
  public:
   inline void MarkDirty() { dirty = true; }
   struct ImageConfig {
-    VulkanDriver *driver = nullptr;
-    CPUImage *image = nullptr;
+    VulkanDriver *pdriver = nullptr;
+    CPUImage *pimage = nullptr;
     VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
     std::span<ModelVertex> vertices = {};
     std::span<uint32_t> indices = {};
   };
   static std::unique_ptr<Layer2dResource> CreateFromImage(
       const ImageConfig &config);
+
+  ~Layer2dResource() override;
 };
 
 class ModelRenderer {
   VulkanDriver *_driver = nullptr;
+  VkSampler _layer_sampler = VK_NULL_HANDLE;
+  std::vector<Layer2dResource *> _render_layers;
+  VkDescriptorSetLayout _descriptor_set_layout = VK_NULL_HANDLE;
+  VkPipelineLayout _pipeline_layout = VK_NULL_HANDLE;
 
  public:
   ModelRenderer(VulkanDriver *driver);
+  void AddLayer(Layer2dResource *layer);
+  std::span<Layer2dResource*> GetLayers() { return _render_layers; }
   ~ModelRenderer();
 
   void Render();

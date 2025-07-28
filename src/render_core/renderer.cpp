@@ -1,33 +1,86 @@
 #include "renderer.h"
 
+#include <vulkan/vulkan_core.h>
+
+#include <cstdint>
 #include <memory>
+#include <vector>
 
 #include "canvas_sd.gen.h"
 #include "vulkan_driver.h"
 
 namespace rdc {
-ModelRenderer::ModelRenderer(VulkanDriver *driver) { _driver = driver; }
-ModelRenderer::~ModelRenderer() {}
+ModelRenderer::ModelRenderer(VulkanDriver *driver) {
+  _driver = driver;
+  _layer_sampler = _driver->HCreateSimpleSampler();
+  // create graphics pipeline for dynamic renderering
+  {
+    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    bindings.push_back({
+        .binding = shader_gen::canvas_sd::ubo.binding,
+        .descriptorType = shader_gen::canvas_sd::ubo.desc_type,
+        .descriptorCount = 1,
+    });
+    bindings.push_back({
+        .binding = shader_gen::canvas_sd::main_tex.binding,
+        .descriptorType = shader_gen::canvas_sd::main_tex.desc_type,
+        .descriptorCount = 1,
+    });
+
+    // shader_gen::canvas_sd::
+    VkDescriptorSetLayoutCreateInfo set0_info = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .bindingCount = static_cast<uint32_t>(bindings.size()),
+        .pBindings = bindings.data(),
+    };
+    vkCreateDescriptorSetLayout(_driver->GetDevice(), &set0_info, nullptr,
+                                &_descriptor_set_layout);
+
+    VkPipelineLayoutCreateInfo layout_info = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .setLayoutCount = 1,
+        .pSetLayouts = &_descriptor_set_layout,
+    };
+
+    vkCreatePipelineLayout(_driver->GetDevice(), &layout_info, nullptr,
+                           &_pipeline_layout);
+  }
+}
+ModelRenderer::~ModelRenderer() {
+  vkDestroyDescriptorSetLayout(_driver->GetDevice(), _descriptor_set_layout,
+                               nullptr);
+  vkDestroyPipelineLayout(_driver->GetDevice(), _pipeline_layout, nullptr);
+  vkDestroySampler(_driver->GetDevice(), _layer_sampler, nullptr);
+}
+
+Layer2dResource::~Layer2dResource() {
+  vmaDestroyImage(_driver->GetVmaAllocator(), _image, _allocation);
+  vkDestroyImageView(_driver->GetDevice(), _image_view, nullptr);
+}
 
 std::unique_ptr<Layer2dResource> Layer2dResource::CreateFromImage(
     const ImageConfig &config) {
   auto result = std::unique_ptr<Layer2dResource>(new Layer2dResource());
-  result->_driver = config.driver;
+  result->_driver = config.pdriver;
 
   // upload data
-  auto cpu_image = config.image;
+  auto cpu_image = config.pimage;
 
   VkDeviceSize size =
       cpu_image->width * cpu_image->height * cpu_image->channels;
   VkBuffer staging_buffer;
   VmaAllocation staging_allocation;
-  config.driver->HCreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                               VMA_MEMORY_USAGE_CPU_ONLY, staging_buffer,
-                               staging_allocation);
+  config.pdriver->HCreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                VMA_MEMORY_USAGE_CPU_ONLY, staging_buffer,
+                                staging_allocation);
   void *data;
-  vmaMapMemory(config.driver->GetVmaAllocator(), staging_allocation, &data);
+  vmaMapMemory(config.pdriver->GetVmaAllocator(), staging_allocation, &data);
   memcpy(data, cpu_image->data, size);
-  vmaUnmapMemory(config.driver->GetVmaAllocator(), staging_allocation);
+  vmaUnmapMemory(config.pdriver->GetVmaAllocator(), staging_allocation);
 
   // create vkimage
   VmaAllocationCreateInfo alloc_info = {
@@ -55,22 +108,18 @@ std::unique_ptr<Layer2dResource> Layer2dResource::CreateFromImage(
       .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
   };
 
-  AssertVkResult(
-      vmaCreateImage(config.driver->GetVmaAllocator(), &image_info, &alloc_info,
-                     &result->_image, &result->_allocation, nullptr),
-      "Failed to create image");
+  AssertVkResult(vmaCreateImage(config.pdriver->GetVmaAllocator(), &image_info,
+                                &alloc_info, &result->_image,
+                                &result->_allocation, nullptr),
+                 "Failed to create image");
 
   VkCommandBuffer single_command_buffer =
-      config.driver->HBeginOneTimeCommandBuffer();
+      config.pdriver->HBeginOneTimeCommandBuffer();
 
-  VkImageMemoryBarrier barrier = {};
-  config.driver->HTransitionImageLayout(
-      result->_image, VK_IMAGE_LAYOUT_UNDEFINED,
-      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, barrier);
-
-  vkCmdPipelineBarrier(single_command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                       VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
-                       nullptr, 1, &barrier);
+  config.pdriver->HTransitionImageLayout(
+      single_command_buffer, result->_image, 0, VK_ACCESS_TRANSFER_WRITE_BIT,
+      VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
   VkBufferImageCopy copy_region = {
       .bufferOffset = 0,
       .bufferRowLength = 0,
@@ -92,16 +141,18 @@ std::unique_ptr<Layer2dResource> Layer2dResource::CreateFromImage(
   vkCmdCopyBufferToImage(single_command_buffer, staging_buffer, result->_image,
                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy_region);
 
-  config.driver->HTransitionImageLayout(
-      result->_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, barrier);
+  config.pdriver->HTransitionImageLayout(
+      single_command_buffer, result->_image, VK_ACCESS_TRANSFER_WRITE_BIT,
+      VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+      VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-  vkCmdPipelineBarrier(single_command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                       VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0,
-                       nullptr, 1, &barrier);
+  config.pdriver->HEndOneTimeCommandBuffer(single_command_buffer,
+                                           config.pdriver->GetGraphicsQueue());
 
-  config.driver->HEndOneTimeCommandBuffer(single_command_buffer,
-                                          config.driver->GetGraphicsQueue());
+  vmaDestroyBuffer(config.pdriver->GetVmaAllocator(), staging_buffer,
+                   staging_allocation);
 
   // create image view
   VkImageViewCreateInfo image_view_info = {
@@ -127,9 +178,10 @@ std::unique_ptr<Layer2dResource> Layer2dResource::CreateFromImage(
               .layerCount = 1,
           },
   };
-  AssertVkResult(vkCreateImageView(config.driver->GetDevice(), &image_view_info,
-                                   nullptr, &result->_image_view),
-                 "Failed to create image view");
+  AssertVkResult(
+      vkCreateImageView(config.pdriver->GetDevice(), &image_view_info, nullptr,
+                        &result->_image_view),
+      "Failed to create image view");
   result->_vertices =
       std::vector<ModelVertex>(config.vertices.begin(), config.vertices.end());
   result->_indices =

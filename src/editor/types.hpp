@@ -27,12 +27,18 @@ class CPUImage {
     memcpy(data, i.data, width * height * channels);
     deleter = [this]() {
       free(data);
+      data = nullptr;
     };
   }
 
+  bool IsValid() { return data != nullptr; }
+
   void LoadFromFile(const std::string& file_path) {
     data = stbi_load(file_path.c_str(), reinterpret_cast<int*>(&width),
-              reinterpret_cast<int*>(&height), &channels, 4);
+                     reinterpret_cast<int*>(&height), &channels, 4);
+    if (data == nullptr) {
+      return;
+    }
     deleter = [this]() {
       if (data) {
         stbi_image_free(data);
