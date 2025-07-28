@@ -9,8 +9,8 @@
 #include "render_core/vulkan_driver.h"
 class AppWindow {
   GLFWwindow *window;
-  rdc::RenderResourceManager* manager;
-  rdc::VulkanDriver* _driver;
+  rdc::RenderResourceManager* manager = nullptr;
+  rdc::VulkanDriver* _driver = nullptr;
 
   VkResult CreateVulkanSurface(VkInstance instance, VkSurfaceKHR &surface) {
     if (glfwCreateWindowSurface(instance, window, nullptr, &surface) !=
@@ -56,17 +56,19 @@ class AppWindow {
     }
 
     _driver = new rdc::VulkanDriver(config);
-    CPUImage image = CPUImage();
-    image.LoadFromFile("../test/body.png");
-    if(!image.IsValid()){
-      std::cerr << "Failed to load image\n";
-      std::abort();
-    }
-    rdc::Layer2dResource::ImageConfig image_config;
-    image_config.pdriver = _driver;
-    image_config.pimage = &image;
+    auto renderer = new rdc::ModelRenderer(_driver);
 
-    auto render_image = manager->AddResource(rdc::Layer2dResource::CreateFromImage(image_config));
+    // CPUImage image = CPUImage();
+    // image.LoadFromFile("../test/body.png");
+    // if(!image.IsValid()){
+    //   std::cerr << "Failed to load image\n";
+    //   std::abort();
+    // }
+    // rdc::Layer2dResource::ImageConfig image_config;
+    // image_config.pdriver = _driver;
+    // image_config.pimage = &image;
+    //
+    // auto render_image = manager->AddResource(rdc::Layer2dResource::CreateFromImage(image_config));
   }
   void Run() {
     while (!glfwWindowShouldClose(window)) {

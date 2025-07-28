@@ -13,6 +13,11 @@ namespace rdc {
 ModelRenderer::ModelRenderer(VulkanDriver *driver) {
   _driver = driver;
   _layer_sampler = _driver->HCreateSimpleSampler();
+  vkCreateShadersEXT = reinterpret_cast<PFN_vkCreateShadersEXT>(
+      vkGetDeviceProcAddr(_driver->GetDevice(), "vkCreateShadersEXT"));
+  vkDestroyShaderEXT = reinterpret_cast<PFN_vkDestroyShaderEXT>(
+      vkGetDeviceProcAddr(_driver->GetDevice(), "vkDestroyShaderEXT"));
+
   // create graphics pipeline for dynamic renderering
   {
     std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -20,14 +25,15 @@ ModelRenderer::ModelRenderer(VulkanDriver *driver) {
         .binding = shader_gen::canvas_sd::ubo.binding,
         .descriptorType = shader_gen::canvas_sd::ubo.desc_type,
         .descriptorCount = 1,
+        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
     });
     bindings.push_back({
         .binding = shader_gen::canvas_sd::main_tex.binding,
         .descriptorType = shader_gen::canvas_sd::main_tex.desc_type,
         .descriptorCount = 1,
+        .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
     });
 
-    // shader_gen::canvas_sd::
     VkDescriptorSetLayoutCreateInfo set0_info = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
         .pNext = nullptr,
@@ -37,25 +43,54 @@ ModelRenderer::ModelRenderer(VulkanDriver *driver) {
     };
     vkCreateDescriptorSetLayout(_driver->GetDevice(), &set0_info, nullptr,
                                 &_descriptor_set_layout);
+  }
+  {
+    // shader objects
+    _vertex_shader.stage_flag = VK_SHADER_STAGE_VERTEX_BIT;
+    _fragment_shader.stage_flag = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-    VkPipelineLayoutCreateInfo layout_info = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = 0,
-        .setLayoutCount = 1,
-        .pSetLayouts = &_descriptor_set_layout,
-    };
+    VkShaderCreateInfoEXT shader_create_infos[2];
+    VkShaderCreateInfoEXT &vert_shader_create_info = shader_create_infos[0];
+    vert_shader_create_info = {};
+    vert_shader_create_info.sType = VK_STRUCTURE_TYPE_SHADER_CREATE_INFO_EXT;
+    vert_shader_create_info.pNext = nullptr;
+    vert_shader_create_info.pName = "main";
+    vert_shader_create_info.flags = VK_SHADER_CREATE_LINK_STAGE_BIT_EXT;
+    vert_shader_create_info.stage = _vertex_shader.stage_flag;
+    vert_shader_create_info.nextStage = _fragment_shader.stage_flag;
+    vert_shader_create_info.codeType = VK_SHADER_CODE_TYPE_SPIRV_EXT;
+    vert_shader_create_info.codeSize =
+        sizeof(shader_gen::canvas_sd::vertex_spv);
+    vert_shader_create_info.pCode = shader_gen::canvas_sd::vertex_spv;
+    vert_shader_create_info.setLayoutCount = 1;
+    vert_shader_create_info.pSetLayouts = &_descriptor_set_layout;
 
-    vkCreatePipelineLayout(_driver->GetDevice(), &layout_info, nullptr,
-                           &_pipeline_layout);
+    VkShaderCreateInfoEXT &frag_shader_create_info = shader_create_infos[1];
+    frag_shader_create_info = vert_shader_create_info;
+    frag_shader_create_info.stage = _fragment_shader.stage_flag;
+    frag_shader_create_info.nextStage = 0;
+    frag_shader_create_info.codeSize =
+        sizeof(shader_gen::canvas_sd::fragment_spv);
+    frag_shader_create_info.pCode = shader_gen::canvas_sd::fragment_spv;
+
+    VkShaderEXT shaderEXTs[2];
+
+    AssertVkResult(vkCreateShadersEXT(
+        driver->GetDevice(), 2, shader_create_infos, nullptr, shaderEXTs));
+    _vertex_shader.shader = shaderEXTs[0];
+    _fragment_shader.shader = shaderEXTs[1];
   }
 }
+void ModelRenderer::AddLayer(Layer2dResource *layer) {}
 ModelRenderer::~ModelRenderer() {
+  _vertex_shader.Destroy(_driver->GetDevice(), vkDestroyShaderEXT);
+  _fragment_shader.Destroy(_driver->GetDevice(), vkDestroyShaderEXT);
+
   vkDestroyDescriptorSetLayout(_driver->GetDevice(), _descriptor_set_layout,
                                nullptr);
-  vkDestroyPipelineLayout(_driver->GetDevice(), _pipeline_layout, nullptr);
   vkDestroySampler(_driver->GetDevice(), _layer_sampler, nullptr);
 }
+void ModelRenderer::Render() {}
 
 Layer2dResource::~Layer2dResource() {
   vmaDestroyImage(_driver->GetVmaAllocator(), _image, _allocation);

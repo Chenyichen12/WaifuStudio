@@ -47,12 +47,26 @@ class ModelRenderer {
   VkSampler _layer_sampler = VK_NULL_HANDLE;
   std::vector<Layer2dResource *> _render_layers;
   VkDescriptorSetLayout _descriptor_set_layout = VK_NULL_HANDLE;
-  VkPipelineLayout _pipeline_layout = VK_NULL_HANDLE;
+
+  // func
+  PFN_vkCreateShadersEXT vkCreateShadersEXT = nullptr;
+  PFN_vkDestroyShaderEXT vkDestroyShaderEXT = nullptr;
+
+  struct Shader {
+    VkShaderStageFlagBits stage_flag = VK_SHADER_STAGE_VERTEX_BIT;
+    VkShaderEXT shader = VK_NULL_HANDLE;
+    void Destroy(const VkDevice &device, const PFN_vkDestroyShaderEXT destroy) {
+      destroy(device, shader, nullptr);
+      shader = VK_NULL_HANDLE;
+    };
+  };
+  Shader _vertex_shader;
+  Shader _fragment_shader;
 
  public:
   ModelRenderer(VulkanDriver *driver);
   void AddLayer(Layer2dResource *layer);
-  std::span<Layer2dResource*> GetLayers() { return _render_layers; }
+  std::span<Layer2dResource *> GetLayers() { return _render_layers; }
   ~ModelRenderer();
 
   void Render();
